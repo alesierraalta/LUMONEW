@@ -3,51 +3,106 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, DollarSign, AlertTriangle, FolderOpen } from 'lucide-react'
 import { formatCurrency, formatNumber } from '@/lib/utils'
+import { analyticsService } from '@/lib/database'
+import { useEffect, useState } from 'react'
 
-// Mock data - in a real app, this would come from an API
-const mockMetrics = {
-  totalItems: 1247,
-  totalValue: 125430.50,
-  lowStockItems: 23,
-  categoriesCount: 12
+interface DashboardMetrics {
+  totalItems: number
+  lowStockCount: number
+  totalValue: number
+  categoriesCount: number
+  locationsCount: number
 }
 
 export function MetricsCards() {
-  const metrics = [
+  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchMetrics() {
+      try {
+        setLoading(true)
+        const data = await analyticsService.getDashboardMetrics()
+        setMetrics(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchMetrics()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, index) => (
+          <Card key={index} className="animate-pulse">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <div className="h-4 bg-gray-200 rounded w-20"></div>
+              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-24"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <Card className="col-span-full border-red-200 bg-red-50/50">
+          <CardContent className="pt-6">
+            <p className="text-red-600">Error loading metrics: {error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!metrics) return null
+
+  const metricsData = [
     {
       title: 'Total Items',
-      value: formatNumber(mockMetrics.totalItems),
+      value: formatNumber(metrics.totalItems),
       description: 'Items in inventory',
       icon: Package,
-      trend: '+12% from last month'
+      trend: 'Real-time data'
     },
     {
       title: 'Total Value',
-      value: formatCurrency(mockMetrics.totalValue),
+      value: formatCurrency(metrics.totalValue),
       description: 'Inventory value',
       icon: DollarSign,
-      trend: '+8% from last month'
+      trend: 'Real-time data'
     },
     {
       title: 'Low Stock',
-      value: formatNumber(mockMetrics.lowStockItems),
+      value: formatNumber(metrics.lowStockCount),
       description: 'Items need restocking',
       icon: AlertTriangle,
-      trend: '-5% from last month',
-      isAlert: true
+      trend: 'Requires attention',
+      isAlert: metrics.lowStockCount > 0
     },
     {
       title: 'Categories',
-      value: formatNumber(mockMetrics.categoriesCount),
+      value: formatNumber(metrics.categoriesCount),
       description: 'Product categories',
       icon: FolderOpen,
-      trend: 'No change'
+      trend: 'Active categories'
     }
   ]
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {metrics.map((metric, index) => (
+      {metricsData.map((metric, index) => (
         <Card key={index} className={metric.isAlert ? 'border-yellow-200 bg-yellow-50/50' : ''}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">

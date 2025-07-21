@@ -12,139 +12,109 @@ import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
 import { ToastProvider } from '@/components/ui/toast'
 import { ModalProvider } from '@/components/ui/modal'
+import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/lib/auth/auth-context'
+import { locationService, inventoryService } from '@/lib/database'
+import { LoadingSpinner } from '@/components/ui/loading'
+import { LocationsTable } from '@/components/locations/locations-table'
 
-// Mock user data
-const mockUser = {
-  id: '1',
-  name: 'Admin User',
-  email: 'admin@example.com',
-  role: 'admin' as const,
-  avatar: undefined,
-  isActive: true,
-  lastLogin: new Date(),
-  permissions: {
-    canCreate: true,
-    canEdit: true,
-    canDelete: true,
-    canViewReports: true,
-    canManageUsers: true,
-    canBulkOperations: true,
-    canQuickStock: true,
-    canViewAuditLogs: true
-  },
-  accessibleLocations: ['1', '2', '3'],
-  defaultLocation: '1',
-  preferences: {
-    language: 'es' as const,
-    theme: 'light' as const,
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'USD',
-    notifications: {
-      email: true,
-      push: true,
-      lowStock: true,
-      bulkOperations: true
-    }
-  },
-  createdAt: new Date(),
-  updatedAt: new Date(),
-  createdBy: 'system',
-  updatedBy: 'system'
-}
-
-// Simplified mock data for shelf/storage locations
-const mockLocations: Location[] = [
-  {
-    id: '1',
-    name: 'Shelf A1',
-    description: 'Electronics storage shelf - first row',
-    itemQuantity: 45
-  },
-  {
-    id: '2',
-    name: 'Shelf A2',
-    description: 'Electronics storage shelf - second row',
-    itemQuantity: 32
-  },
-  {
-    id: '3',
-    name: 'Shelf B1',
-    description: 'Accessories storage area',
-    itemQuantity: 78
-  },
-  {
-    id: '4',
-    name: 'Shelf B2',
-    description: 'Cables and small items storage',
-    itemQuantity: 156
-  },
-  {
-    id: '5',
-    name: 'Storage Unit C',
-    description: 'Large items storage container',
-    itemQuantity: 23
-  },
-  {
-    id: '6',
-    name: 'Shelf D1',
-    description: 'Phone cases and covers',
-    itemQuantity: 89
-  },
-  {
-    id: '7',
-    name: 'Storage Unit E',
-    description: 'Bulk storage for high-volume items',
-    itemQuantity: 234
-  },
-  {
-    id: '8',
-    name: 'Shelf F1',
-    description: 'Audio equipment storage',
-    itemQuantity: 67
-  }
-]
-
-// Mock locations data for cards
-const mockLocationsData = {
-  totalLocations: mockLocations.length,
-  totalItems: mockLocations.reduce((sum, location) => sum + location.itemQuantity, 0),
-  averageItemsPerLocation: Math.round(mockLocations.reduce((sum, location) => sum + location.itemQuantity, 0) / mockLocations.length),
-  highestCapacityLocation: mockLocations.reduce((max, location) => 
-    location.itemQuantity > max.itemQuantity ? location : max, mockLocations[0]),
-  emptyLocations: mockLocations.filter(loc => loc.itemQuantity === 0).length,
-  utilizationRate: Math.round((mockLocations.filter(loc => loc.itemQuantity > 0).length / mockLocations.length) * 100),
-  topLocations: mockLocations
-    .sort((a, b) => b.itemQuantity - a.itemQuantity)
-    .slice(0, 3)
-    .map(loc => ({ id: loc.id, name: loc.name, itemQuantity: loc.itemQuantity })),
-  recentActivity: [
-    { id: '1', action: 'Ubicación actualizada', location: 'Shelf A1', timestamp: new Date() },
-    { id: '2', action: 'Nueva ubicación creada', location: 'Storage Unit F', timestamp: new Date() }
-  ],
-  locationDistribution: mockLocations.map(loc => ({
-    name: loc.name,
-    value: loc.itemQuantity,
-    utilization: loc.itemQuantity > 0 ? 'En Uso' : 'Vacío'
-  }))
-}
+// Helper function to map database location to Location type
+const mapDatabaseToLocation = (dbLocation: any, itemQuantity: number = 0): Location => ({
+  id: dbLocation.id,
+  name: dbLocation.name,
+  description: dbLocation.address || '',
+  itemQuantity
+})
 
 function LocationsContent() {
-  const [locations, setLocations] = useState<Location[]>(mockLocations)
+  const [locations, setLocations] = useState<Location[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'itemQuantity'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
   const [isClient, setIsClient] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [locationsData, setLocationsData] = useState<any>(null)
+  const { addToast } = useToast()
+
+  const loadLocations = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      
+      // Load locations from database
+      const dbLocations = await locationService.getAll()
+      
+      // Load inventory to calculate item counts per location
+      const inventory = await inventoryService.getAll()
+      
+      // Calculate item counts for each location
+      const locationsWithCounts = dbLocations.map(location => {
+        const locationItems = inventory.filter(item => item.location_id === location.id)
+        const itemQuantity = locationItems.reduce((sum, item) => sum + item.quantity, 0)
+        
+        return mapDatabaseToLocation(location, itemQuantity)
+      })
+      
+      setLocations(locationsWithCounts)
+      
+      // Generate locations data for cards
+      const totalLocations = locationsWithCounts.length
+      const totalItems = locationsWithCounts.reduce((sum, location) => sum + location.itemQuantity, 0)
+      const averageItemsPerLocation = totalLocations > 0 ? Math.round(totalItems / totalLocations) : 0
+      const highestCapacityLocation = locationsWithCounts.length > 0
+        ? locationsWithCounts.reduce((max, location) =>
+            location.itemQuantity > max.itemQuantity ? location : max, locationsWithCounts[0])
+        : null
+      const emptyLocations = locationsWithCounts.filter(loc => loc.itemQuantity === 0).length
+      const utilizationRate = totalLocations > 0
+        ? Math.round((locationsWithCounts.filter(loc => loc.itemQuantity > 0).length / totalLocations) * 100)
+        : 0
+      
+      const cardData = {
+        totalLocations,
+        totalItems,
+        averageItemsPerLocation,
+        highestCapacityLocation,
+        emptyLocations,
+        utilizationRate,
+        topLocations: locationsWithCounts
+          .sort((a, b) => b.itemQuantity - a.itemQuantity)
+          .slice(0, 3)
+          .map(loc => ({ id: loc.id, name: loc.name, itemQuantity: loc.itemQuantity })),
+        recentActivity: [
+          { id: '1', action: 'Ubicaciones cargadas', location: 'Sistema', timestamp: new Date() }
+        ],
+        locationDistribution: locationsWithCounts.map(loc => ({
+          name: loc.name,
+          value: loc.itemQuantity,
+          utilization: loc.itemQuantity > 0 ? 'En Uso' : 'Vacío'
+        }))
+      }
+      
+      setLocationsData(cardData)
+      
+    } catch (error) {
+      console.error('Error loading locations:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar ubicaciones',
+        description: 'No se pudieron cargar las ubicaciones desde la base de datos'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [addToast])
 
   const handleMount = useCallback(() => {
     setIsClient(true)
-  }, [])
+    loadLocations()
+  }, [loadLocations])
 
   useEffect(() => {
     handleMount()
   }, [handleMount])
 
   // Generate contextual cards for locations page
-  usePageCards('locations', mockLocationsData)
+  usePageCards('locations', locationsData)
 
   const filteredLocations = locations
     .filter(location => {
@@ -169,10 +139,13 @@ function LocationsContent() {
   const highestCapacityLocation = locations.reduce((max, location) =>
     location.itemQuantity > max.itemQuantity ? location : max, locations[0])
 
-  if (!isClient) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-gray-600">Cargando ubicaciones...</p>
+        </div>
       </div>
     )
   }
@@ -266,78 +239,7 @@ function LocationsContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
-            <div className="overflow-x-auto custom-scrollbar">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-muted/50">
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Nombre
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Descripción
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Cantidad de Artículos
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Estado
-                    </th>
-                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredLocations.map((location) => (
-                    <tr key={location.id} className="border-b transition-colors hover:bg-muted/50 hover:scale-[1.01] transition-transform">
-                      <td className="p-4 align-middle">
-                        <div className="font-medium">{location.name}</div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="text-sm text-muted-foreground">
-                          {location.description || 'Sin descripción'}
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="font-medium">{location.itemQuantity}</div>
-                        <div className="text-sm text-muted-foreground">
-                          artículos almacenados
-                        </div>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <Badge
-                          variant={location.itemQuantity > 0 ? "default" : "secondary"}
-                          className={location.itemQuantity > 0 ? "bg-green-100 text-green-800 hover:bg-green-200 transition-colors" : "hover:bg-gray-200 transition-colors"}
-                        >
-                          {location.itemQuantity > 0 ? 'En Uso' : 'Vacío'}
-                        </Badge>
-                      </td>
-                      <td className="p-4 align-middle">
-                        <div className="flex items-center space-x-1">
-                          <Button variant="ghost" size="sm" title="Ver detalles" className="hover:scale-110 transition-transform">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" title="Editar" className="hover:scale-110 transition-transform">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" title="Eliminar" className="hover:scale-110 transition-transform hover:text-red-600">
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {filteredLocations.length === 0 && (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground">No se encontraron ubicaciones que coincidan con tu búsqueda.</p>
-            </div>
-          )}
+          <LocationsTable searchTerm={searchTerm} />
         </CardContent>
       </Card>
     </div>
@@ -345,6 +247,8 @@ function LocationsContent() {
 }
 
 export default function LocationsPage() {
+  const { user } = useAuth()
+  
   return (
     <ToastProvider>
       <ModalProvider>
@@ -354,7 +258,79 @@ export default function LocationsPage() {
             <div className="h-full overflow-y-auto custom-scrollbar">
               <CardProvider
                 currentPage="locations"
-                currentUser={mockUser}
+                currentUser={user ? {
+                  id: user.id,
+                  name: user.user_metadata?.full_name || user.email || 'Usuario',
+                  email: user.email || '',
+                  role: 'admin' as const,
+                  avatar: user.user_metadata?.avatar_url,
+                  isActive: true,
+                  lastLogin: new Date(),
+                  permissions: {
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    canViewReports: true,
+                    canManageUsers: true,
+                    canBulkOperations: true,
+                    canQuickStock: true,
+                    canViewAuditLogs: true
+                  },
+                  accessibleLocations: ['1', '2', '3'],
+                  defaultLocation: '1',
+                  preferences: {
+                    language: 'es' as const,
+                    theme: 'light' as const,
+                    dateFormat: 'DD/MM/YYYY',
+                    currency: 'USD',
+                    notifications: {
+                      email: true,
+                      push: true,
+                      lowStock: true,
+                      bulkOperations: true
+                    }
+                  },
+                  createdAt: new Date(user.created_at),
+                  updatedAt: new Date(),
+                  createdBy: 'system',
+                  updatedBy: 'system'
+                } : {
+                  id: 'guest',
+                  name: 'Guest User',
+                  email: 'guest@example.com',
+                  role: 'admin' as const,
+                  avatar: undefined,
+                  isActive: true,
+                  lastLogin: new Date(),
+                  permissions: {
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    canViewReports: true,
+                    canManageUsers: true,
+                    canBulkOperations: true,
+                    canQuickStock: true,
+                    canViewAuditLogs: true
+                  },
+                  accessibleLocations: ['1', '2', '3'],
+                  defaultLocation: '1',
+                  preferences: {
+                    language: 'es' as const,
+                    theme: 'light' as const,
+                    dateFormat: 'DD/MM/YYYY',
+                    currency: 'USD',
+                    notifications: {
+                      email: true,
+                      push: true,
+                      lowStock: true,
+                      bulkOperations: true
+                    }
+                  },
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  createdBy: 'system',
+                  updatedBy: 'system'
+                }}
               >
                 <LocationsContent />
               </CardProvider>

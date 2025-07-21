@@ -3,7 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { MetricsCards } from './metrics-cards'
 import { InventoryChart } from './inventory-chart'
-import { RecentActivity } from './recent-activity'
+import RecentActivities from './recent-activities'
 import { QuickActions } from './quick-actions'
 import { InventoryTurnoverChart } from './inventory-turnover-chart'
 import { SalesVelocityMetrics } from './sales-velocity-metrics'
@@ -76,17 +76,9 @@ export function Dashboard() {
               </CardContent>
             </Card>
             
-            <Card className="col-span-3">
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Latest inventory movements and updates
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <RecentActivity />
-              </CardContent>
-            </Card>
+            <div className="col-span-3">
+              <RecentActivities />
+            </div>
           </div>
         </TabsContent>
         

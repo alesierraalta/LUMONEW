@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import { AuthProvider } from '@/lib/auth/auth-context'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Inventory Management System',
-  description: 'Modern inventory management application built with Next.js',
+  title: 'LUMO - Sistema de Gestión de Inventario',
+  description: 'Sistema moderno de gestión de inventario construido con Next.js y Supabase',
 }
 
 export default function RootLayout({
@@ -15,9 +16,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body className={inter.className}>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   )

@@ -1,84 +1,139 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts'
+import { analyticsService } from '@/lib/database'
+import { useEffect, useState } from 'react'
 
-// Mock data - in a real app, this would come from an API
-const mockChartData = [
-  { month: 'Jan', value: 98000, items: 1150 },
-  { month: 'Feb', value: 102000, items: 1180 },
-  { month: 'Mar', value: 108000, items: 1220 },
-  { month: 'Apr', value: 115000, items: 1280 },
-  { month: 'May', value: 118000, items: 1300 },
-  { month: 'Jun', value: 125000, items: 1350 },
-  { month: 'Jul', value: 125430, items: 1247 }
-]
+interface CategoryData {
+  name: string
+  value: number
+  color: string
+}
 
 export function InventoryChart() {
+  const [data, setData] = useState<CategoryData[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const categoryData = await analyticsService.getInventoryByCategory()
+        setData(categoryData as CategoryData[])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch chart data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <p className="text-red-600">Error loading chart: {error}</p>
+      </div>
+    )
+  }
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-[350px] flex items-center justify-center">
+        <p className="text-muted-foreground">No data available</p>
+      </div>
+    )
+  }
+
+  const RADIAN = Math.PI / 180
+  const renderCustomizedLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent
+  }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+    const x = cx + radius * Math.cos(-midAngle * RADIAN)
+    const y = cy + radius * Math.sin(-midAngle * RADIAN)
+
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        className="text-xs font-medium"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    )
+  }
+
   return (
     <ResponsiveContainer width="100%" height={350}>
-      <LineChart
-        data={mockChartData}
-        margin={{
-          top: 5,
-          right: 30,
-          left: 20,
-          bottom: 5,
-        }}
-      >
-        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-        <XAxis 
-          dataKey="month" 
-          className="text-xs fill-muted-foreground"
-        />
-        <YAxis 
-          className="text-xs fill-muted-foreground"
-          tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
-        />
+      <PieChart>
+        <Pie
+          data={data}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={renderCustomizedLabel}
+          outerRadius={120}
+          fill="#8884d8"
+          dataKey="value"
+        >
+          {data.map((entry, index) => (
+            <Cell key={`cell-${index}`} fill={entry.color} />
+          ))}
+        </Pie>
         <Tooltip
-          content={({ active, payload, label }) => {
+          content={({ active, payload }) => {
             if (active && payload && payload.length) {
+              const data = payload[0].payload
               return (
-                <div className="rounded-lg border bg-background p-2 shadow-sm">
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col">
-                      <span className="text-[0.70rem] uppercase text-muted-foreground">
-                        Month
-                      </span>
-                      <span className="font-bold text-muted-foreground">
-                        {label}
-                      </span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-[0.70rem] uppercase text-muted-foreground">
-                        Value
-                      </span>
-                      <span className="font-bold">
-                        ${payload[0].value?.toLocaleString()}
-                      </span>
-                    </div>
+                <div className="rounded-lg border bg-background p-3 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-3 h-3 rounded-full" 
+                      style={{ backgroundColor: data.color }}
+                    />
+                    <span className="font-medium">{data.name}</span>
                   </div>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {data.value} items
+                  </p>
                 </div>
               )
             }
             return null
           }}
         />
-        <Line
-          type="monotone"
-          dataKey="value"
-          strokeWidth={2}
-          className="stroke-primary"
-          dot={{
-            fill: 'hsl(var(--primary))',
-            strokeWidth: 2,
-            r: 4
-          }}
-          activeDot={{
-            r: 6,
-            fill: 'hsl(var(--primary))'
-          }}
+        <Legend 
+          content={({ payload }) => (
+            <div className="flex flex-wrap justify-center gap-4 mt-4">
+              {payload?.map((entry, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {entry.value}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         />
-      </LineChart>
+      </PieChart>
     </ResponsiveContainer>
   )
 }

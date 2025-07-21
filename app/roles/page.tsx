@@ -11,125 +11,8 @@ import { useToast } from '@/components/ui/toast'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Shield } from 'lucide-react'
-
-// Available permissions in the system
-export const AVAILABLE_PERMISSIONS = [
-  { id: 'users.view', name: 'Ver usuarios', category: 'Usuarios' },
-  { id: 'users.create', name: 'Crear usuarios', category: 'Usuarios' },
-  { id: 'users.edit', name: 'Editar usuarios', category: 'Usuarios' },
-  { id: 'users.delete', name: 'Eliminar usuarios', category: 'Usuarios' },
-  { id: 'roles.view', name: 'Ver roles', category: 'Roles' },
-  { id: 'roles.create', name: 'Crear roles', category: 'Roles' },
-  { id: 'roles.edit', name: 'Editar roles', category: 'Roles' },
-  { id: 'roles.delete', name: 'Eliminar roles', category: 'Roles' },
-  { id: 'roles.assign', name: 'Asignar roles', category: 'Roles' },
-  { id: 'inventory.view', name: 'Ver inventario', category: 'Inventario' },
-  { id: 'inventory.create', name: 'Crear productos', category: 'Inventario' },
-  { id: 'inventory.edit', name: 'Editar productos', category: 'Inventario' },
-  { id: 'inventory.delete', name: 'Eliminar productos', category: 'Inventario' },
-  { id: 'reports.view', name: 'Ver reportes', category: 'Reportes' },
-  { id: 'reports.create', name: 'Crear reportes', category: 'Reportes' },
-  { id: 'reports.export', name: 'Exportar reportes', category: 'Reportes' },
-  { id: 'system.admin', name: 'Administración del sistema', category: 'Sistema' },
-  { id: 'system.settings', name: 'Configuración del sistema', category: 'Sistema' },
-  { id: 'system.backup', name: 'Respaldos del sistema', category: 'Sistema' },
-  { id: 'profile.view', name: 'Ver perfil propio', category: 'Perfil' },
-  { id: 'profile.edit', name: 'Editar perfil propio', category: 'Perfil' },
-  // Sidebar visibility permissions
-  { id: 'sidebar.dashboard', name: 'Ver Dashboard', category: 'Navegación' },
-  { id: 'sidebar.users', name: 'Ver sección Usuarios', category: 'Navegación' },
-  { id: 'sidebar.roles', name: 'Ver sección Roles', category: 'Navegación' },
-  { id: 'sidebar.inventory', name: 'Ver sección Inventario', category: 'Navegación' },
-  { id: 'sidebar.categories', name: 'Ver sección Categorías', category: 'Navegación' },
-  { id: 'sidebar.locations', name: 'Ver sección Ubicaciones', category: 'Navegación' },
-  { id: 'sidebar.reports', name: 'Ver sección Reportes', category: 'Navegación' },
-  { id: 'sidebar.alerts', name: 'Ver sección Alertas', category: 'Navegación' },
-  { id: 'sidebar.settings', name: 'Ver sección Configuración', category: 'Navegación' }
-]
-
-// Mock roles data
-const mockRoles: RoleData[] = [
-  {
-    id: '1',
-    name: 'Super Administrador',
-    description: 'Acceso completo a todas las funciones del sistema',
-    permissions: AVAILABLE_PERMISSIONS.map(p => p.id),
-    color: 'red',
-    isSystem: true,
-    userCount: 2,
-    createdAt: '2024-01-15',
-    updatedAt: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Administrador',
-    description: 'Gestión de usuarios, roles e inventario',
-    permissions: [
-      'users.view', 'users.create', 'users.edit', 'users.delete',
-      'roles.view', 'roles.create', 'roles.edit', 'roles.assign',
-      'inventory.view', 'inventory.create', 'inventory.edit', 'inventory.delete',
-      'reports.view', 'reports.create', 'reports.export',
-      'profile.view', 'profile.edit',
-      'sidebar.dashboard', 'sidebar.users', 'sidebar.roles', 'sidebar.inventory',
-      'sidebar.categories', 'sidebar.locations', 'sidebar.reports', 'sidebar.alerts', 'sidebar.settings'
-    ],
-    color: 'blue',
-    isSystem: false,
-    userCount: 5,
-    createdAt: '2024-01-20',
-    updatedAt: '2024-02-10'
-  },
-  {
-    id: '3',
-    name: 'Gerente',
-    description: 'Gestión de equipos y supervisión de operaciones',
-    permissions: [
-      'users.view', 'users.edit',
-      'inventory.view', 'inventory.create', 'inventory.edit',
-      'reports.view', 'reports.create',
-      'profile.view', 'profile.edit',
-      'sidebar.dashboard', 'sidebar.users', 'sidebar.inventory', 'sidebar.reports'
-    ],
-    color: 'green',
-    isSystem: false,
-    userCount: 8,
-    createdAt: '2024-01-25',
-    updatedAt: '2024-03-05'
-  },
-  {
-    id: '4',
-    name: 'Empleado',
-    description: 'Acceso básico para operaciones diarias',
-    permissions: [
-      'users.view',
-      'inventory.view', 'inventory.create',
-      'reports.view',
-      'profile.view', 'profile.edit',
-      'sidebar.dashboard', 'sidebar.inventory', 'sidebar.reports'
-    ],
-    color: 'yellow',
-    isSystem: false,
-    userCount: 25,
-    createdAt: '2024-02-01',
-    updatedAt: '2024-02-15'
-  },
-  {
-    id: '5',
-    name: 'Invitado',
-    description: 'Acceso de solo lectura para visitantes',
-    permissions: [
-      'inventory.view',
-      'reports.view',
-      'profile.view',
-      'sidebar.dashboard', 'sidebar.inventory'
-    ],
-    color: 'gray',
-    isSystem: false,
-    userCount: 3,
-    createdAt: '2024-02-10',
-    updatedAt: '2024-02-10'
-  }
-]
+import { AVAILABLE_PERMISSIONS } from '@/lib/permissions'
+import { roleService } from '@/lib/database'
 
 function RoleManagementContent() {
   const [roles, setRoles] = useState<RoleData[]>([])
@@ -138,56 +21,86 @@ function RoleManagementContent() {
   const { openModal } = useModal()
   const { addToast } = useToast()
 
+  // Load roles from database
+  const loadRoles = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const rolesData = await roleService.getAll()
+      setRoles(rolesData)
+    } catch (error) {
+      console.error('Error loading roles:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar roles',
+        description: 'No se pudieron cargar los roles desde la base de datos'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [addToast])
+
   const handleRoleCreate = useCallback(() => {
     openModal(
       <RoleForm
         onSubmit={async (roleData) => {
-          setIsLoading(true)
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          
-          const newRole: RoleData = {
-            ...roleData,
-            id: Date.now().toString(),
-            userCount: 0,
-            createdAt: new Date().toISOString().split('T')[0],
-            updatedAt: new Date().toISOString().split('T')[0]
+          try {
+            setIsLoading(true)
+            const newRole = await roleService.create(roleData)
+            setRoles(prev => [...prev, newRole])
+            addToast({
+              type: 'success',
+              title: 'Rol creado exitosamente',
+              description: `El rol "${newRole.name}" ha sido creado`
+            })
+          } catch (error) {
+            console.error('Error creating role:', error)
+            addToast({
+              type: 'error',
+              title: 'Error al crear rol',
+              description: 'No se pudo crear el rol'
+            })
+          } finally {
+            setIsLoading(false)
           }
-          
-          setRoles(prev => [...prev, newRole])
-          setIsLoading(false)
         }}
         isLoading={isLoading}
         availablePermissions={AVAILABLE_PERMISSIONS}
       />,
       { size: 'xl' }
     )
-  }, [openModal, setIsLoading])
+  }, [openModal, addToast])
 
   const handleRoleEdit = useCallback((role: RoleData) => {
     openModal(
       <RoleForm
         role={role}
         onSubmit={async (roleData) => {
-          setIsLoading(true)
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          
-          setRoles(prev => prev.map(r => r.id === role.id ? { 
-            ...roleData, 
-            id: role.id,
-            userCount: role.userCount,
-            createdAt: role.createdAt,
-            updatedAt: new Date().toISOString().split('T')[0]
-          } : r))
-          setIsLoading(false)
+          try {
+            setIsLoading(true)
+            const updatedRole = await roleService.update(role.id, roleData)
+            setRoles(prev => prev.map(r => r.id === role.id ? updatedRole : r))
+            addToast({
+              type: 'success',
+              title: 'Rol actualizado exitosamente',
+              description: `El rol "${updatedRole.name}" ha sido actualizado`
+            })
+          } catch (error) {
+            console.error('Error updating role:', error)
+            addToast({
+              type: 'error',
+              title: 'Error al actualizar rol',
+              description: 'No se pudo actualizar el rol'
+            })
+          } finally {
+            setIsLoading(false)
+          }
         }}
         isLoading={isLoading}
         availablePermissions={AVAILABLE_PERMISSIONS}
       />,
       { size: 'xl' }
     )
-  }, [openModal, setIsLoading])
+  }, [openModal, addToast])
 
   const handleRoleDelete = useCallback(async (roleId: string) => {
     const role = roles.find(r => r.id === roleId)
@@ -209,13 +122,26 @@ function RoleManagementContent() {
       return
     }
 
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setRoles(prev => prev.filter(r => r.id !== roleId))
-    setIsLoading(false)
-  }, [roles, addToast, setIsLoading])
+    try {
+      setIsLoading(true)
+      await roleService.delete(roleId)
+      setRoles(prev => prev.filter(r => r.id !== roleId))
+      addToast({
+        type: 'success',
+        title: 'Rol eliminado exitosamente',
+        description: 'El rol ha sido eliminado'
+      })
+    } catch (error) {
+      console.error('Error deleting role:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al eliminar rol',
+        description: 'No se pudo eliminar el rol'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [roles, addToast])
 
   const handleRoleView = useCallback((role: RoleData) => {
     openModal(
@@ -224,11 +150,11 @@ function RoleManagementContent() {
     )
   }, [openModal])
 
-  // Handle client-side hydration
+  // Handle client-side hydration and load roles
   useEffect(() => {
     setIsClient(true)
-    setRoles(mockRoles)
-  }, [])
+    loadRoles()
+  }, [loadRoles])
 
   // Prevent hydration mismatch by showing loading until client-side
   if (!isClient) {
@@ -327,21 +253,21 @@ function RoleDetailsModal({
             <div className="flex justify-between">
               <span className="text-gray-600">Creado:</span>
               <span className="font-medium text-gray-900">
-                {new Date(role.createdAt).toLocaleDateString('es-ES', {
+                {role.createdAt ? new Date(role.createdAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
-                })}
+                }) : 'No disponible'}
               </span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Última actualización:</span>
               <span className="font-medium text-gray-900">
-                {new Date(role.updatedAt).toLocaleDateString('es-ES', {
+                {role.updatedAt ? new Date(role.updatedAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
-                })}
+                }) : 'No disponible'}
               </span>
             </div>
           </div>

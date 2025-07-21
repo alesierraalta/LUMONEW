@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Sidebar } from '@/components/layout/sidebar'
 import { InventoryTable } from '@/components/inventory/inventory-table'
 import { InventoryFilters } from '@/components/inventory/inventory-filters'
@@ -14,75 +15,82 @@ import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
 import { ToastProvider } from '@/components/ui/toast'
 import { ModalProvider } from '@/components/ui/modal'
-
-// Mock user data - moved outside component to prevent recreation
-const mockUser = {
-  id: '1',
-  name: 'Admin User',
-  email: 'admin@example.com',
-  role: 'admin' as const,
-  avatar: undefined,
-  isActive: true,
-  lastLogin: new Date('2024-01-01'),
-  permissions: {
-    canCreate: true,
-    canEdit: true,
-    canDelete: true,
-    canViewReports: true,
-    canManageUsers: true,
-    canBulkOperations: true,
-    canQuickStock: true,
-    canViewAuditLogs: true
-  },
-  accessibleLocations: ['1', '2', '3'],
-  defaultLocation: '1',
-  preferences: {
-    language: 'es' as const,
-    theme: 'light' as const,
-    dateFormat: 'DD/MM/YYYY',
-    currency: 'USD',
-    notifications: {
-      email: true,
-      push: true,
-      lowStock: true,
-      bulkOperations: true
-    }
-  },
-  createdAt: new Date('2024-01-01'),
-  updatedAt: new Date('2024-01-01'),
-  createdBy: 'system',
-  updatedBy: 'system'
-}
-
-// Mock inventory data for cards - moved outside component to prevent recreation
-const mockInventoryData = {
-  totalItems: 1247,
-  lowStockItems: [
-    { id: '1', nombre: 'iPhone 14 Pro', stock: 3, stockMinimo: 10 },
-    { id: '2', nombre: 'MacBook Air M2', stock: 1, stockMinimo: 5 },
-    { id: '3', nombre: 'AirPods Pro', stock: 2, stockMinimo: 15 }
-  ],
-  categories: ['Electrónicos', 'Accesorios', 'Computadoras'],
-  recentActivity: [
-    { id: '1', action: 'Stock actualizado', product: 'iPhone 14 Pro', timestamp: new Date('2024-01-01') },
-    { id: '2', action: 'Nuevo producto agregado', product: 'Samsung Galaxy S24', timestamp: new Date('2024-01-01') }
-  ],
-  criticalAlerts: 5,
-  pendingOrders: 12,
-  totalValue: 2450000
-}
+import { useToast } from '@/components/ui/toast'
+import { useAuth } from '@/lib/auth/auth-context'
+import { auditedInventoryService, auditedCategoryService } from '@/lib/database-with-audit'
+import { analyticsService } from '@/lib/database'
+import { LoadingSpinner } from '@/components/ui/loading'
 
 function InventoryContent() {
+  const router = useRouter()
   const [filters, setFilters] = useState<FilterOptions>({})
   const [isClient, setIsClient] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [isTransactionBuilderOpen, setIsTransactionBuilderOpen] = useState(false)
   const [isTransactionHistoryOpen, setIsTransactionHistoryOpen] = useState(false)
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
+  const [inventoryData, setInventoryData] = useState<any>(null)
+  const { addToast } = useToast()
   
+  const loadInventoryData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      
+      // Load inventory items
+      const inventory = await auditedInventoryService.getAll()
+      
+      // Load categories for context
+      const categories = await auditedCategoryService.getAll()
+      
+      // Get analytics data
+      const analytics = await analyticsService.getDashboardMetrics()
+      
+      // Calculate low stock items
+      const lowStockItems = inventory
+        .filter(item => item.quantity <= item.min_stock)
+        .slice(0, 5)
+        .map(item => ({
+          id: item.id,
+          nombre: item.name,
+          stock: item.quantity,
+          stockMinimo: item.min_stock
+        }))
+      
+      // Calculate total value
+      const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+      
+      // Generate inventory data for cards
+      const cardData = {
+        totalItems: inventory.length,
+        lowStockItems,
+        categories: categories.map(cat => cat.name),
+        recentActivity: [
+          { id: '1', action: 'Inventario cargado', product: 'Sistema', timestamp: new Date() }
+        ],
+        criticalAlerts: lowStockItems.length,
+        pendingOrders: 0, // This would come from orders table if implemented
+        totalValue
+      }
+      
+      setInventoryData(cardData)
+      
+    } catch (error) {
+      console.error('Error loading inventory data:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar inventario',
+        description: 'No se pudieron cargar los datos del inventario desde la base de datos'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [addToast])
+
   const handleMount = useCallback(() => {
     setIsClient(true)
-  }, [])
+    loadInventoryData()
+  }, [loadInventoryData])
 
   useEffect(() => {
     handleMount()
@@ -92,16 +100,20 @@ function InventoryContent() {
   const handleTransactionSave = useCallback((transaction: any) => {
     setTransactions(prev => [transaction, ...prev])
     console.log('Transaction saved:', transaction)
-    // In a real app, this would save to the backend
-  }, [])
+    // In a real app, this would save to the backend and update inventory
+    loadInventoryData() // Reload data after transaction
+  }, [loadInventoryData])
 
   // Generate contextual cards for inventory page
-  usePageCards('inventory', mockInventoryData)
+  usePageCards('inventory', inventoryData)
 
-  if (!isClient) {
+  if (!isClient || isLoading) {
     return (
       <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="flex flex-col items-center gap-4">
+          <LoadingSpinner size="lg" />
+          <p className="text-gray-600">Cargando inventario...</p>
+        </div>
       </div>
     )
   }
@@ -155,7 +167,12 @@ function InventoryContent() {
             <ShoppingCart className="mr-2 h-4 w-4" />
             New Sale
           </Button>
-          <Button size="sm" variant="outline" className="hover:scale-105 transition-transform">
+          <Button
+            size="sm"
+            variant="outline"
+            className="hover:scale-105 transition-transform"
+            onClick={() => router.push('/inventory/create')}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Add Item
           </Button>
@@ -207,6 +224,8 @@ function InventoryContent() {
 }
 
 export default function InventoryPage() {
+  const { user } = useAuth()
+  
   return (
     <ToastProvider>
       <ModalProvider>
@@ -216,7 +235,79 @@ export default function InventoryPage() {
             <div className="h-full overflow-y-auto custom-scrollbar">
               <CardProvider
                 currentPage="inventory"
-                currentUser={mockUser}
+                currentUser={user ? {
+                  id: user.id,
+                  name: user.user_metadata?.full_name || user.email || 'Usuario',
+                  email: user.email || '',
+                  role: 'admin' as const,
+                  avatar: user.user_metadata?.avatar_url,
+                  isActive: true,
+                  lastLogin: new Date(),
+                  permissions: {
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    canViewReports: true,
+                    canManageUsers: true,
+                    canBulkOperations: true,
+                    canQuickStock: true,
+                    canViewAuditLogs: true
+                  },
+                  accessibleLocations: ['1', '2', '3'],
+                  defaultLocation: '1',
+                  preferences: {
+                    language: 'es' as const,
+                    theme: 'light' as const,
+                    dateFormat: 'DD/MM/YYYY',
+                    currency: 'USD',
+                    notifications: {
+                      email: true,
+                      push: true,
+                      lowStock: true,
+                      bulkOperations: true
+                    }
+                  },
+                  createdAt: new Date(user.created_at),
+                  updatedAt: new Date(),
+                  createdBy: 'system',
+                  updatedBy: 'system'
+                } : {
+                  id: 'guest',
+                  name: 'Guest User',
+                  email: 'guest@example.com',
+                  role: 'admin' as const,
+                  avatar: undefined,
+                  isActive: true,
+                  lastLogin: new Date(),
+                  permissions: {
+                    canCreate: true,
+                    canEdit: true,
+                    canDelete: true,
+                    canViewReports: true,
+                    canManageUsers: true,
+                    canBulkOperations: true,
+                    canQuickStock: true,
+                    canViewAuditLogs: true
+                  },
+                  accessibleLocations: ['1', '2', '3'],
+                  defaultLocation: '1',
+                  preferences: {
+                    language: 'es' as const,
+                    theme: 'light' as const,
+                    dateFormat: 'DD/MM/YYYY',
+                    currency: 'USD',
+                    notifications: {
+                      email: true,
+                      push: true,
+                      lowStock: true,
+                      bulkOperations: true
+                    }
+                  },
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  createdBy: 'system',
+                  updatedBy: 'system'
+                }}
               >
                 <InventoryContent />
               </CardProvider>

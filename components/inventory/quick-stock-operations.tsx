@@ -280,12 +280,12 @@ export function QuickStockOperations({
                       </Badge>
                     </div>
                   </div>
-                  {projectedStatus === 'bajo_stock' && (
+                  {projectedStatus === 'low' && (
                     <p className="text-xs text-orange-600 mt-1">
                       ⚠️ El stock resultante estará por debajo del nivel mínimo
                     </p>
                   )}
-                  {projectedStatus === 'agotado' && (
+                  {projectedStock === 0 && (
                     <p className="text-xs text-red-600 mt-1">
                       ⚠️ El producto quedará agotado
                     </p>

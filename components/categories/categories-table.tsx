@@ -1,18 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Category } from '@/lib/types'
 import { formatDate } from '@/lib/utils'
+import { categoryService } from '@/lib/database'
 
-interface CategoriesTableProps {
-  categories: Category[]
+interface Category {
+  id: string
+  name: string
+  description: string | null
+  color: string
+  created_at: string
+  updated_at: string
 }
 
-export function CategoriesTable({ categories }: CategoriesTableProps) {
+interface CategoriesTableProps {
+  searchTerm?: string
+}
+
+export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
+  const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch categories data
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        setLoading(true)
+        const data = await categoryService.getAll()
+        setCategories(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch categories')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchCategories()
+  }, [])
+
+  // Filter categories based on search term
+  const filteredCategories = categories.filter(category =>
+    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (category.description && category.description.toLowerCase().includes(searchTerm.toLowerCase()))
+  )
 
   const toggleCategorySelection = (categoryId: string) => {
     setSelectedCategories(prev =>
@@ -24,7 +59,97 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
 
   const toggleAllCategories = () => {
     setSelectedCategories(prev =>
-      prev.length === categories.length ? [] : categories.map(c => c.id)
+      prev.length === filteredCategories.length ? [] : filteredCategories.map(c => c.id)
+    )
+  }
+
+  const handleEdit = (category: Category) => {
+    // TODO: Implement edit functionality
+    console.log('Edit category:', category)
+  }
+
+  const handleDelete = async (category: Category) => {
+    if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+      try {
+        await categoryService.delete(category.id)
+        setCategories(prev => prev.filter(c => c.id !== category.id))
+      } catch (err) {
+        console.error('Failed to delete category:', err)
+        alert('Failed to delete category. It may be in use by inventory items.')
+      }
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (confirm(`Are you sure you want to delete ${selectedCategories.length} categories?`)) {
+      try {
+        await Promise.all(selectedCategories.map(id => categoryService.delete(id)))
+        setCategories(prev => prev.filter(c => !selectedCategories.includes(c.id)))
+        setSelectedCategories([])
+      } catch (err) {
+        console.error('Failed to delete categories:', err)
+        alert('Failed to delete some categories. They may be in use by inventory items.')
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-4">
+                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Category</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Description</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Updated</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(5)].map((_, index) => (
+              <tr key={index} className="border-b border-gray-100">
+                <td className="py-4 px-4">
+                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex justify-end space-x-2">
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600">Error loading categories: {error}</div>
+      </div>
     )
   }
 
@@ -36,21 +161,20 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
             <th className="text-left py-3 px-4">
               <input
                 type="checkbox"
-                checked={selectedCategories.length === categories.length && categories.length > 0}
+                checked={selectedCategories.length === filteredCategories.length && filteredCategories.length > 0}
                 onChange={toggleAllCategories}
                 className="rounded border-gray-300"
               />
             </th>
             <th className="text-left py-3 px-4 font-medium text-gray-900">Category</th>
             <th className="text-left py-3 px-4 font-medium text-gray-900">Description</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Items</th>
             <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
             <th className="text-left py-3 px-4 font-medium text-gray-900">Updated</th>
             <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
           </tr>
         </thead>
         <tbody>
-          {categories.map((category) => (
+          {filteredCategories.map((category) => (
             <tr key={category.id} className="border-b border-gray-100 hover:bg-gray-50">
               <td className="py-4 px-4">
                 <input
@@ -77,18 +201,13 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                 </div>
               </td>
               <td className="py-4 px-4">
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-                  {category.itemCount} items
-                </Badge>
-              </td>
-              <td className="py-4 px-4">
                 <div className="text-sm text-gray-600">
-                  {formatDate(category.createdAt)}
+                  {formatDate(new Date(category.created_at))}
                 </div>
               </td>
               <td className="py-4 px-4">
                 <div className="text-sm text-gray-600">
-                  {formatDate(category.updatedAt)}
+                  {formatDate(new Date(category.updated_at))}
                 </div>
               </td>
               <td className="py-4 px-4">
@@ -96,10 +215,20 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleEdit(category)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    onClick={() => handleDelete(category)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -112,11 +241,11 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
         </tbody>
       </table>
 
-      {categories.length === 0 && (
+      {filteredCategories.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-gray-500">No categories found</div>
           <div className="text-sm text-gray-400 mt-1">
-            Try adjusting your search criteria
+            {searchTerm ? 'Try adjusting your search criteria' : 'Create your first category to get started'}
           </div>
         </div>
       )}
@@ -131,7 +260,12 @@ export function CategoriesTable({ categories }: CategoriesTableProps) {
               <Button variant="outline" size="sm">
                 Export Selected
               </Button>
-              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700"
+                onClick={handleBulkDelete}
+              >
                 Delete Selected
               </Button>
             </div>

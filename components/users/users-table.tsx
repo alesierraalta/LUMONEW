@@ -1,14 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { MoreHorizontal, Edit, Trash2, Eye, Mail, Shield, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { User as UserType } from '@/lib/types'
 import { formatDate, formatDateTime } from '@/lib/utils'
+import { userService } from '@/lib/database'
+
+interface User {
+  id: string
+  name: string
+  email: string
+  role: string
+  avatar: string | null
+  is_active: boolean
+  last_login: string | null
+  created_at: string
+  updated_at: string
+}
 
 interface UsersTableProps {
-  users: UserType[]
+  searchTerm?: string
 }
 
 const getRoleColor = (role: string) => {
@@ -37,8 +49,35 @@ const getRoleIcon = (role: string) => {
   }
 }
 
-export function UsersTable({ users }: UsersTableProps) {
+export function UsersTable({ searchTerm = '' }: UsersTableProps) {
+  const [users, setUsers] = useState<User[]>([])
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch users data
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        setLoading(true)
+        const data = await userService.getAll()
+        setUsers(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch users')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchUsers()
+  }, [])
+
+  // Filter users based on search term
+  const filteredUsers = users.filter(user =>
+    user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.role.toLowerCase().includes(searchTerm.toLowerCase())
+  )
 
   const toggleUserSelection = (userId: string) => {
     setSelectedUsers(prev =>
@@ -50,7 +89,109 @@ export function UsersTable({ users }: UsersTableProps) {
 
   const toggleAllUsers = () => {
     setSelectedUsers(prev =>
-      prev.length === users.length ? [] : users.map(u => u.id)
+      prev.length === filteredUsers.length ? [] : filteredUsers.map(u => u.id)
+    )
+  }
+
+  const handleEdit = (user: User) => {
+    // TODO: Implement edit functionality
+    console.log('Edit user:', user)
+  }
+
+  const handleDelete = async (user: User) => {
+    if (confirm(`Are you sure you want to delete the user "${user.name}"?`)) {
+      try {
+        await userService.delete(user.id)
+        setUsers(prev => prev.filter(u => u.id !== user.id))
+      } catch (err) {
+        console.error('Failed to delete user:', err)
+        alert('Failed to delete user.')
+      }
+    }
+  }
+
+  const handleBulkDeactivate = async () => {
+    if (confirm(`Are you sure you want to deactivate ${selectedUsers.length} users?`)) {
+      try {
+        await Promise.all(selectedUsers.map(id => 
+          userService.update(id, { is_active: false })
+        ))
+        setUsers(prev => prev.map(u => 
+          selectedUsers.includes(u.id) ? { ...u, is_active: false } : u
+        ))
+        setSelectedUsers([])
+      } catch (err) {
+        console.error('Failed to deactivate users:', err)
+        alert('Failed to deactivate some users.')
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-gray-200">
+              <th className="text-left py-3 px-4">
+                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+              </th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Email</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Last Login</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[...Array(5)].map((_, index) => (
+              <tr key={index} className="border-b border-gray-100">
+                <td className="py-4 px-4">
+                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </td>
+                <td className="py-4 px-4">
+                  <div className="flex justify-end space-x-2">
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600">Error loading users: {error}</div>
+      </div>
     )
   }
 
@@ -62,7 +203,7 @@ export function UsersTable({ users }: UsersTableProps) {
             <th className="text-left py-3 px-4">
               <input
                 type="checkbox"
-                checked={selectedUsers.length === users.length && users.length > 0}
+                checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
                 onChange={toggleAllUsers}
                 className="rounded border-gray-300"
               />
@@ -77,7 +218,7 @@ export function UsersTable({ users }: UsersTableProps) {
           </tr>
         </thead>
         <tbody>
-          {users.map((user) => (
+          {filteredUsers.map((user) => (
             <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
               <td className="py-4 px-4">
                 <input
@@ -120,17 +261,17 @@ export function UsersTable({ users }: UsersTableProps) {
                 </Badge>
               </td>
               <td className="py-4 px-4">
-                <Badge variant={user.isActive ? "default" : "secondary"}>
-                  {user.isActive ? 'Active' : 'Inactive'}
+                <Badge variant={user.is_active ? "default" : "secondary"}>
+                  {user.is_active ? 'Active' : 'Inactive'}
                 </Badge>
               </td>
               <td className="py-4 px-4">
                 <div className="text-sm text-gray-600">
-                  {user.lastLogin ? (
+                  {user.last_login ? (
                     <div>
-                      <div>{formatDate(user.lastLogin)}</div>
+                      <div>{formatDate(new Date(user.last_login))}</div>
                       <div className="text-xs text-gray-400">
-                        {formatDateTime(user.lastLogin).split(' ')[1]}
+                        {formatDateTime(new Date(user.last_login)).split(' ')[1]}
                       </div>
                     </div>
                   ) : (
@@ -140,7 +281,7 @@ export function UsersTable({ users }: UsersTableProps) {
               </td>
               <td className="py-4 px-4">
                 <div className="text-sm text-gray-600">
-                  {formatDate(user.createdAt)}
+                  {formatDate(new Date(user.created_at))}
                 </div>
               </td>
               <td className="py-4 px-4">
@@ -148,10 +289,20 @@ export function UsersTable({ users }: UsersTableProps) {
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0"
+                    onClick={() => handleEdit(user)}
+                  >
                     <Edit className="h-4 w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-red-600 hover:text-red-700">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                    onClick={() => handleDelete(user)}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -164,11 +315,11 @@ export function UsersTable({ users }: UsersTableProps) {
         </tbody>
       </table>
 
-      {users.length === 0 && (
+      {filteredUsers.length === 0 && !loading && (
         <div className="text-center py-12">
           <div className="text-gray-500">No users found</div>
           <div className="text-sm text-gray-400 mt-1">
-            Try adjusting your search criteria
+            {searchTerm ? 'Try adjusting your search criteria' : 'Create your first user to get started'}
           </div>
         </div>
       )}
@@ -186,7 +337,12 @@ export function UsersTable({ users }: UsersTableProps) {
               <Button variant="outline" size="sm">
                 Bulk Edit
               </Button>
-              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700"
+                onClick={handleBulkDeactivate}
+              >
                 Deactivate Selected
               </Button>
             </div>

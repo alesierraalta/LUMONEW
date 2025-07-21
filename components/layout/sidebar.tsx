@@ -31,9 +31,9 @@ const navigation = [
     isSection: true,
     children: [
       {
-        name: 'Productos',
+        name: 'Stock',
         href: '/inventory',
-        icon: Package,
+        icon: Box,
       },
       {
         name: 'Categorías',

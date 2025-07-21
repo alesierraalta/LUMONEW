@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { InventoryItem } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
+import { auditedInventoryService } from '@/lib/database-with-audit'
 
 // Transaction line item interface
 interface TransactionLineItem {
@@ -55,84 +56,58 @@ interface TransactionBuilderProps {
   initialMode?: 'sale' | 'stock_addition'
 }
 
-// Mock products data - in real app this would come from API
-const mockProducts: InventoryItem[] = [
-  {
-    id: '1',
-    sku: 'WH-001',
-    name: 'Wireless Headphones',
-    description: 'Premium noise-cancelling wireless headphones',
-    categoryId: '1',
-    price: 199.99,
-    cost: 120.00,
-    margin: 39.99,
-    currentStock: 25,
-    minimumLevel: 20,
-    status: 'active',
-    locationId: '1',
-    tags: ['electronics', 'audio', 'wireless'],
-    images: ['/images/headphones.jpg'],
-    lastUpdated: new Date('2024-01-15'),
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
-    createdBy: 'admin',
-    updatedBy: 'admin',
+// Transform database inventory item to Transaction Builder format
+const transformInventoryItem = (dbItem: any): InventoryItem => {
+  return {
+    id: dbItem.id,
+    sku: dbItem.sku,
+    name: dbItem.name,
+    description: dbItem.description || '',
+    categoryId: dbItem.category_id,
+    category: dbItem.categories ? {
+      id: dbItem.categories.id,
+      name: dbItem.categories.name,
+      color: dbItem.categories.color,
+      description: '',
+      parentId: undefined,
+      level: 0,
+      path: [],
+      itemCount: 0,
+      totalValue: 0,
+      isActive: true,
+      sortOrder: 0,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      createdBy: '',
+      updatedBy: '',
+      syncStatus: 'synced'
+    } : undefined,
+    price: dbItem.unit_price,
+    cost: dbItem.unit_price * 0.6, // Estimate cost as 60% of price if not available
+    margin: dbItem.unit_price * 0.4, // Estimate margin as 40% of price
+    currentStock: dbItem.quantity,
+    minimumLevel: dbItem.min_stock,
+    maximumLevel: dbItem.max_stock,
+    status: dbItem.status as 'active' | 'inactive' | 'discontinued' | 'pending',
+    locationId: dbItem.location_id,
+    location: dbItem.locations ? {
+      id: dbItem.locations.id,
+      name: dbItem.locations.name,
+      description: dbItem.locations.type,
+      itemQuantity: 0
+    } : undefined,
+    tags: [],
+    images: [],
+    lastUpdated: new Date(dbItem.updated_at),
+    createdAt: new Date(dbItem.created_at),
+    updatedAt: new Date(dbItem.updated_at),
+    createdBy: 'system',
+    updatedBy: 'system',
     syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 50,
-    barcode: '1234567890123'
-  },
-  {
-    id: '2',
-    sku: 'UC-002',
-    name: 'USB-C Cable',
-    description: 'High-speed USB-C charging cable 2m',
-    categoryId: '2',
-    price: 24.99,
-    cost: 8.50,
-    margin: 65.99,
-    currentStock: 150,
-    minimumLevel: 50,
-    status: 'active',
-    locationId: '1',
-    tags: ['cables', 'usb-c', 'charging'],
-    images: ['/images/usb-cable.jpg'],
-    lastUpdated: new Date('2024-01-14'),
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-14'),
-    createdBy: 'admin',
-    updatedBy: 'manager1',
-    syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 100,
-    barcode: '1234567890124'
-  },
-  {
-    id: '3',
-    sku: 'BS-003',
-    name: 'Bluetooth Speaker',
-    description: 'Portable waterproof Bluetooth speaker',
-    categoryId: '1',
-    price: 89.99,
-    cost: 45.00,
-    margin: 49.99,
-    currentStock: 8,
-    minimumLevel: 15,
-    status: 'active',
-    locationId: '2',
-    tags: ['electronics', 'audio', 'bluetooth', 'waterproof'],
-    images: ['/images/speaker.jpg'],
-    lastUpdated: new Date('2024-01-13'),
-    createdAt: new Date('2024-01-03'),
-    updatedAt: new Date('2024-01-13'),
-    createdBy: 'admin',
-    updatedBy: 'employee1',
-    syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 30,
-    barcode: '1234567890125'
+    autoReorder: false,
+    barcode: dbItem.sku // Use SKU as barcode if no specific barcode field
   }
-]
+}
 
 export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sale' }: TransactionBuilderProps) {
   const [transactionType, setTransactionType] = useState<'sale' | 'stock_addition'>(initialMode)
@@ -144,17 +119,42 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
   const [notes, setNotes] = useState('')
   const [draggedItem, setDraggedItem] = useState<string | null>(null)
   const [barcodeInput, setBarcodeInput] = useState('')
+  const [products, setProducts] = useState<InventoryItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Fetch inventory data
+  useEffect(() => {
+    const fetchInventory = async () => {
+      if (!isOpen) return
+      
+      try {
+        setLoading(true)
+        setError(null)
+        const data = await auditedInventoryService.getAll()
+        const transformedProducts = data.map(transformInventoryItem)
+        setProducts(transformedProducts)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch inventory')
+        console.error('Error fetching inventory:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchInventory()
+  }, [isOpen])
 
   // Filter products based on search term
   const filteredProducts = useMemo(() => {
-    if (!searchTerm) return mockProducts
-    return mockProducts.filter(product =>
+    if (!searchTerm) return products
+    return products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.barcode?.includes(searchTerm)
     )
-  }, [searchTerm])
+  }, [searchTerm, products])
 
   // Calculate totals
   const calculations = useMemo(() => {
@@ -235,15 +235,16 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
 
   // Handle barcode scan/input
   const handleBarcodeInput = useCallback((barcode: string) => {
-    const product = mockProducts.find(p => p.barcode === barcode)
+    const product = products.find(p => p.barcode === barcode || p.sku === barcode)
     if (product) {
       addProduct(product)
       setBarcodeInput('')
     } else {
       // Show error or not found message
       console.log('Product not found for barcode:', barcode)
+      setError(`Product not found for barcode: ${barcode}`)
     }
-  }, [addProduct])
+  }, [addProduct, products])
 
   // Handle drag and drop reordering
   const handleDragStart = (e: React.DragEvent, itemId: string) => {
@@ -308,6 +309,7 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
       setSearchTerm('')
       setShowProductSearch(false)
       setBarcodeInput('')
+      setError(null)
     }
   }, [isOpen])
 
@@ -394,6 +396,12 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {error && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-600">{error}</p>
+                    </div>
+                  )}
+                  
                   <div className="relative">
                     <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -404,39 +412,51 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
                     />
                   </div>
                   
-                  <div className="max-h-60 overflow-y-auto space-y-2">
-                    {filteredProducts.map((product) => (
-                      <div
-                        key={product.id}
-                        className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                        onClick={() => addProduct(product)}
-                      >
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{product.name}</span>
-                            <Badge variant="outline">{product.sku}</Badge>
-                          </div>
-                          <p className="text-sm text-muted-foreground">{product.description}</p>
-                          <div className="flex items-center gap-4 mt-1">
-                            <span className="text-sm">
-                              Stock: <span className="font-medium">{product.currentStock}</span>
-                            </span>
-                            <span className="text-sm">
-                              Price: <span className="font-medium">{formatCurrency(product.price)}</span>
-                            </span>
-                            {transactionType === 'stock_addition' && (
-                              <span className="text-sm">
-                                Cost: <span className="font-medium">{formatCurrency(product.cost)}</span>
-                              </span>
-                            )}
-                          </div>
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-sm text-muted-foreground">Loading products...</div>
+                    </div>
+                  ) : (
+                    <div className="max-h-60 overflow-y-auto space-y-2">
+                      {filteredProducts.length === 0 ? (
+                        <div className="text-center py-4 text-muted-foreground">
+                          {searchTerm ? 'No products found matching your search.' : 'No products available.'}
                         </div>
-                        <Button size="sm">
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
+                      ) : (
+                        filteredProducts.map((product) => (
+                          <div
+                            key={product.id}
+                            className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                            onClick={() => addProduct(product)}
+                          >
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{product.name}</span>
+                                <Badge variant="outline">{product.sku}</Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">{product.description}</p>
+                              <div className="flex items-center gap-4 mt-1">
+                                <span className="text-sm">
+                                  Stock: <span className="font-medium">{product.currentStock}</span>
+                                </span>
+                                <span className="text-sm">
+                                  Price: <span className="font-medium">{formatCurrency(product.price)}</span>
+                                </span>
+                                {transactionType === 'stock_addition' && (
+                                  <span className="text-sm">
+                                    Cost: <span className="font-medium">{formatCurrency(product.cost)}</span>
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button size="sm">
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

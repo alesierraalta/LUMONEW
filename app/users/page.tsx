@@ -4,97 +4,54 @@ import * as React from 'react'
 import { useState, useCallback, useEffect } from 'react'
 import { UserGrid } from '@/components/users/user-grid'
 import { UserForm, UserData } from '@/components/users/user-form'
+import { UserEditForm, UserEditData } from '@/components/users/user-edit-form'
 import { ToastProvider } from '@/components/ui/toast'
 import { ModalProvider } from '@/components/ui/modal'
 import { useModal } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { Sidebar } from '@/components/layout/sidebar'
+import { userService } from '@/lib/database'
 
-// Mock data for demonstration
-const mockUsers: UserData[] = [
-  {
-    id: '1',
-    firstName: 'Ana',
-    lastName: 'García',
-    email: 'ana.garcia@empresa.com',
-    phone: '+58 414-123-4567',
-    position: 'Gerente de Ventas',
-    department: 'Ventas',
-    location: 'Caracas',
-    bio: 'Especialista en ventas con más de 8 años de experiencia en el sector tecnológico.',
-    profileImage: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-    startDate: '2020-03-15',
-    status: 'active'
-  },
-  {
-    id: '2',
-    firstName: 'Carlos',
-    lastName: 'Rodríguez',
-    email: 'carlos.rodriguez@empresa.com',
-    phone: '+58 412-987-6543',
-    position: 'Desarrollador Senior',
-    department: 'Tecnología',
-    location: 'Valencia',
-    bio: 'Desarrollador full-stack especializado en React y Node.js.',
-    startDate: '2019-08-22',
-    status: 'active'
-  },
-  {
-    id: '3',
-    firstName: 'María',
-    lastName: 'López',
-    email: 'maria.lopez@empresa.com',
-    phone: '+58 416-555-0123',
-    position: 'Diseñadora UX/UI',
-    department: 'Diseño',
-    location: 'Maracaibo',
-    bio: 'Diseñadora creativa con pasión por crear experiencias de usuario excepcionales.',
-    profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face',
-    startDate: '2021-01-10',
-    status: 'active'
-  },
-  {
-    id: '4',
-    firstName: 'José',
-    lastName: 'Martínez',
-    email: 'jose.martinez@empresa.com',
-    phone: '+58 424-777-8888',
-    position: 'Analista de Marketing',
-    department: 'Marketing',
-    location: 'Caracas',
-    bio: 'Especialista en marketing digital y análisis de datos.',
-    startDate: '2022-06-01',
-    status: 'pending'
-  },
-  {
-    id: '5',
-    firstName: 'Laura',
-    lastName: 'Fernández',
-    email: 'laura.fernandez@empresa.com',
-    phone: '+58 414-999-0000',
-    position: 'Contadora',
-    department: 'Finanzas',
-    location: 'Valencia',
-    bio: 'Contadora pública con experiencia en auditoría y finanzas corporativas.',
-    startDate: '2018-11-30',
-    status: 'inactive'
-  },
-  {
-    id: '6',
-    firstName: 'Roberto',
-    lastName: 'Silva',
-    email: 'roberto.silva@empresa.com',
-    phone: '+58 412-333-4444',
-    position: 'Especialista en RRHH',
-    department: 'Recursos Humanos',
-    location: 'Maracaibo',
-    bio: 'Profesional en recursos humanos enfocado en desarrollo del talento.',
-    profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-    startDate: '2020-09-15',
-    status: 'active'
-  }
-]
+// Helper function to convert UserData to database format
+const mapUserDataToDatabase = (userData: UserData) => ({
+  email: userData.email,
+  name: `${userData.firstName} ${userData.lastName}`,
+  role: userData.position,
+  status: userData.status
+})
+
+// Helper function to convert database user to UserData format
+const mapDatabaseToUserData = (dbUser: any): UserData => ({
+  id: dbUser.id,
+  firstName: dbUser.name?.split(' ')[0] || '',
+  lastName: dbUser.name?.split(' ').slice(1).join(' ') || '',
+  email: dbUser.email,
+  phone: dbUser.phone || '',
+  position: dbUser.role || '',
+  department: dbUser.department || '',
+  location: dbUser.location || '',
+  bio: dbUser.bio || '',
+  profileImage: dbUser.profile_image,
+  startDate: dbUser.start_date || new Date().toISOString().split('T')[0],
+  status: dbUser.status || 'active'
+})
+
+// Helper function to convert database user to UserEditData format
+const mapDatabaseToUserEditData = (dbUser: any): UserEditData => ({
+  id: dbUser.id,
+  firstName: dbUser.name?.split(' ')[0] || '',
+  lastName: dbUser.name?.split(' ').slice(1).join(' ') || '',
+  email: dbUser.email,
+  role: dbUser.role || ''
+})
+
+// Helper function to convert UserEditData to database format
+const mapUserEditDataToDatabase = (userData: UserEditData) => ({
+  email: userData.email,
+  name: `${userData.firstName} ${userData.lastName}`,
+  role: userData.role
+})
 
 function UserManagementContent() {
   const [users, setUsers] = useState<UserData[]>([])
@@ -103,54 +60,121 @@ function UserManagementContent() {
   const { openModal } = useModal()
   const { addToast } = useToast()
 
+  const loadUsers = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const usersData = await userService.getAll()
+      const mappedUsers = usersData.map(mapDatabaseToUserData)
+      setUsers(mappedUsers)
+    } catch (error) {
+      console.error('Error loading users:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar usuarios',
+        description: 'No se pudieron cargar los usuarios desde la base de datos'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [addToast])
+
   const handleUserCreate = useCallback(() => {
     openModal(
       <UserForm
         onSubmit={async (userData) => {
-          setIsLoading(true)
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          
-          const newUser: UserData = {
-            ...userData,
-            id: Date.now().toString()
+          try {
+            setIsLoading(true)
+            const dbUserData = mapUserDataToDatabase(userData)
+            const newDbUser = await userService.create(dbUserData)
+            const newUser = mapDatabaseToUserData(newDbUser)
+            setUsers(prev => [...prev, newUser])
+            addToast({
+              type: 'success',
+              title: 'Usuario creado exitosamente',
+              description: `${userData.firstName} ${userData.lastName} ha sido creado`
+            })
+          } catch (error) {
+            console.error('Error creating user:', error)
+            addToast({
+              type: 'error',
+              title: 'Error al crear usuario',
+              description: 'No se pudo crear el usuario en la base de datos'
+            })
+          } finally {
+            setIsLoading(false)
           }
-          
-          setUsers(prev => [...prev, newUser])
-          setIsLoading(false)
         }}
         isLoading={isLoading}
       />,
       { size: 'lg' }
     )
-  }, [openModal, setIsLoading])
+  }, [openModal, setIsLoading, addToast])
 
   const handleUserEdit = useCallback((user: UserData) => {
+    // Convert UserData to UserEditData for the simplified form
+    const editUser: UserEditData = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.position // Map position to role
+    }
+
     openModal(
-      <UserForm
-        user={user}
+      <UserEditForm
+        user={editUser}
         onSubmit={async (userData) => {
-          setIsLoading(true)
-          // Simulate API call
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          
-          setUsers(prev => prev.map(u => u.id === user.id ? { ...userData, id: user.id } : u))
-          setIsLoading(false)
+          try {
+            setIsLoading(true)
+            if (!user.id) throw new Error('User ID is required for update')
+            
+            const dbUserData = mapUserEditDataToDatabase(userData)
+            const updatedDbUser = await userService.update(user.id, dbUserData)
+            const updatedUser = mapDatabaseToUserData(updatedDbUser)
+            setUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u))
+            addToast({
+              type: 'success',
+              title: 'Usuario actualizado exitosamente',
+              description: `${userData.firstName} ${userData.lastName} ha sido actualizado`
+            })
+          } catch (error) {
+            console.error('Error updating user:', error)
+            addToast({
+              type: 'error',
+              title: 'Error al actualizar usuario',
+              description: 'No se pudo actualizar el usuario en la base de datos'
+            })
+          } finally {
+            setIsLoading(false)
+          }
         }}
         isLoading={isLoading}
       />,
-      { size: 'lg' }
+      { size: 'md' }
     )
-  }, [openModal, setIsLoading])
+  }, [openModal, setIsLoading, addToast])
 
   const handleUserDelete = useCallback(async (userId: string) => {
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    setUsers(prev => prev.filter(u => u.id !== userId))
-    setIsLoading(false)
-  }, [setIsLoading])
+    try {
+      setIsLoading(true)
+      await userService.delete(userId)
+      setUsers(prev => prev.filter(u => u.id !== userId))
+      addToast({
+        type: 'success',
+        title: 'Usuario eliminado exitosamente',
+        description: 'El usuario ha sido eliminado de la base de datos'
+      })
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al eliminar usuario',
+        description: 'No se pudo eliminar el usuario de la base de datos'
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }, [setIsLoading, addToast])
 
   const handleUserView = useCallback((user: UserData) => {
     openModal(
@@ -159,11 +183,11 @@ function UserManagementContent() {
     )
   }, [openModal])
 
-  // Handle client-side hydration
+  // Handle client-side hydration and load users
   useEffect(() => {
     setIsClient(true)
-    setUsers(mockUsers)
-  }, [])
+    loadUsers()
+  }, [loadUsers])
 
   // Prevent hydration mismatch by showing loading until client-side
   if (!isClient) {

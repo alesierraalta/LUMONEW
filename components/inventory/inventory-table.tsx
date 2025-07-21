@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -15,110 +15,40 @@ import {
   Plus,
   Minus
 } from 'lucide-react'
-import { formatCurrency, formatDate, getStockStatus } from '@/lib/utils'
-import { InventoryItem, FilterOptions, QuickStockOperation } from '@/lib/types'
-import { QuickStockOperations } from './quick-stock-operations'
-import { BulkOperations } from './bulk-operations'
-import { StockWarnings } from './stock-warnings'
+import { formatCurrency, formatDate } from '@/lib/utils'
+import { auditedInventoryService } from '@/lib/database-with-audit'
+import { categoryService, locationService } from '@/lib/database'
 
-// Mock data - in a real app, this would come from an API
-const mockInventoryItems: InventoryItem[] = [
-  {
-    id: '1',
-    sku: 'WH-001',
-    name: 'Wireless Headphones',
-    description: 'Premium noise-cancelling wireless headphones',
-    categoryId: '1',
-    price: 199.99,
-    cost: 120.00,
-    margin: 39.99,
-    currentStock: 5,
-    minimumLevel: 20,
-    status: 'active',
-    locationId: '1',
-    tags: ['electronics', 'audio', 'wireless'],
-    images: ['/images/headphones.jpg'],
-    lastUpdated: new Date('2024-01-15'),
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-15'),
-    createdBy: 'admin',
-    updatedBy: 'admin',
-    syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 50
-  },
-  {
-    id: '2',
-    sku: 'UC-002',
-    name: 'USB-C Cable',
-    description: 'High-speed USB-C charging cable 2m',
-    categoryId: '2',
-    price: 24.99,
-    cost: 8.50,
-    margin: 65.99,
-    currentStock: 12,
-    minimumLevel: 50,
-    status: 'active',
-    locationId: '1',
-    tags: ['cables', 'usb-c', 'charging'],
-    images: ['/images/usb-cable.jpg'],
-    lastUpdated: new Date('2024-01-14'),
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-14'),
-    createdBy: 'admin',
-    updatedBy: 'manager1',
-    syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 100
-  },
-  {
-    id: '3',
-    sku: 'BS-003',
-    name: 'Bluetooth Speaker',
-    description: 'Portable waterproof Bluetooth speaker',
-    categoryId: '1',
-    price: 89.99,
-    cost: 45.00,
-    margin: 49.99,
-    currentStock: 0,
-    minimumLevel: 15,
-    status: 'active',
-    locationId: '2',
-    tags: ['electronics', 'audio', 'bluetooth', 'waterproof'],
-    images: ['/images/speaker.jpg'],
-    lastUpdated: new Date('2024-01-13'),
-    createdAt: new Date('2024-01-03'),
-    updatedAt: new Date('2024-01-13'),
-    createdBy: 'admin',
-    updatedBy: 'employee1',
-    syncStatus: 'synced',
-    autoReorder: true,
-    autoReorderQuantity: 30
-  },
-  {
-    id: '4',
-    sku: 'PC-004',
-    name: 'Phone Case',
-    description: 'Protective silicone phone case',
-    categoryId: '3',
-    price: 19.99,
-    cost: 5.00,
-    margin: 74.99,
-    currentStock: 8,
-    minimumLevel: 25,
-    status: 'active',
-    locationId: '1',
-    tags: ['accessories', 'phone', 'protection'],
-    images: ['/images/phone-case.jpg'],
-    lastUpdated: new Date('2024-01-12'),
-    createdAt: new Date('2024-01-04'),
-    updatedAt: new Date('2024-01-12'),
-    createdBy: 'admin',
-    updatedBy: 'manager1',
-    syncStatus: 'synced',
-    autoReorder: false
+interface InventoryItem {
+  id: string
+  name: string
+  sku: string
+  category_id: string
+  location_id: string
+  quantity: number
+  min_stock: number
+  max_stock: number
+  unit_price: number
+  status: 'active' | 'inactive' | 'discontinued'
+  created_at: string
+  updated_at: string
+  categories: {
+    id: string
+    name: string
+    color: string
   }
-]
+  locations: {
+    id: string
+    name: string
+    type: string
+  }
+}
+
+interface FilterOptions {
+  status?: string
+  lowStock?: boolean
+  stockStatus?: string
+}
 
 interface InventoryTableProps {
   filters: FilterOptions
@@ -128,28 +58,27 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<keyof InventoryItem>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
-  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
-  const [isQuickStockOpen, setIsQuickStockOpen] = useState(false)
-  const [items, setItems] = useState<InventoryItem[]>(mockInventoryItems)
+  const [items, setItems] = useState<InventoryItem[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
-  const [isBulkOperationsOpen, setIsBulkOperationsOpen] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Handle stock updates
-  const handleStockUpdate = (itemId: string, newStock: number, operation: QuickStockOperation) => {
-    setItems(prevItems =>
-      prevItems.map(item =>
-        item.id === itemId
-          ? { ...item, currentStock: newStock, lastUpdated: new Date() }
-          : item
-      )
-    )
-    console.log('Stock operation completed:', operation)
-  }
+  // Fetch inventory data
+  useEffect(() => {
+    async function fetchInventory() {
+      try {
+        setLoading(true)
+        const data = await auditedInventoryService.getAll()
+        setItems(data || [])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch inventory')
+      } finally {
+        setLoading(false)
+      }
+    }
 
-  const handleQuickStock = (item: InventoryItem) => {
-    setSelectedItem(item)
-    setIsQuickStockOpen(true)
-  }
+    fetchInventory()
+  }, [])
 
   // Handle bulk selection
   const handleSelectAll = (checked: boolean) => {
@@ -168,15 +97,6 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     }
   }
 
-  const handleBulkOperationComplete = () => {
-    setSelectedItems([])
-    setIsBulkOperationsOpen(false)
-    // In a real app, you would refresh the data from the API
-    console.log('Bulk operation completed, refreshing data...')
-  }
-
-  const selectedItemsData = items.filter(item => selectedItems.includes(item.id))
-
   // Helper function to get inventory stock status
   const getInventoryStockStatus = (currentStock: number, minimumLevel: number) => {
     if (currentStock === 0) return 'out_of_stock'
@@ -190,12 +110,12 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                          item.sku.toLowerCase().includes(searchTerm.toLowerCase())
     
     const matchesStatus = !filters.status || item.status === filters.status
-    const matchesLowStock = !filters.lowStock || getInventoryStockStatus(item.currentStock, item.minimumLevel) === 'low_stock'
+    const matchesLowStock = !filters.lowStock || getInventoryStockStatus(item.quantity, item.min_stock) === 'low_stock'
     
     // Enhanced stock status filtering
     let matchesStockStatus = true
     if (filters.stockStatus) {
-      const itemStockStatus = getInventoryStockStatus(item.currentStock, item.minimumLevel)
+      const itemStockStatus = getInventoryStockStatus(item.quantity, item.min_stock)
       matchesStockStatus = itemStockStatus === filters.stockStatus
     }
     
@@ -226,22 +146,70 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   }
 
   const getStockBadge = (item: InventoryItem) => {
-    const status = getInventoryStockStatus(item.currentStock, item.minimumLevel)
+    const status = getInventoryStockStatus(item.quantity, item.min_stock)
     
     if (status === 'out_of_stock') {
-      return <Badge variant="destructive">Agotado</Badge>
+      return <Badge variant="destructive">Out of Stock</Badge>
     }
     if (status === 'low_stock') {
-      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Bajo Stock</Badge>
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Low Stock</Badge>
     }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800">En Stock</Badge>
+    return <Badge variant="secondary" className="bg-green-100 text-green-800">In Stock</Badge>
+  }
+
+  const handleEdit = async (item: InventoryItem) => {
+    // TODO: Implement edit functionality
+    console.log('Edit item:', item)
+  }
+
+  const handleDelete = async (item: InventoryItem) => {
+    if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+      try {
+        await auditedInventoryService.delete(item.id)
+        setItems(prev => prev.filter(i => i.id !== item.id))
+      } catch (err) {
+        console.error('Failed to delete item:', err)
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between space-x-2">
+          <div className="relative flex-1 max-w-sm">
+            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div className="rounded-md border">
+          <div className="p-4">
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="flex items-center space-x-4 py-4 animate-pulse">
+                <div className="w-4 h-4 bg-gray-200 rounded"></div>
+                <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                <div className="w-32 h-4 bg-gray-200 rounded"></div>
+                <div className="w-16 h-4 bg-gray-200 rounded"></div>
+                <div className="w-12 h-4 bg-gray-200 rounded"></div>
+                <div className="w-20 h-4 bg-gray-200 rounded"></div>
+                <div className="w-24 h-4 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-red-600">Error loading inventory: {error}</p>
+      </div>
+    )
   }
 
   return (
     <div className="space-y-4">
-      {/* Stock Warnings */}
-      <StockWarnings items={items} />
-      
       {/* Search and Bulk Operations */}
       <div className="flex items-center justify-between space-x-2">
         <div className="relative flex-1 max-w-sm">
@@ -254,84 +222,11 @@ export function InventoryTable({ filters }: InventoryTableProps) {
           />
         </div>
         {selectedItems.length > 0 && (
-          <Button
-            onClick={() => setIsBulkOperationsOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            Operaciones Masivas ({selectedItems.length})
+          <Button className="bg-blue-600 hover:bg-blue-700">
+            Bulk Operations ({selectedItems.length})
           </Button>
         )}
       </div>
-
-      {/* Bulk Operations Component */}
-      {selectedItems.length > 0 && (
-        <BulkOperations
-          selectedItems={selectedItemsData}
-          isOpen={isBulkOperationsOpen}
-          onClose={() => setIsBulkOperationsOpen(false)}
-          onBulkOperation={(operation) => {
-            console.log('Bulk operation:', operation)
-            // Handle bulk operation here
-            setSelectedItems([])
-            setIsBulkOperationsOpen(false)
-          }}
-          categories={[
-            {
-              id: '1',
-              name: 'Electrónicos',
-              description: 'Productos electrónicos',
-              level: 0,
-              path: [],
-              itemCount: 0,
-              totalValue: 0,
-              isActive: true,
-              sortOrder: 1,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              createdBy: 'system',
-              updatedBy: 'system',
-              syncStatus: 'synced'
-            },
-            {
-              id: '2',
-              name: 'Ropa',
-              description: 'Artículos de vestir',
-              level: 0,
-              path: [],
-              itemCount: 0,
-              totalValue: 0,
-              isActive: true,
-              sortOrder: 2,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              createdBy: 'system',
-              updatedBy: 'system',
-              syncStatus: 'synced'
-            },
-            {
-              id: '3',
-              name: 'Hogar',
-              description: 'Artículos para el hogar',
-              level: 0,
-              path: [],
-              itemCount: 0,
-              totalValue: 0,
-              isActive: true,
-              sortOrder: 3,
-              createdAt: new Date(),
-              updatedAt: new Date(),
-              createdBy: 'system',
-              updatedBy: 'system',
-              syncStatus: 'synced'
-            }
-          ]}
-          locations={[
-            { id: '1', name: 'Almacén Principal', description: 'Almacén central', itemQuantity: 0 },
-            { id: '2', name: 'Tienda Centro', description: 'Tienda del centro', itemQuantity: 0 },
-            { id: '3', name: 'Depósito Norte', description: 'Depósito secundario', itemQuantity: 0 }
-          ]}
-        />
-      )}
 
       {/* Table */}
       <div className="rounded-md border">
@@ -343,7 +238,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   <Checkbox
                     checked={selectedItems.length === sortedItems.length && sortedItems.length > 0}
                     onCheckedChange={handleSelectAll}
-                    aria-label="Seleccionar todos"
+                    aria-label="Select all"
                   />
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
@@ -369,11 +264,17 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   </Button>
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Category
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Location
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-8 data-[state=open]:bg-accent"
-                    onClick={() => handleSort('price')}
+                    onClick={() => handleSort('unit_price')}
                   >
                     Price
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -384,7 +285,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     variant="ghost"
                     size="sm"
                     className="h-8 data-[state=open]:bg-accent"
-                    onClick={() => handleSort('currentStock')}
+                    onClick={() => handleSort('quantity')}
                   >
                     Stock
                     <ArrowUpDown className="ml-2 h-4 w-4" />
@@ -408,56 +309,63 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     <Checkbox
                       checked={selectedItems.includes(item.id)}
                       onCheckedChange={(checked) => handleSelectItem(item.id, checked as boolean)}
-                      aria-label={`Seleccionar ${item.name}`}
+                      aria-label={`Select ${item.name}`}
                     />
                   </td>
                   <td className="p-4 align-middle">
                     <div className="font-medium">{item.sku}</div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div>
-                      <div className="font-medium">{item.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.description}
-                      </div>
+                    <div className="font-medium">{item.name}</div>
+                  </td>
+                  <td className="p-4 align-middle">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.categories?.color || '#gray' }}
+                      />
+                      <span className="text-sm">{item.categories?.name || 'Unknown'}</span>
                     </div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="font-medium">{formatCurrency(item.price)}</div>
-                    <div className="text-sm text-muted-foreground">
-                      Cost: {formatCurrency(item.cost)}
-                    </div>
+                    <div className="text-sm">{item.locations?.name || 'Unknown'}</div>
+                    <div className="text-xs text-muted-foreground">{item.locations?.type}</div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="font-medium">{item.currentStock}</div>
+                    <div className="font-medium">{formatCurrency(item.unit_price)}</div>
+                  </td>
+                  <td className="p-4 align-middle">
+                    <div className="font-medium">{item.quantity}</div>
                     <div className="text-sm text-muted-foreground">
-                      Min: {item.minimumLevel}
+                      Min: {item.min_stock}
                     </div>
                   </td>
                   <td className="p-4 align-middle">
                     {getStockBadge(item)}
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="text-sm">{formatDate(item.lastUpdated)}</div>
+                    <div className="text-sm">{formatDate(new Date(item.updated_at))}</div>
                   </td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center space-x-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleQuickStock(item)}
-                        className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                        title="Ajuste rápido de stock"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm" title="Ver detalles">
+                      <Button variant="ghost" size="sm" title="View details">
                         <Eye className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" title="Editar">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Edit"
+                        onClick={() => handleEdit(item)}
+                      >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" title="Eliminar">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        title="Delete"
+                        onClick={() => handleDelete(item)}
+                        className="text-red-600 hover:text-red-700"
+                      >
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -469,23 +377,10 @@ export function InventoryTable({ filters }: InventoryTableProps) {
         </div>
       </div>
 
-      {sortedItems.length === 0 && (
+      {sortedItems.length === 0 && !loading && (
         <div className="text-center py-6">
           <p className="text-muted-foreground">No items found matching your criteria.</p>
         </div>
-      )}
-
-      {/* Quick Stock Operations Modal */}
-      {selectedItem && (
-        <QuickStockOperations
-          item={selectedItem}
-          isOpen={isQuickStockOpen}
-          onClose={() => {
-            setIsQuickStockOpen(false)
-            setSelectedItem(null)
-          }}
-          onStockUpdate={handleStockUpdate}
-        />
       )}
     </div>
   )
