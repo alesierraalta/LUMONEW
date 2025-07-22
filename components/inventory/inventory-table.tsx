@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,6 @@ import {
   MoreHorizontal,
   Edit,
   Trash2,
-  Eye,
   ArrowUpDown,
   Search,
   Plus,
@@ -18,6 +18,7 @@ import {
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { auditedInventoryService } from '@/lib/database-with-audit'
 import { categoryService, locationService } from '@/lib/database'
+import { QuickStockModal } from './quick-stock-modal'
 
 interface InventoryItem {
   id: string
@@ -55,6 +56,7 @@ interface InventoryTableProps {
 }
 
 export function InventoryTable({ filters }: InventoryTableProps) {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<keyof InventoryItem>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -62,21 +64,14 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [quickStockModal, setQuickStockModal] = useState<{
+    isOpen: boolean
+    item: InventoryItem | null
+    initialOperation: 'add' | 'subtract'
+  }>({ isOpen: false, item: null, initialOperation: 'add' })
 
   // Fetch inventory data
   useEffect(() => {
-    async function fetchInventory() {
-      try {
-        setLoading(true)
-        const data = await auditedInventoryService.getAll()
-        setItems(data || [])
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch inventory')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchInventory()
   }, [])
 
@@ -158,8 +153,37 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   }
 
   const handleEdit = async (item: InventoryItem) => {
-    // TODO: Implement edit functionality
-    console.log('Edit item:', item)
+    router.push(`/inventory/edit/${item.id}`)
+  }
+
+  const handleQuickStock = (item: InventoryItem) => {
+    setQuickStockModal({ isOpen: true, item, initialOperation: 'add' })
+  }
+
+  const handleQuickStockSubtract = (item: InventoryItem) => {
+    setQuickStockModal({ isOpen: true, item, initialOperation: 'subtract' })
+  }
+
+  const handleQuickStockClose = () => {
+    setQuickStockModal({ isOpen: false, item: null, initialOperation: 'add' })
+  }
+
+  const handleStockUpdated = () => {
+    // Refresh the inventory data
+    fetchInventory()
+  }
+
+  // Move fetchInventory function outside useEffect so it can be reused
+  const fetchInventory = async () => {
+    try {
+      setLoading(true)
+      const data = await auditedInventoryService.getAll()
+      setItems(data || [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to fetch inventory')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleDelete = async (item: InventoryItem) => {
@@ -348,20 +372,35 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   </td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center space-x-1">
-                      <Button variant="ghost" size="sm" title="View details">
-                        <Eye className="h-4 w-4" />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Agregar stock"
+                        onClick={() => handleQuickStock(item)}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <Plus className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        title="Restar stock"
+                        onClick={() => handleQuickStockSubtract(item)}
+                        className="text-orange-600 hover:text-orange-700"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         title="Edit"
                         onClick={() => handleEdit(item)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         title="Delete"
                         onClick={() => handleDelete(item)}
                         className="text-red-600 hover:text-red-700"
@@ -382,6 +421,15 @@ export function InventoryTable({ filters }: InventoryTableProps) {
           <p className="text-muted-foreground">No items found matching your criteria.</p>
         </div>
       )}
+
+      {/* Quick Stock Modal */}
+      <QuickStockModal
+        isOpen={quickStockModal.isOpen}
+        onClose={handleQuickStockClose}
+        item={quickStockModal.item}
+        onStockUpdated={handleStockUpdated}
+        initialOperation={quickStockModal.initialOperation}
+      />
     </div>
   )
 }

@@ -251,7 +251,7 @@ export const auditedInventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .order('created_at', { ascending: false })
     
@@ -265,7 +265,7 @@ export const auditedInventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .eq('id', id)
       .single()
@@ -292,7 +292,7 @@ export const auditedInventoryService = {
         .select(`
           *,
           categories (id, name, color),
-          locations (id, name, type)
+          locations (id, name, address)
         `)
         .single()
       
@@ -341,7 +341,7 @@ export const auditedInventoryService = {
         .select(`
           *,
           categories (id, name, color),
-          locations (id, name, type)
+          locations (id, name, address)
         `)
         .single()
       
@@ -507,7 +507,7 @@ export const auditedLocationService = {
     return data
   },
 
-  async create(location: { name: string; address?: string; type: string; capacity?: number }) {
+  async create(location: { name: string; address?: string }) {
     try {
       const { data, error } = await supabase
         .from('locations')
@@ -538,7 +538,7 @@ export const auditedLocationService = {
     }
   },
 
-  async update(id: string, updates: Partial<{ name: string; address: string; type: string; capacity: number }>) {
+  async update(id: string, updates: Partial<{ name: string; address: string }>) {
     try {
       const oldData = await this.getById(id)
       

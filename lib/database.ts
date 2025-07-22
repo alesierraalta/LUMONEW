@@ -191,7 +191,7 @@ export const locationService = {
     return data
   },
 
-  async create(location: { name: string; address?: string; type: string; capacity?: number }) {
+  async create(location: { name: string; address?: string }) {
     const { data, error } = await supabase
       .from('locations')
       .insert([location])
@@ -202,7 +202,7 @@ export const locationService = {
     return data
   },
 
-  async update(id: string, updates: Partial<{ name: string; address: string; type: string; capacity: number }>) {
+  async update(id: string, updates: Partial<{ name: string; address: string }>) {
     const { data, error } = await supabase
       .from('locations')
       .update(updates)
@@ -232,7 +232,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .order('created_at', { ascending: false })
     
@@ -246,7 +246,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .eq('id', id)
       .single()
@@ -272,7 +272,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .single()
     
@@ -298,7 +298,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .single()
     
@@ -321,7 +321,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .filter('quantity', 'lte', 'min_stock')
       .eq('status', 'active')
@@ -336,7 +336,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .eq('category_id', categoryId)
       .eq('status', 'active')
@@ -351,7 +351,7 @@ export const inventoryService = {
       .select(`
         *,
         categories (id, name, color),
-        locations (id, name, type)
+        locations (id, name, address)
       `)
       .eq('location_id', locationId)
       .eq('status', 'active')
@@ -497,5 +497,231 @@ export const analyticsService = {
 
   async getRecentActivity() {
     return await auditService.getAll(10)
+  }
+}
+
+// Transaction operations
+export const transactionService = {
+  async getAll(limit = 50) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        transaction_items (
+          id,
+          product_id,
+          product_sku,
+          product_name,
+          quantity,
+          unit_price,
+          total_price,
+          notes
+        )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    
+    if (error) throw error
+    return data
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        transaction_items (
+          id,
+          product_id,
+          product_sku,
+          product_name,
+          quantity,
+          unit_price,
+          total_price,
+          notes
+        )
+      `)
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async create(transaction: {
+    type: 'sale' | 'stock_addition'
+    subtotal: number
+    tax: number
+    tax_rate: number
+    total: number
+    notes?: string
+    created_by: string
+    status?: 'completed' | 'pending' | 'cancelled'
+    line_items: {
+      product_id: string
+      product_sku: string
+      product_name: string
+      quantity: number
+      unit_price: number
+      total_price: number
+      notes?: string
+    }[]
+  }) {
+    const { line_items, ...transactionData } = transaction
+    
+    // Start a transaction
+    const { data: newTransaction, error: transactionError } = await supabase
+      .from('transactions')
+      .insert([{
+        ...transactionData,
+        status: transactionData.status || 'completed'
+      }])
+      .select()
+      .single()
+    
+    if (transactionError) throw transactionError
+    
+    // Insert line items
+    const lineItemsWithTransactionId = line_items.map(item => ({
+      ...item,
+      transaction_id: newTransaction.id
+    }))
+    
+    const { error: itemsError } = await supabase
+      .from('transaction_items')
+      .insert(lineItemsWithTransactionId)
+    
+    if (itemsError) throw itemsError
+    
+    // Return the complete transaction with items
+    return await this.getById(newTransaction.id)
+  },
+
+  async update(id: string, updates: Partial<{
+    type: 'sale' | 'stock_addition'
+    subtotal: number
+    tax: number
+    tax_rate: number
+    total: number
+    notes: string
+    status: 'completed' | 'pending' | 'cancelled'
+  }>) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    // Delete transaction items first (due to foreign key constraint)
+    const { error: itemsError } = await supabase
+      .from('transaction_items')
+      .delete()
+      .eq('transaction_id', id)
+    
+    if (itemsError) throw itemsError
+    
+    // Delete the transaction
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
+  },
+
+  async getByDateRange(startDate: Date, endDate: Date) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        transaction_items (
+          id,
+          product_id,
+          product_sku,
+          product_name,
+          quantity,
+          unit_price,
+          total_price,
+          notes
+        )
+      `)
+      .gte('created_at', startDate.toISOString())
+      .lte('created_at', endDate.toISOString())
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  },
+
+  async getByType(type: 'sale' | 'stock_addition', limit = 50) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        transaction_items (
+          id,
+          product_id,
+          product_sku,
+          product_name,
+          quantity,
+          unit_price,
+          total_price,
+          notes
+        )
+      `)
+      .eq('type', type)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    
+    if (error) throw error
+    return data
+  },
+
+  async getByUser(userId: string, limit = 50) {
+    const { data, error } = await supabase
+      .from('transactions')
+      .select(`
+        *,
+        transaction_items (
+          id,
+          product_id,
+          product_sku,
+          product_name,
+          quantity,
+          unit_price,
+          total_price,
+          notes
+        )
+      `)
+      .eq('created_by', userId)
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    
+    if (error) throw error
+    return data
+  },
+
+  async deleteAll() {
+    // Delete all transaction items first (due to foreign key constraint)
+    const { error: itemsError } = await supabase
+      .from('transaction_items')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
+    
+    if (itemsError) throw itemsError
+    
+    // Delete all transactions
+    const { error } = await supabase
+      .from('transactions')
+      .delete()
+      .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
+    
+    if (error) throw error
   }
 }

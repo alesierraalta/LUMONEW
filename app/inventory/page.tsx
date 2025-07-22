@@ -9,7 +9,7 @@ import { TransactionBuilder } from '@/components/inventory/transaction-builder'
 import { TransactionHistory } from '@/components/inventory/transaction-history'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Download, Upload, ShoppingCart, Package, History } from 'lucide-react'
+import { Plus, Download, Upload, ShoppingCart, Package, History, Zap } from 'lucide-react'
 import { FilterOptions } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
@@ -20,9 +20,12 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { auditedInventoryService, auditedCategoryService } from '@/lib/database-with-audit'
 import { analyticsService } from '@/lib/database'
 import { LoadingSpinner } from '@/components/ui/loading'
+import { BulkCreateModal } from '@/components/inventory/bulk-create-modal'
+import { useModal } from '@/components/ui/modal'
 
 function InventoryContent() {
   const router = useRouter()
+  const { user } = useAuth()
   const [filters, setFilters] = useState<FilterOptions>({})
   const [isClient, setIsClient] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -31,7 +34,9 @@ function InventoryContent() {
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
   const [inventoryData, setInventoryData] = useState<any>(null)
+  const [loadingTransactions, setLoadingTransactions] = useState(false)
   const { addToast } = useToast()
+  const { openModal } = useModal()
   
   const loadInventoryData = useCallback(async () => {
     try {
@@ -87,22 +92,114 @@ function InventoryContent() {
     }
   }, [addToast])
 
+  const loadTransactions = useCallback(async () => {
+    try {
+      setLoadingTransactions(true)
+      const response = await fetch('/api/transactions?limit=100')
+      const result = await response.json()
+      
+      if (result.success) {
+        setTransactions(result.data || [])
+      } else {
+        console.error('Error loading transactions:', result.error)
+        addToast({
+          type: 'error',
+          title: 'Error al cargar historial',
+          description: 'No se pudieron cargar las transacciones'
+        })
+      }
+    } catch (error) {
+      console.error('Error loading transactions:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar historial',
+        description: 'Error de conexión al cargar las transacciones'
+      })
+    } finally {
+      setLoadingTransactions(false)
+    }
+  }, [addToast])
+
   const handleMount = useCallback(() => {
     setIsClient(true)
     loadInventoryData()
-  }, [loadInventoryData])
+    loadTransactions()
+  }, [loadInventoryData, loadTransactions])
 
   useEffect(() => {
     handleMount()
   }, [handleMount])
 
   // Handle transaction save
-  const handleTransactionSave = useCallback((transaction: any) => {
-    setTransactions(prev => [transaction, ...prev])
-    console.log('Transaction saved:', transaction)
-    // In a real app, this would save to the backend and update inventory
-    loadInventoryData() // Reload data after transaction
-  }, [loadInventoryData])
+  const handleTransactionSave = useCallback(async (transaction: any) => {
+    try {
+      // Save transaction to database via API
+      const response = await fetch('/api/transactions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: transaction.type,
+          subtotal: transaction.subtotal,
+          tax: transaction.tax,
+          taxRate: transaction.taxRate,
+          total: transaction.total,
+          notes: transaction.notes,
+          createdBy: user?.email || 'guest',
+          lineItems: transaction.lineItems.map((item: any) => ({
+            productId: item.product.id,
+            productSku: item.product.sku,
+            productName: item.product.name,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.totalPrice,
+            notes: item.notes
+          }))
+        })
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        // Add the saved transaction to local state
+        setTransactions(prev => [result.data, ...prev])
+        
+        // Show success message
+        addToast({
+          type: 'success',
+          title: 'Transacción guardada',
+          description: `${transaction.type === 'sale' ? 'Venta' : 'Adición de stock'} guardada exitosamente`
+        })
+        
+        // Reload inventory data to reflect stock changes
+        loadInventoryData()
+        
+        // Reload transactions to get the latest data
+        loadTransactions()
+      } else {
+        throw new Error(result.error || 'Error al guardar la transacción')
+      }
+    } catch (error) {
+      console.error('Error saving transaction:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al guardar',
+        description: error instanceof Error ? error.message : 'No se pudo guardar la transacción'
+      })
+    }
+  }, [user, addToast, loadInventoryData, loadTransactions])
+
+  // Handle bulk create modal
+  const handleBulkCreate = useCallback(() => {
+    openModal(
+      <BulkCreateModal
+        onSuccess={loadInventoryData}
+        onClose={() => {}} // Modal handles its own closing
+      />,
+      { size: 'xl' }
+    )
+  }, [openModal, loadInventoryData])
 
   // Generate contextual cards for inventory page
   usePageCards('inventory', inventoryData)
@@ -170,6 +267,15 @@ function InventoryContent() {
           <Button
             size="sm"
             variant="outline"
+            className="hover:scale-105 transition-transform bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+            onClick={handleBulkCreate}
+          >
+            <Zap className="mr-2 h-4 w-4" />
+            Creación Rápida
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
             className="hover:scale-105 transition-transform"
             onClick={() => router.push('/inventory/create')}
           >
@@ -218,6 +324,7 @@ function InventoryContent() {
         isOpen={isTransactionHistoryOpen}
         onClose={() => setIsTransactionHistoryOpen(false)}
         transactions={transactions}
+        onResetHistory={loadTransactions}
       />
     </div>
   )

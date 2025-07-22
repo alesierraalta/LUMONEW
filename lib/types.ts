@@ -407,8 +407,7 @@ export interface CategoryFormData {
 
 export interface LocationFormData {
   name: string
-  description?: string
-  itemQuantity: number
+  address?: string
 }
 
 export interface UserFormData {

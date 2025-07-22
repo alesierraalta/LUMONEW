@@ -168,7 +168,11 @@ function LocationsContent() {
             <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
-          <Button size="sm" className="hover:scale-105 transition-transform">
+          <Button
+            size="sm"
+            className="hover:scale-105 transition-transform"
+            onClick={() => window.location.href = '/locations/create'}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Agregar Ubicación
           </Button>

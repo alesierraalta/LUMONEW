@@ -1,8 +1,6 @@
 {
-  "/categories/page": "app/categories/page.js",
   "/users/page": "app/users/page.js",
-  "/users/create/page": "app/users/create/page.js",
-  "/roles/page": "app/roles/page.js",
+  "/locations/edit/[id]/page": "app/locations/edit/[id]/page.js",
   "/inventory/page": "app/inventory/page.js",
-  "/locations/page": "app/locations/page.js"
+  "/categories/page": "app/categories/page.js"
 }

@@ -26,9 +26,26 @@ import {
   BarChart3,
   TrendingUp,
   FileText,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  AlertTriangle
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
+
+// Add toast hook import (assuming it exists in the project)
+interface ToastProps {
+  type: 'success' | 'error' | 'warning' | 'info'
+  title: string
+  description?: string
+}
+
+// Mock toast function for now - this should be replaced with actual toast implementation
+const useToast = () => ({
+  addToast: (toast: ToastProps) => {
+    console.log('Toast:', toast)
+    // In a real implementation, this would show a toast notification
+  }
+})
 
 // Transaction interfaces (matching the transaction builder)
 interface TransactionLineItem {
@@ -65,6 +82,7 @@ interface TransactionHistoryProps {
   isOpen: boolean
   onClose: () => void
   transactions: Transaction[]
+  onResetHistory?: () => void
 }
 
 // Mock transaction data
@@ -168,7 +186,8 @@ const mockTransactions: Transaction[] = [
   }
 ]
 
-export function TransactionHistory({ isOpen, onClose, transactions = mockTransactions }: TransactionHistoryProps) {
+export function TransactionHistory({ isOpen, onClose, transactions = mockTransactions, onResetHistory }: TransactionHistoryProps) {
+  const { addToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
   const [typeFilter, setTypeFilter] = useState<'all' | 'sale' | 'stock_addition'>('all')
@@ -192,6 +211,10 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
   // View states
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'analytics'>('list')
+  
+  // Reset history states
+  const [showResetConfirmation, setShowResetConfirmation] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   // Get unique users for filter dropdown
   const uniqueUsers = useMemo(() => {
@@ -346,6 +369,48 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
     setCurrentPage(1)
   }
 
+  // Reset history function
+  const handleResetHistory = async () => {
+    if (!onResetHistory) return
+    
+    try {
+      setIsResetting(true)
+      
+      const response = await fetch('/api/transactions', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      })
+      
+      const result = await response.json()
+      
+      if (result.success) {
+        // Show success message
+        addToast({
+          type: 'success',
+          title: 'History Reset Successfully',
+          description: 'All transaction history has been permanently deleted from the database.'
+        })
+        
+        // Call the parent callback to refresh the data
+        onResetHistory()
+        setShowResetConfirmation(false)
+      } else {
+        throw new Error(result.message || 'Failed to reset transaction history')
+      }
+    } catch (error) {
+      console.error('Error resetting history:', error)
+      addToast({
+        type: 'error',
+        title: 'Reset Failed',
+        description: error instanceof Error ? error.message : 'An unexpected error occurred while resetting the transaction history.'
+      })
+    } finally {
+      setIsResetting(false)
+    }
+  }
+
   const getTransactionIcon = (type: string) => {
     return type === 'sale' ? ShoppingCart : Package
   }
@@ -489,6 +554,18 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
                     <RefreshCw className="h-4 w-4 mr-2" />
                     Reset
                   </Button>
+                  
+                  {onResetHistory && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => setShowResetConfirmation(true)}
+                      disabled={isResetting}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {isResetting ? 'Resetting...' : 'Reset History'}
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -822,6 +899,71 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
                   <p className="text-muted-foreground">{selectedTransaction.notes}</p>
                 </div>
               )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Reset History Confirmation Dialog */}
+      {showResetConfirmation && (
+        <Dialog open={showResetConfirmation} onOpenChange={setShowResetConfirmation}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="h-5 w-5" />
+                Reset Transaction History
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-lg border border-destructive/20">
+                <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+                <div className="space-y-2">
+                  <p className="font-medium text-destructive">Warning: This action cannot be undone!</p>
+                  <p className="text-sm text-muted-foreground">
+                    This will permanently delete all transaction history from the database.
+                    All sales records, stock additions, and related data will be lost forever.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <p className="text-sm font-medium">This will delete:</p>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• All transaction records ({summary.totalTransactions} transactions)</li>
+                  <li>• All sales history ({summary.totalSales} sales)</li>
+                  <li>• All stock addition records ({summary.totalStockAdditions} additions)</li>
+                  <li>• Total value: {formatCurrency(summary.totalValue)}</li>
+                </ul>
+              </div>
+              
+              <div className="flex items-center justify-end gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowResetConfirmation(false)}
+                  disabled={isResetting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleResetHistory}
+                  disabled={isResetting}
+                  className="min-w-[120px]"
+                >
+                  {isResetting ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                      Resetting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Reset History
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>

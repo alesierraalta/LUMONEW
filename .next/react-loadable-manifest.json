@@ -1,4 +1,10 @@
 {
+  "lib\\navigation-config.ts -> lucide-react": {
+    "id": "lib\\navigation-config.ts -> lucide-react",
+    "files": [
+      "static/chunks/vendors.js"
+    ]
+  },
   "node_modules\\@supabase\\auth-js\\dist\\module\\lib\\helpers.js -> @supabase/node-fetch": {
     "id": "node_modules\\@supabase\\auth-js\\dist\\module\\lib\\helpers.js -> @supabase/node-fetch",
     "files": []

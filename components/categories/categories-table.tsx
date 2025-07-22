@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { MoreHorizontal, Edit, Trash2, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -21,6 +22,7 @@ interface CategoriesTableProps {
 }
 
 export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
+  const router = useRouter()
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -64,8 +66,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
   }
 
   const handleEdit = (category: Category) => {
-    // TODO: Implement edit functionality
-    console.log('Edit category:', category)
+    router.push(`/categories/edit/${category.id}`)
   }
 
   const handleDelete = async (category: Category) => {
