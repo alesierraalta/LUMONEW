@@ -74,7 +74,7 @@ export function LoadingOverlay({
     <div className={cn('relative', className)}>
       {children}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
           <div className="flex flex-col items-center gap-3">
             <LoadingSpinner size="lg" />
             <p className="text-sm text-gray-600 font-medium">{message}</p>
@@ -97,7 +97,7 @@ export function Skeleton({ className, lines = 1 }: SkeletonProps) {
         <div
           key={i}
           className={cn(
-            'bg-gray-200 rounded-md',
+            'bg-muted rounded-md',
             lines > 1 ? 'h-4 mb-2 last:mb-0' : 'h-4',
             i === lines - 1 && lines > 1 ? 'w-3/4' : 'w-full',
             className
@@ -166,7 +166,7 @@ export function ProgressBar({
           </span>
         )}
       </div>
-      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+      <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
         <div
           className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}

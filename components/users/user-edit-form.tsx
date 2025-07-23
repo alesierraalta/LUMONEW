@@ -226,7 +226,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
               type="button"
               onClick={handleCancel}
               disabled={isLoading}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-6 py-2 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4 mr-2 inline" />
               {tCommon('cancel')}

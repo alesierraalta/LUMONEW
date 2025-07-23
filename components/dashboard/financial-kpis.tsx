@@ -139,12 +139,12 @@ export function FinancialKPIs() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center p-3 bg-green-50 rounded-lg">
-                <div className="text-lg font-bold text-green-600">+{revenueGrowth}%</div>
+              <div className="text-center p-3 bg-green-50 dark:bg-green-950/20 rounded-lg">
+                <div className="text-lg font-bold text-green-600 dark:text-green-400">+{revenueGrowth}%</div>
                 <div className="text-sm text-muted-foreground">{t('revenueGrowth')}</div>
               </div>
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <div className="text-lg font-bold text-blue-600">+{profitGrowth}%</div>
+              <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
+                <div className="text-lg font-bold text-blue-600 dark:text-blue-400">+{profitGrowth}%</div>
                 <div className="text-sm text-muted-foreground">{t('profitGrowth')}</div>
               </div>
             </div>
@@ -200,10 +200,10 @@ export function FinancialKPIs() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="mb-4 p-3 bg-purple-50 rounded-lg">
+            <div className="mb-4 p-3 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">{t('currentCashFlow')}</span>
-                <span className="text-lg font-bold text-purple-600">${currentMonth.cashFlow.toLocaleString()}</span>
+                <span className="text-lg font-bold text-purple-600 dark:text-purple-400">${currentMonth.cashFlow.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
                 {currentMonth.roi}% {t('roiThisMonth')}
@@ -320,7 +320,7 @@ export function FinancialKPIs() {
               ))}
             </div>
             
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="font-medium">{t('totalExpenses')}</span>
                 <span className="font-bold text-lg">

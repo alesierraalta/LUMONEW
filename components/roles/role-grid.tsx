@@ -153,7 +153,7 @@ export function RoleGrid({
     const [showActions, setShowActions] = useState(false)
 
     return (
-      <div className="bg-white rounded-xl border border-gray-200 p-6 hover:shadow-lg transition-all duration-200 group">
+      <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-all duration-200 group">
         {/* Role Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -177,19 +177,19 @@ export function RoleGrid({
           <div className="relative">
             <button
               onClick={() => setShowActions(!showActions)}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors opacity-0 group-hover:opacity-100"
+              className="p-2 rounded-lg hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
             >
               <MoreVertical className="h-4 w-4 text-gray-500" />
             </button>
 
             {showActions && (
-              <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10">
+              <div className="absolute right-0 top-full mt-1 w-48 bg-popover rounded-lg shadow-lg border border-border py-1 z-10">
                 <button
                   onClick={() => {
                     onRoleView(role)
                     setShowActions(false)
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent flex items-center gap-2"
                 >
                   <Eye className="h-4 w-4" />
                   {t('viewDetails')}
@@ -199,7 +199,7 @@ export function RoleGrid({
                     onRoleEdit(role)
                     setShowActions(false)
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent flex items-center gap-2"
                   disabled={role.isSystem}
                 >
                   <Edit className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function RoleGrid({
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-xl border border-gray-200 p-6">
+            <div key={i} className="bg-card rounded-xl border border-border p-6">
               <div className="flex items-center gap-4 mb-4">
                 <Skeleton className="h-12 w-12 rounded-full" />
                 <div className="space-y-2 flex-1">
@@ -318,7 +318,7 @@ export function RoleGrid({
       </div>
 
       {/* Search and Filters */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4">
+      <div className="bg-card rounded-xl border border-border p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
@@ -339,7 +339,7 @@ export function RoleGrid({
               'inline-flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors',
               showFilters 
                 ? 'bg-purple-50 border-purple-200 text-purple-700'
-                : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                : 'border-border text-foreground hover:bg-accent'
             )}
           >
             <Filter className="h-4 w-4" />

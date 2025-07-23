@@ -336,7 +336,7 @@ export function BulkOperations({
 
         <div className="space-y-6">
           {/* Selected Items Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-muted p-4 rounded-lg">
             <h4 className="font-medium mb-2">{t('selectedItems', { count: selectedItems.length })}</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>

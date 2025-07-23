@@ -199,7 +199,7 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
             const currentStock = location.current_stock || 0
             
             return (
-              <tr key={location.id} className="border-b border-gray-100 hover:bg-gray-50">
+              <tr key={location.id} className="border-b border-border hover:bg-muted/50">
                 <td className="py-4 px-4">
                   <input
                     type="checkbox"

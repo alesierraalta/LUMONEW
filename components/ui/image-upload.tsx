@@ -157,7 +157,7 @@ export function ImageUpload({
                     e.stopPropagation()
                     handleClick()
                   }}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-2 bg-background rounded-full shadow-lg hover:bg-muted transition-colors"
                   disabled={disabled}
                 >
                   <Upload className="h-4 w-4 text-gray-600" />
@@ -167,7 +167,7 @@ export function ImageUpload({
                     e.stopPropagation()
                     handleRemoveImage()
                   }}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-50 transition-colors"
+                  className="p-2 bg-background rounded-full shadow-lg hover:bg-muted transition-colors"
                   disabled={disabled}
                 >
                   <X className="h-4 w-4 text-red-500" />
@@ -175,7 +175,7 @@ export function ImageUpload({
               </div>
             </div>
             {isUploading && (
-              <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-lg">
+              <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent" />
                   <span className="text-sm text-gray-600">Procesando...</span>

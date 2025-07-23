@@ -240,8 +240,8 @@ function QuickStockModalContent({
       
       <div className="space-y-6">
         {/* Item Info */}
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <h3 className="font-medium text-gray-900">{item.name}</h3>
+        <div className="bg-muted p-4 rounded-lg">
+          <h3 className="font-medium">{item.name}</h3>
           <p className="text-sm text-gray-600">{t('sku')}: {item.sku}</p>
           <p className="text-sm text-gray-600">{t('currentStock')}: <span className="font-medium">{item.quantity}</span></p>
           {item.quantity <= item.min_stock && (
@@ -302,7 +302,7 @@ function QuickStockModalContent({
               id="reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
               required
             >
               <option value="">{t('selectReason')}</option>

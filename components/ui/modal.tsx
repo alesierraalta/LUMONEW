@@ -109,7 +109,7 @@ function ModalOverlay({ content, options }: ModalOverlayProps) {
     >
       <div
         className={cn(
-          'relative w-full bg-white rounded-xl shadow-2xl transition-all duration-300 transform',
+          'relative w-full bg-card rounded-xl shadow-2xl transition-all duration-300 transform',
           sizeClasses[options.size || 'md'],
           isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
         )}
@@ -117,7 +117,7 @@ function ModalOverlay({ content, options }: ModalOverlayProps) {
         {options.closable !== false && (
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-4 right-4 z-10 p-2 rounded-lg hover:bg-accent transition-colors"
           >
             <X className="h-5 w-5 text-gray-500" />
           </button>
@@ -196,7 +196,7 @@ export function ConfirmationModal({
       <div className="flex gap-3 justify-end">
         <button
           onClick={handleCancel}
-          className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          className="px-4 py-2 text-muted-foreground hover:bg-accent rounded-lg transition-colors"
         >
           {cancelText}
         </button>

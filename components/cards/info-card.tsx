@@ -63,7 +63,7 @@ const renderStatCard = (card: StatCard) => {
         )}
       </div>
       {card.previousValue && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-muted-foreground">
           Anterior: {String(card.previousValue)}
         </p>
       )}
@@ -113,12 +113,12 @@ const getSeverityIcon = (severity: 'info' | 'warning' | 'error' | 'success' | 'c
 export function InfoCard({ card, className }: InfoCardProps) {
   const getCardColor = () => {
     const baseColors = {
-      blue: 'border-blue-200 bg-blue-50',
-      green: 'border-green-200 bg-green-50',
-      yellow: 'border-yellow-200 bg-yellow-50',
-      red: 'border-red-200 bg-red-50',
-      purple: 'border-purple-200 bg-purple-50',
-      gray: 'border-gray-200 bg-gray-50'
+      blue: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20',
+      green: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20',
+      yellow: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20',
+      red: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20',
+      purple: 'border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/20',
+      gray: 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/20'
     }
     return card.color ? baseColors[card.color] : baseColors.gray
   }
@@ -181,7 +181,7 @@ export function InfoCard({ card, className }: InfoCardProps) {
 
           {/* Generic Content */}
           {card.content && (
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-foreground">
               {card.content}
             </div>
           )}

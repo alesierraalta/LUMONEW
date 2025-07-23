@@ -135,11 +135,11 @@ export function QuickStockOperations({
     }
   }
 
-  const currentStockStatus = getStockStatus(item.currentStock, item.minimumLevel)
+  const currentStockStatus = getStockStatus(item.currentStock, item.minimumLevel, item.maximumLevel || item.minimumLevel * 3)
   const projectedStock = operationType === 'add'
     ? item.currentStock + (form.watch('quantity') || 0)
     : Math.max(0, item.currentStock - (form.watch('quantity') || 0))
-  const projectedStatus = getStockStatus(projectedStock, item.minimumLevel)
+  const projectedStatus = getStockStatus(projectedStock, item.minimumLevel, item.maximumLevel || item.minimumLevel * 3)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -156,7 +156,7 @@ export function QuickStockOperations({
 
         <div className="space-y-4">
           {/* Current Stock Info */}
-          <div className="bg-gray-50 p-4 rounded-lg">
+          <div className="bg-muted p-4 rounded-lg">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">Stock Actual:</span>
               <div className="flex items-center gap-2">
@@ -166,7 +166,7 @@ export function QuickStockOperations({
                 </Badge>
               </div>
             </div>
-            <div className="flex justify-between items-center text-sm text-gray-600">
+            <div className="flex justify-between items-center text-sm text-muted-foreground">
               <span>Nivel Mínimo: {item.minimumLevel}</span>
               <span>Precio: {formatCurrency(item.price)}</span>
             </div>
@@ -262,7 +262,7 @@ export function QuickStockOperations({
 
               {/* Projected Stock Preview */}
               {form.watch('quantity') > 0 && (
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center gap-2 mb-2">
                     <AlertTriangle className="h-4 w-4 text-blue-600" />
                     <span className="text-sm font-medium text-blue-800">

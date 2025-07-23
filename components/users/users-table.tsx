@@ -136,7 +136,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
           <thead>
             <tr className="border-b border-gray-200">
               <th className="text-left py-3 px-4">
-                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-4 h-4 bg-muted rounded animate-pulse"></div>
               </th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">{t('user')}</th>
               <th className="text-left py-3 px-4 font-medium text-gray-900">{t('email')}</th>
@@ -151,34 +151,34 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
             {[...Array(5)].map((_, index) => (
               <tr key={index} className="border-b border-gray-100">
                 <td className="py-4 px-4">
-                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-4 h-4 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center space-x-3">
-                    <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div className="w-24 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-muted rounded-full animate-pulse"></div>
+                    <div className="w-24 h-4 bg-muted rounded animate-pulse"></div>
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-32 h-4 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-16 h-6 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-16 h-6 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-20 h-4 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-20 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-20 h-4 bg-muted rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end space-x-2">
-                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-muted rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-muted rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-muted rounded animate-pulse"></div>
                   </div>
                 </td>
               </tr>
@@ -221,7 +221,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
         </thead>
         <tbody>
           {filteredUsers.map((user) => (
-            <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+            <tr key={user.id} className="border-b border-border hover:bg-accent/50">
               <td className="py-4 px-4">
                 <input
                   type="checkbox"
@@ -240,8 +240,8 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                         alt={user.name}
                       />
                     ) : (
-                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-                        <User className="h-4 w-4 text-gray-600" />
+                      <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                        <User className="h-4 w-4 text-muted-foreground" />
                       </div>
                     )}
                   </div>

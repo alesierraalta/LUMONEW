@@ -239,7 +239,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
       <div className="space-y-4">
         <div className="max-h-96 overflow-y-auto space-y-3">
           {items.map((item, index) => (
-            <div key={item.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
+            <div key={item.id} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
               <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
                 {index + 1}
               </div>
@@ -276,7 +276,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
                     value={item.category_id}
                     onChange={(e) => updateItem(item.id, 'category_id', e.target.value)}
                     className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      item.errors?.category_id ? 'border-red-500' : 'border-gray-300'
+                      item.errors?.category_id ? 'border-red-500' : 'border-input'
                     }`}
                     disabled={isSubmitting}
                   >

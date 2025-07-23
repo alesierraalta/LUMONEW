@@ -204,20 +204,20 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       <div className="space-y-4">
         <div className="flex items-center justify-between space-x-2">
           <div className="relative flex-1 max-w-sm">
-            <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+            <div className="h-10 bg-muted rounded animate-pulse"></div>
           </div>
         </div>
         <div className="rounded-md border">
           <div className="p-4">
             {[...Array(5)].map((_, index) => (
               <div key={index} className="flex items-center space-x-4 py-4 animate-pulse">
-                <div className="w-4 h-4 bg-gray-200 rounded"></div>
-                <div className="w-20 h-4 bg-gray-200 rounded"></div>
-                <div className="w-32 h-4 bg-gray-200 rounded"></div>
-                <div className="w-16 h-4 bg-gray-200 rounded"></div>
-                <div className="w-12 h-4 bg-gray-200 rounded"></div>
-                <div className="w-20 h-4 bg-gray-200 rounded"></div>
-                <div className="w-24 h-4 bg-gray-200 rounded"></div>
+                <div className="w-4 h-4 bg-muted rounded"></div>
+                <div className="w-20 h-4 bg-muted rounded"></div>
+                <div className="w-32 h-4 bg-muted rounded"></div>
+                <div className="w-16 h-4 bg-muted rounded"></div>
+                <div className="w-12 h-4 bg-muted rounded"></div>
+                <div className="w-20 h-4 bg-muted rounded"></div>
+                <div className="w-24 h-4 bg-muted rounded"></div>
               </div>
             ))}
           </div>

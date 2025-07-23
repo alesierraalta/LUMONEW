@@ -14,6 +14,7 @@ import { ToastProvider } from '@/components/ui/toast'
 import { ModalProvider } from '@/components/ui/modal'
 import { Settings, User, Bell, Palette, Database, Shield } from 'lucide-react'
 import { setLocale } from '@/lib/actions/locale'
+import { useTheme } from '@/lib/contexts/theme-context'
 
 // Mock user data
 const mockUser = {
@@ -59,6 +60,7 @@ function SettingsContent() {
   const t = useTranslations('settings')
   const tCommon = useTranslations('common')
   const locale = useLocale()
+  const { theme, setTheme } = useTheme()
 
   const handleMount = useCallback(() => {
     setIsClient(true)
@@ -70,6 +72,10 @@ function SettingsContent() {
 
   const handleLanguageChange = async (newLocale: string) => {
     await setLocale(newLocale)
+  }
+
+  const handleThemeChange = (newTheme: string) => {
+    setTheme(newTheme as 'light' | 'dark' | 'system')
   }
 
   if (!isClient) {
@@ -160,7 +166,7 @@ function SettingsContent() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="theme">Theme</Label>
-              <Select defaultValue="light">
+              <Select value={theme} onValueChange={handleThemeChange}>
                 <SelectTrigger className="focus:ring-2 focus:ring-primary/20 transition-all">
                   <SelectValue />
                 </SelectTrigger>

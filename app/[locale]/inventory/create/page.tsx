@@ -251,7 +251,7 @@ function CreateInventoryItemContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* SKU */}
               <div className="space-y-2">
-                <label htmlFor="sku" className="text-sm font-medium text-gray-700">
+                <label htmlFor="sku" className="text-sm font-medium">
                   SKU *
                 </label>
                 <Input
@@ -269,7 +269,7 @@ function CreateInventoryItemContent() {
 
               {/* Nombre */}
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="text-sm font-medium">
                   Nombre del Producto *
                 </label>
                 <Input
@@ -287,7 +287,7 @@ function CreateInventoryItemContent() {
 
               {/* Categoría */}
               <div className="space-y-2">
-                <label htmlFor="category_id" className="text-sm font-medium text-gray-700">
+                <label htmlFor="category_id" className="text-sm font-medium">
                   Categoría
                 </label>
                 <select
@@ -295,7 +295,7 @@ function CreateInventoryItemContent() {
                   value={formData.category_id}
                   onChange={(e) => handleInputChange('category_id', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.category_id ? 'border-red-500' : 'border-gray-300'
+                    errors.category_id ? 'border-red-500' : 'border-input'
                   }`}
                 >
                   <option value="">Seleccionar categoría</option>
@@ -312,7 +312,7 @@ function CreateInventoryItemContent() {
 
               {/* Ubicación */}
               <div className="space-y-2">
-                <label htmlFor="location_id" className="text-sm font-medium text-gray-700">
+                <label htmlFor="location_id" className="text-sm font-medium">
                   Ubicación
                 </label>
                 <select
@@ -320,7 +320,7 @@ function CreateInventoryItemContent() {
                   value={formData.location_id}
                   onChange={(e) => handleInputChange('location_id', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.location_id ? 'border-red-500' : 'border-gray-300'
+                    errors.location_id ? 'border-red-500' : 'border-input'
                   }`}
                 >
                   <option value="">Seleccionar ubicación</option>
@@ -337,7 +337,7 @@ function CreateInventoryItemContent() {
 
               {/* Precio Unitario */}
               <div className="space-y-2">
-                <label htmlFor="unit_price" className="text-sm font-medium text-gray-700">
+                <label htmlFor="unit_price" className="text-sm font-medium">
                   Precio Unitario ($)
                 </label>
                 <Input
@@ -357,7 +357,7 @@ function CreateInventoryItemContent() {
 
               {/* Cantidad */}
               <div className="space-y-2">
-                <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                <label htmlFor="quantity" className="text-sm font-medium">
                   Cantidad Inicial
                 </label>
                 <Input
@@ -376,7 +376,7 @@ function CreateInventoryItemContent() {
 
               {/* Stock Mínimo */}
               <div className="space-y-2">
-                <label htmlFor="min_stock" className="text-sm font-medium text-gray-700">
+                <label htmlFor="min_stock" className="text-sm font-medium">
                   Stock Mínimo
                 </label>
                 <Input
@@ -395,7 +395,7 @@ function CreateInventoryItemContent() {
 
               {/* Stock Máximo */}
               <div className="space-y-2">
-                <label htmlFor="max_stock" className="text-sm font-medium text-gray-700">
+                <label htmlFor="max_stock" className="text-sm font-medium">
                   Stock Máximo
                 </label>
                 <Input
@@ -414,14 +414,14 @@ function CreateInventoryItemContent() {
 
               {/* Unidad de Medida */}
               <div className="space-y-2">
-                <label htmlFor="unit_of_measure" className="text-sm font-medium text-gray-700">
+                <label htmlFor="unit_of_measure" className="text-sm font-medium">
                   Unidad de Medida
                 </label>
                 <select
                   id="unit_of_measure"
                   value={formData.unit_of_measure}
                   onChange={(e) => handleInputChange('unit_of_measure', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
                 >
                   <option value="unidad">Unidad</option>
                   <option value="kg">Kilogramo</option>
@@ -437,7 +437,7 @@ function CreateInventoryItemContent() {
 
               {/* Proveedor */}
               <div className="space-y-2">
-                <label htmlFor="supplier" className="text-sm font-medium text-gray-700">
+                <label htmlFor="supplier" className="text-sm font-medium">
                   Proveedor
                 </label>
                 <Input
@@ -452,7 +452,7 @@ function CreateInventoryItemContent() {
 
             {/* Descripción */}
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium text-gray-700">
+              <label htmlFor="description" className="text-sm font-medium">
                 Descripción
               </label>
               <textarea
@@ -461,13 +461,13 @@ function CreateInventoryItemContent() {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Descripción detallada del producto..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
               />
             </div>
 
             {/* Código de Barras */}
             <div className="space-y-2">
-              <label htmlFor="barcode" className="text-sm font-medium text-gray-700">
+              <label htmlFor="barcode" className="text-sm font-medium">
                 Código de Barras
               </label>
               <Input

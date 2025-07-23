@@ -139,7 +139,7 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
             <h4 className="font-medium text-sm mb-2">Campos Modificados:</h4>
             <div className="space-y-1">
               {changes.map((change: any, index: number) => (
-                <div key={index} className="text-xs bg-gray-50 p-2 rounded">
+                <div key={index} className="text-xs bg-muted p-2 rounded">
                   <div className="font-medium">{change.field}:</div>
                   <div className="flex items-center space-x-2">
                     <span className="text-red-600 line-through">
@@ -233,7 +233,7 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
           <TableBody>
             {auditLogs.map((log) => (
               <React.Fragment key={log.id}>
-                <TableRow className="hover:bg-gray-50">
+                <TableRow className="hover:bg-muted/50">
                   <TableCell>
                     <Button
                       variant="ghost"
@@ -326,7 +326,7 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
                             {log.metadata && (
                               <div>
                                 <h4 className="font-medium mb-2">Metadatos</h4>
-                                <pre className="text-xs bg-gray-50 p-2 rounded overflow-auto">
+                                <pre className="text-xs bg-muted p-2 rounded overflow-auto">
                                   {JSON.stringify(log.metadata, null, 2)}
                                 </pre>
                               </div>

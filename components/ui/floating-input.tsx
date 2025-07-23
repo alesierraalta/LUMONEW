@@ -131,15 +131,15 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
             onBlur={handleBlur}
             disabled={disabled}
             className={cn(
-              'peer w-full px-4 pt-6 pb-2 text-sm bg-white border rounded-lg transition-all duration-200 outline-none',
+              'peer w-full px-4 pt-6 pb-2 text-sm bg-background border rounded-lg transition-all duration-200 outline-none',
               'placeholder-transparent',
               'focus:ring-2 focus:ring-offset-0',
               displayError
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
                 : displaySuccess
                 ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
-                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
-              disabled && 'bg-gray-50 cursor-not-allowed opacity-60'
+                : 'border-border focus:border-primary focus:ring-primary/20',
+              disabled && 'bg-muted cursor-not-allowed opacity-60'
             )}
             {...props}
           />
@@ -325,15 +325,15 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
             onBlur={handleBlur}
             disabled={disabled}
             className={cn(
-              'peer w-full px-4 pt-6 pb-2 text-sm bg-white border rounded-lg transition-all duration-200 outline-none resize-none',
+              'peer w-full px-4 pt-6 pb-2 text-sm bg-background border rounded-lg transition-all duration-200 outline-none resize-none',
               'placeholder-transparent',
               'focus:ring-2 focus:ring-offset-0',
               displayError
                 ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
                 : displaySuccess
                 ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
-                : 'border-gray-300 focus:border-blue-500 focus:ring-blue-200',
-              disabled && 'bg-gray-50 cursor-not-allowed opacity-60'
+                : 'border-border focus:border-primary focus:ring-primary/20',
+              disabled && 'bg-muted cursor-not-allowed opacity-60'
             )}
             {...props}
           />

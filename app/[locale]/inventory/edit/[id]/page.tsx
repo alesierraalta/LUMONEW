@@ -261,7 +261,7 @@ function EditInventoryItemContent() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600">Cargando datos del item...</p>
+          <p className="text-muted-foreground">Cargando datos del item...</p>
         </div>
       </div>
     )
@@ -304,7 +304,7 @@ function EditInventoryItemContent() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* SKU */}
               <div className="space-y-2">
-                <label htmlFor="sku" className="text-sm font-medium text-gray-700">
+                <label htmlFor="sku" className="text-sm font-medium">
                   SKU *
                 </label>
                 <Input
@@ -322,7 +322,7 @@ function EditInventoryItemContent() {
 
               {/* Nombre */}
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium text-gray-700">
+                <label htmlFor="name" className="text-sm font-medium">
                   Nombre del Producto *
                 </label>
                 <Input
@@ -340,7 +340,7 @@ function EditInventoryItemContent() {
 
               {/* Categoría */}
               <div className="space-y-2">
-                <label htmlFor="category_id" className="text-sm font-medium text-gray-700">
+                <label htmlFor="category_id" className="text-sm font-medium">
                   Categoría
                 </label>
                 <select
@@ -348,7 +348,7 @@ function EditInventoryItemContent() {
                   value={formData.category_id}
                   onChange={(e) => handleInputChange('category_id', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.category_id ? 'border-red-500' : 'border-gray-300'
+                    errors.category_id ? 'border-red-500' : 'border-input'
                   }`}
                 >
                   <option value="">Seleccionar categoría</option>
@@ -365,7 +365,7 @@ function EditInventoryItemContent() {
 
               {/* Ubicación */}
               <div className="space-y-2">
-                <label htmlFor="location_id" className="text-sm font-medium text-gray-700">
+                <label htmlFor="location_id" className="text-sm font-medium">
                   Ubicación
                 </label>
                 <select
@@ -373,7 +373,7 @@ function EditInventoryItemContent() {
                   value={formData.location_id}
                   onChange={(e) => handleInputChange('location_id', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.location_id ? 'border-red-500' : 'border-gray-300'
+                    errors.location_id ? 'border-red-500' : 'border-input'
                   }`}
                 >
                   <option value="">Seleccionar ubicación</option>
@@ -390,7 +390,7 @@ function EditInventoryItemContent() {
 
               {/* Precio Unitario */}
               <div className="space-y-2">
-                <label htmlFor="unit_price" className="text-sm font-medium text-gray-700">
+                <label htmlFor="unit_price" className="text-sm font-medium">
                   Precio Unitario ($)
                 </label>
                 <Input
@@ -410,7 +410,7 @@ function EditInventoryItemContent() {
 
               {/* Cantidad */}
               <div className="space-y-2">
-                <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+                <label htmlFor="quantity" className="text-sm font-medium">
                   Cantidad Actual
                 </label>
                 <Input
@@ -429,7 +429,7 @@ function EditInventoryItemContent() {
 
               {/* Stock Mínimo */}
               <div className="space-y-2">
-                <label htmlFor="min_stock" className="text-sm font-medium text-gray-700">
+                <label htmlFor="min_stock" className="text-sm font-medium">
                   Stock Mínimo
                 </label>
                 <Input
@@ -448,7 +448,7 @@ function EditInventoryItemContent() {
 
               {/* Stock Máximo */}
               <div className="space-y-2">
-                <label htmlFor="max_stock" className="text-sm font-medium text-gray-700">
+                <label htmlFor="max_stock" className="text-sm font-medium">
                   Stock Máximo
                 </label>
                 <Input
@@ -467,14 +467,14 @@ function EditInventoryItemContent() {
 
               {/* Estado */}
               <div className="space-y-2">
-                <label htmlFor="status" className="text-sm font-medium text-gray-700">
+                <label htmlFor="status" className="text-sm font-medium">
                   Estado
                 </label>
                 <select
                   id="status"
                   value={formData.status}
                   onChange={(e) => handleInputChange('status', e.target.value as 'active' | 'inactive' | 'discontinued')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
                 >
                   <option value="active">Activo</option>
                   <option value="inactive">Inactivo</option>
@@ -484,14 +484,14 @@ function EditInventoryItemContent() {
 
               {/* Unidad de Medida */}
               <div className="space-y-2">
-                <label htmlFor="unit_of_measure" className="text-sm font-medium text-gray-700">
+                <label htmlFor="unit_of_measure" className="text-sm font-medium">
                   Unidad de Medida
                 </label>
                 <select
                   id="unit_of_measure"
                   value={formData.unit_of_measure}
                   onChange={(e) => handleInputChange('unit_of_measure', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
                 >
                   <option value="unidad">Unidad</option>
                   <option value="kg">Kilogramo</option>
@@ -507,7 +507,7 @@ function EditInventoryItemContent() {
 
               {/* Proveedor */}
               <div className="space-y-2">
-                <label htmlFor="supplier" className="text-sm font-medium text-gray-700">
+                <label htmlFor="supplier" className="text-sm font-medium">
                   Proveedor
                 </label>
                 <Input
@@ -522,7 +522,7 @@ function EditInventoryItemContent() {
 
             {/* Descripción */}
             <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium text-gray-700">
+              <label htmlFor="description" className="text-sm font-medium">
                 Descripción
               </label>
               <textarea
@@ -531,13 +531,13 @@ function EditInventoryItemContent() {
                 onChange={(e) => handleInputChange('description', e.target.value)}
                 placeholder="Descripción detallada del producto..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
               />
             </div>
 
             {/* Código de Barras */}
             <div className="space-y-2">
-              <label htmlFor="barcode" className="text-sm font-medium text-gray-700">
+              <label htmlFor="barcode" className="text-sm font-medium">
                 Código de Barras
               </label>
               <Input

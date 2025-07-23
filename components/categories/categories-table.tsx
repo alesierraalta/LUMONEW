@@ -176,7 +176,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
         </thead>
         <tbody>
           {filteredCategories.map((category) => (
-            <tr key={category.id} className="border-b border-gray-100 hover:bg-gray-50">
+            <tr key={category.id} className="border-b border-border hover:bg-muted/50">
               <td className="py-4 px-4">
                 <input
                   type="checkbox"

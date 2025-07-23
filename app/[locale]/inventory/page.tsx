@@ -243,7 +243,7 @@ function InventoryContent() {
           </Button>
           <Button
             size="sm"
-            className="hover:scale-105 transition-transform bg-green-600 hover:bg-green-700"
+            className="hover:scale-105 transition-transform bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
             onClick={() => {
               setTransactionMode('stock_addition')
               setIsTransactionBuilderOpen(true)
@@ -266,7 +266,7 @@ function InventoryContent() {
           <Button
             size="sm"
             variant="outline"
-            className="hover:scale-105 transition-transform bg-yellow-50 border-yellow-300 text-yellow-700 hover:bg-yellow-100"
+            className="hover:scale-105 transition-transform bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
             onClick={handleBulkCreate}
           >
             <Zap className="mr-2 h-4 w-4" />

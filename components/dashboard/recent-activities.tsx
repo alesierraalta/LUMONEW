@@ -47,14 +47,14 @@ const operationIcons = {
 }
 
 const operationColors = {
-  INSERT: 'bg-green-100 text-green-800',
-  UPDATE: 'bg-blue-100 text-blue-800',
-  DELETE: 'bg-red-100 text-red-800',
-  LOGIN: 'bg-purple-100 text-purple-800',
-  LOGOUT: 'bg-gray-100 text-gray-800',
-  EXPORT: 'bg-orange-100 text-orange-800',
-  IMPORT: 'bg-indigo-100 text-indigo-800',
-  BULK_OPERATION: 'bg-yellow-100 text-yellow-800'
+  INSERT: 'bg-green-100 text-green-800 dark:bg-green-950/20 dark:text-green-400',
+  UPDATE: 'bg-blue-100 text-blue-800 dark:bg-blue-950/20 dark:text-blue-400',
+  DELETE: 'bg-red-100 text-red-800 dark:bg-red-950/20 dark:text-red-400',
+  LOGIN: 'bg-purple-100 text-purple-800 dark:bg-purple-950/20 dark:text-purple-400',
+  LOGOUT: 'bg-gray-100 text-gray-800 dark:bg-gray-800/20 dark:text-gray-400',
+  EXPORT: 'bg-orange-100 text-orange-800 dark:bg-orange-950/20 dark:text-orange-400',
+  IMPORT: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-950/20 dark:text-indigo-400',
+  BULK_OPERATION: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-950/20 dark:text-yellow-400'
 }
 
 const tableIcons = {
@@ -205,10 +205,10 @@ export default function RecentActivities() {
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="flex items-center space-x-3 animate-pulse">
-                <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
+                <div className="w-8 h-8 bg-muted rounded-full"></div>
                 <div className="flex-1 space-y-1">
-                  <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div className="h-4 bg-muted rounded w-3/4"></div>
+                  <div className="h-3 bg-muted rounded w-1/2"></div>
                 </div>
               </div>
             ))}
@@ -249,7 +249,7 @@ export default function RecentActivities() {
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-muted-foreground">
             <Activity className="h-12 w-12 mx-auto mb-4 opacity-50" />
             <p>No hay actividades recientes</p>
           </div>
@@ -261,7 +261,7 @@ export default function RecentActivities() {
               const operationColor = operationColors[activity.operation as keyof typeof operationColors] || 'bg-gray-100 text-gray-800'
               
               return (
-                <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg border bg-gray-50/50 hover:bg-gray-100/50 transition-colors">
+                <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted transition-colors">
                   <div className="flex-shrink-0">
                     <div className={`p-2 rounded-full ${operationColor}`}>
                       <OperationIcon className="h-4 w-4" />
@@ -270,8 +270,8 @@ export default function RecentActivities() {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <TableIcon className="h-4 w-4 text-gray-500" />
-                      <p className="text-sm font-medium text-gray-900">
+                      <TableIcon className="h-4 w-4 text-muted-foreground" />
+                      <p className="text-sm font-medium text-foreground">
                         {getOperationDescription(activity)}
                       </p>
                       <Badge variant="outline" className="text-xs">
@@ -279,11 +279,11 @@ export default function RecentActivities() {
                       </Badge>
                     </div>
                     
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-sm text-muted-foreground mb-1">
                       {getEntityName(activity)}
                     </p>
                     
-                    <div className="flex items-center gap-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatTimeAgo(activity.created_at)}
@@ -305,7 +305,7 @@ export default function RecentActivities() {
                     
                     {/* Show additional details for specific operations */}
                     {activity.metadata?.stock_change && (
-                      <div className="mt-2 text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      <div className="mt-2 text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-1 rounded">
                         Stock: {activity.metadata.stock_change.from} → {activity.metadata.stock_change.to}
                         {activity.metadata.stock_change.difference > 0 ? ' (+' : ' ('}
                         {activity.metadata.stock_change.difference})
@@ -313,7 +313,7 @@ export default function RecentActivities() {
                     )}
                     
                     {activity.metadata?.total_items && (
-                      <div className="mt-2 text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                      <div className="mt-2 text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/20 px-2 py-1 rounded">
                         {activity.metadata.successful_items}/{activity.metadata.total_items} elementos procesados
                       </div>
                     )}
