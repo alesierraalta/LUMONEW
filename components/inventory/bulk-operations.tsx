@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
+import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
@@ -66,21 +67,21 @@ const bulkUpdateSchema = z.object({
   // Location transfer fields
   newLocationId: z.string().optional(),
   // Common fields
-  reason: z.string().min(1, 'Debe proporcionar una razón para la operación'),
+  reason: z.string().min(1),
   notes: z.string().optional(),
   requiresApproval: z.boolean().default(false)
 })
 
 const bulkDeleteSchema = z.object({
   confirmDelete: z.boolean().refine((val: boolean) => val === true, {
-    message: 'Debe confirmar la eliminación'
+    message: 'Must confirm deletion'
   }),
-  reason: z.string().min(1, 'Debe proporcionar una razón para la eliminación'),
+  reason: z.string().min(1),
   notes: z.string().optional()
 })
 
 const bulkArchiveSchema = z.object({
-  reason: z.string().min(1, 'Debe proporcionar una razón para el archivado'),
+  reason: z.string().min(1),
   notes: z.string().optional(),
   archiveDate: z.date().optional()
 })
@@ -106,6 +107,8 @@ export function BulkOperations({
   categories,
   locations
 }: BulkOperationsProps) {
+  const t = useTranslations('inventory.bulkOperations')
+  const tCommon = useTranslations('common')
   const [operationType, setOperationType] = useState<'update' | 'delete' | 'archive'>('update')
   const [isProcessing, setIsProcessing] = useState(false)
   const [progress, setProgress] = useState(0)
@@ -324,26 +327,26 @@ export function BulkOperations({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getOperationIcon(operationType)}
-            Operaciones Masivas
+            {t('title')}
           </DialogTitle>
           <DialogDescription>
-            Realizar operaciones en {selectedItems.length} elementos seleccionados
+            {t('description', { count: selectedItems.length })}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Selected Items Summary */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <h4 className="font-medium mb-2">Elementos Seleccionados ({selectedItems.length})</h4>
+            <h4 className="font-medium mb-2">{t('selectedItems', { count: selectedItems.length })}</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Valor Total:</span>
+                <span className="text-gray-600">{t('totalValue')}:</span>
                 <span className="font-medium ml-2">{formatCurrency(totalValue)}</span>
               </div>
               <div>
-                <span className="text-gray-600">Stock Total:</span>
+                <span className="text-gray-600">{t('totalStock')}:</span>
                 <span className="font-medium ml-2">
-                  {selectedItems.reduce((sum, item) => sum + item.currentStock, 0)} unidades
+                  {selectedItems.reduce((sum, item) => sum + item.currentStock, 0)} {t('units')}
                 </span>
               </div>
             </div>
@@ -355,7 +358,7 @@ export function BulkOperations({
               ))}
               {selectedItems.length > 5 && (
                 <Badge variant="secondary" className="text-xs">
-                  +{selectedItems.length - 5} más
+                  +{selectedItems.length - 5} {t('more')}
                 </Badge>
               )}
             </div>
@@ -371,7 +374,7 @@ export function BulkOperations({
               disabled={isProcessing}
             >
               <Settings className="h-4 w-4 mr-2" />
-              Actualizar
+              {t('update')}
             </Button>
             <Button
               type="button"
@@ -381,7 +384,7 @@ export function BulkOperations({
               disabled={isProcessing}
             >
               <Archive className="h-4 w-4 mr-2" />
-              Archivar
+              {t('archive')}
             </Button>
             <Button
               type="button"
@@ -391,7 +394,7 @@ export function BulkOperations({
               disabled={isProcessing}
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar
+              {t('delete')}
             </Button>
           </div>
 
@@ -400,11 +403,14 @@ export function BulkOperations({
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 {getStatusIcon()}
-                <span className="text-sm font-medium">Procesando operación...</span>
+                <span className="text-sm font-medium">{t('processing')}</span>
               </div>
               <Progress value={progress} className="w-full" />
               <p className="text-xs text-gray-600">
-                Procesando {Math.floor((progress / 100) * selectedItems.length)} de {selectedItems.length} elementos
+                {t('processingProgress', {
+                  current: Math.floor((progress / 100) * selectedItems.length),
+                  total: selectedItems.length
+                })}
               </p>
             </div>
           )}
@@ -414,10 +420,10 @@ export function BulkOperations({
             <div className="bg-green-50 p-4 rounded-lg border border-green-200">
               <div className="flex items-center gap-2 text-green-800">
                 <CheckCircle className="h-4 w-4" />
-                <span className="font-medium">Operación completada exitosamente</span>
+                <span className="font-medium">{t('operationCompleted')}</span>
               </div>
               <p className="text-sm text-green-700 mt-1">
-                Se procesaron {selectedItems.length} elementos correctamente.
+                {t('operationSuccess', { count: selectedItems.length })}
               </p>
             </div>
           )}
@@ -427,10 +433,10 @@ export function BulkOperations({
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <div className="flex items-center gap-2 text-red-800">
                 <XCircle className="h-4 w-4" />
-                <span className="font-medium">Error en la operación</span>
+                <span className="font-medium">{t('operationError')}</span>
               </div>
               <p className="text-sm text-red-700 mt-1">
-                Ocurrió un error al procesar la operación. Inténtelo nuevamente.
+                {t('operationErrorMessage')}
               </p>
             </div>
           )}
@@ -444,36 +450,36 @@ export function BulkOperations({
                   name="operationType"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Tipo de Actualización</FormLabel>
+                      <FormLabel>{t('updateType')}</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar tipo de actualización" />
+                            <SelectValue placeholder={t('selectUpdateType')} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="price_update">
                             <div className="flex items-center gap-2">
                               <DollarSign className="h-4 w-4" />
-                              Actualizar Precios
+                              {t('updatePrices')}
                             </div>
                           </SelectItem>
                           <SelectItem value="category_change">
                             <div className="flex items-center gap-2">
                               <Tag className="h-4 w-4" />
-                              Cambiar Categoría
+                              {t('changeCategory')}
                             </div>
                           </SelectItem>
                           <SelectItem value="status_change">
                             <div className="flex items-center gap-2">
                               <Settings className="h-4 w-4" />
-                              Cambiar Estado
+                              {t('changeStatus')}
                             </div>
                           </SelectItem>
                           <SelectItem value="location_transfer">
                             <div className="flex items-center gap-2">
                               <ArrowRightLeft className="h-4 w-4" />
-                              Transferir Ubicación
+                              {t('transferLocation')}
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -491,7 +497,7 @@ export function BulkOperations({
                       name="priceAdjustment.type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Tipo de Ajuste</FormLabel>
+                          <FormLabel>{t('adjustmentType')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -499,8 +505,8 @@ export function BulkOperations({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="percentage">Porcentaje</SelectItem>
-                              <SelectItem value="fixed">Valor Fijo</SelectItem>
+                              <SelectItem value="percentage">{t('percentage')}</SelectItem>
+                              <SelectItem value="fixed">{t('fixedValue')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -514,7 +520,7 @@ export function BulkOperations({
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>
-                            Valor {updateForm.watch('priceAdjustment.type') === 'percentage' ? '(%)' : '($)'}
+                            {t('value')} {updateForm.watch('priceAdjustment.type') === 'percentage' ? '(%)' : '($)'}
                           </FormLabel>
                           <FormControl>
                             <Input
@@ -526,9 +532,9 @@ export function BulkOperations({
                             />
                           </FormControl>
                           <FormDescription>
-                            {updateForm.watch('priceAdjustment.type') === 'percentage' 
-                              ? 'Porcentaje de aumento/descuento'
-                              : 'Valor fijo a sumar/restar'
+                            {updateForm.watch('priceAdjustment.type') === 'percentage'
+                              ? t('percentageDescription')
+                              : t('fixedValueDescription')
                             }
                           </FormDescription>
                           <FormMessage />
@@ -541,7 +547,7 @@ export function BulkOperations({
                       name="priceAdjustment.applyTo"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Aplicar a</FormLabel>
+                          <FormLabel>{t('applyTo')}</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
                               <SelectTrigger>
@@ -549,9 +555,9 @@ export function BulkOperations({
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              <SelectItem value="price">Solo Precio de Venta</SelectItem>
-                              <SelectItem value="cost">Solo Costo</SelectItem>
-                              <SelectItem value="both">Precio y Costo</SelectItem>
+                              <SelectItem value="price">{t('priceOnly')}</SelectItem>
+                              <SelectItem value="cost">{t('costOnly')}</SelectItem>
+                              <SelectItem value="both">{t('priceAndCost')}</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -568,11 +574,11 @@ export function BulkOperations({
                     name="newCategoryId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nueva Categoría</FormLabel>
+                        <FormLabel>{t('newCategory')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar categoría" />
+                              <SelectValue placeholder={t('selectCategory')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -596,17 +602,17 @@ export function BulkOperations({
                     name="newStatus"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nuevo Estado</FormLabel>
+                        <FormLabel>{t('newStatus')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar estado" />
+                              <SelectValue placeholder={t('selectStatus')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="active">Activo</SelectItem>
-                            <SelectItem value="inactive">Inactivo</SelectItem>
-                            <SelectItem value="discontinued">Descontinuado</SelectItem>
+                            <SelectItem value="active">{t('active')}</SelectItem>
+                            <SelectItem value="inactive">{t('inactive')}</SelectItem>
+                            <SelectItem value="discontinued">{t('discontinued')}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -622,11 +628,11 @@ export function BulkOperations({
                     name="newLocationId"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Nueva Ubicación</FormLabel>
+                        <FormLabel>{t('newLocation')}</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="Seleccionar ubicación" />
+                              <SelectValue placeholder={t('selectLocation')} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
@@ -651,10 +657,10 @@ export function BulkOperations({
                   name="reason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Razón de la Operación *</FormLabel>
+                      <FormLabel>{t('operationReason')} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Ej: Actualización de precios por inflación, Reorganización de inventario..."
+                          placeholder={t('operationReasonPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -668,10 +674,10 @@ export function BulkOperations({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notas Adicionales (opcional)</FormLabel>
+                      <FormLabel>{t('additionalNotes')}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Información adicional sobre la operación..."
+                          placeholder={t('additionalNotesPlaceholder')}
                           className="resize-none"
                           rows={3}
                           {...field}
@@ -695,10 +701,10 @@ export function BulkOperations({
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel>
-                          Requiere Aprobación
+                          {t('requiresApproval')}
                         </FormLabel>
                         <FormDescription>
-                          La operación requerirá aprobación antes de ejecutarse
+                          {t('requiresApprovalDescription')}
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -715,11 +721,10 @@ export function BulkOperations({
                 <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                   <div className="flex items-center gap-2 text-red-800 mb-2">
                     <AlertTriangle className="h-4 w-4" />
-                    <span className="font-medium">Advertencia: Eliminación Permanente</span>
+                    <span className="font-medium">{t('permanentDeleteWarning')}</span>
                   </div>
                   <p className="text-sm text-red-700">
-                    Esta acción eliminará permanentemente {selectedItems.length} elementos del inventario. 
-                    Esta operación no se puede deshacer.
+                    {t('permanentDeleteMessage', { count: selectedItems.length })}
                   </p>
                 </div>
 
@@ -728,10 +733,10 @@ export function BulkOperations({
                   name="reason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Razón de la Eliminación *</FormLabel>
+                      <FormLabel>{t('deleteReason')} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Ej: Productos obsoletos, Elementos duplicados, Limpieza de inventario..."
+                          placeholder={t('deleteReasonPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -745,10 +750,10 @@ export function BulkOperations({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notas Adicionales (opcional)</FormLabel>
+                      <FormLabel>{t('additionalNotes')}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Información adicional sobre la eliminación..."
+                          placeholder={t('deleteNotesPlaceholder')}
                           className="resize-none"
                           rows={3}
                           {...field}
@@ -772,10 +777,10 @@ export function BulkOperations({
                       </FormControl>
                       <div className="space-y-1 leading-none">
                         <FormLabel className="text-red-700">
-                          Confirmo que deseo eliminar permanentemente estos elementos
+                          {t('confirmDelete')}
                         </FormLabel>
                         <FormDescription>
-                          Esta acción no se puede deshacer
+                          {t('cannotBeUndone')}
                         </FormDescription>
                       </div>
                     </FormItem>
@@ -792,11 +797,10 @@ export function BulkOperations({
                 <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                   <div className="flex items-center gap-2 text-blue-800 mb-2">
                     <Archive className="h-4 w-4" />
-                    <span className="font-medium">Archivar Elementos</span>
+                    <span className="font-medium">{t('archiveElements')}</span>
                   </div>
                   <p className="text-sm text-blue-700">
-                    Los elementos archivados se mantendrán en el sistema pero no aparecerán en las listas activas. 
-                    Pueden ser restaurados posteriormente.
+                    {t('archiveMessage')}
                   </p>
                 </div>
 
@@ -805,10 +809,10 @@ export function BulkOperations({
                   name="reason"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Razón del Archivado *</FormLabel>
+                      <FormLabel>{t('archiveReason')} *</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Ej: Productos fuera de temporada, Elementos inactivos, Reorganización..."
+                          placeholder={t('archiveReasonPlaceholder')}
                           {...field}
                         />
                       </FormControl>
@@ -822,10 +826,10 @@ export function BulkOperations({
                   name="notes"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Notas Adicionales (opcional)</FormLabel>
+                      <FormLabel>{t('additionalNotes')}</FormLabel>
                       <FormControl>
                         <Textarea
-                          placeholder="Información adicional sobre el archivado..."
+                          placeholder={t('archiveNotesPlaceholder')}
                           className="resize-none"
                           rows={3}
                           {...field}
@@ -847,7 +851,7 @@ export function BulkOperations({
             onClick={onClose}
             disabled={isProcessing}
           >
-            Cancelar
+            {tCommon('cancel')}
           </Button>
           {operationType === 'update' && operationStatus === 'idle' && (
             <Button
@@ -857,7 +861,7 @@ export function BulkOperations({
               className="bg-blue-600 hover:bg-blue-700"
             >
               <Settings className="h-4 w-4 mr-2" />
-              Actualizar Elementos
+              {t('updateElements')}
             </Button>
           )}
           {operationType === 'archive' && operationStatus === 'idle' && (
@@ -868,7 +872,7 @@ export function BulkOperations({
               className="bg-orange-600 hover:bg-orange-700"
             >
               <Archive className="h-4 w-4 mr-2" />
-              Archivar Elementos
+              {t('archiveElements')}
             </Button>
           )}
           {operationType === 'delete' && operationStatus === 'idle' && (
@@ -879,7 +883,7 @@ export function BulkOperations({
               variant="destructive"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar Elementos
+              {t('deleteElements')}
             </Button>
           )}
         </DialogFooter>

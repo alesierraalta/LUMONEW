@@ -1,0 +1,12 @@
+// Dashboard Components Barrel Export
+export { AlertsPanel } from './alerts-panel'
+export { Dashboard } from './dashboard'
+export { FinancialKPIs } from './financial-kpis'
+export { InventoryChart } from './inventory-chart'
+export { InventoryTurnoverChart } from './inventory-turnover-chart'
+export { LocationPerformance } from './location-performance'
+export { MetricsCards } from './metrics-cards'
+export { QuickActions } from './quick-actions'
+export { default as RecentActivities } from './recent-activities'
+export { RecentActivity } from './recent-activity'
+export { SalesVelocityMetrics } from './sales-velocity-metrics'

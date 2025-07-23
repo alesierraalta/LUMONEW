@@ -4,6 +4,7 @@ import { Search, SortAsc, SortDesc } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useTranslations } from 'next-intl'
 
 interface CategoriesFiltersProps {
   searchTerm: string
@@ -22,6 +23,7 @@ export function CategoriesFilters({
   sortOrder,
   onSortOrderChange
 }: CategoriesFiltersProps) {
+  const t = useTranslations('categories')
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">

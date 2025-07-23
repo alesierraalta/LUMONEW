@@ -3,28 +3,71 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TrendingUp, Package, AlertCircle } from 'lucide-react'
-
-// Mock data for inventory turnover analysis
-const turnoverData = [
-  { category: 'Electronics', turnover: 8.5, revenue: 45000, items: 120 },
-  { category: 'Clothing', turnover: 6.2, revenue: 32000, items: 85 },
-  { category: 'Home & Garden', turnover: 4.8, revenue: 28000, items: 95 },
-  { category: 'Sports', turnover: 7.1, revenue: 22000, items: 65 },
-  { category: 'Books', turnover: 3.2, revenue: 15000, items: 150 },
-  { category: 'Automotive', turnover: 5.5, revenue: 38000, items: 45 }
-]
-
-// ABC Analysis data
-const abcAnalysisData = [
-  { name: 'A Items (High Value)', value: 20, count: 249, revenue: 80, color: '#22c55e' },
-  { name: 'B Items (Medium Value)', value: 30, count: 374, revenue: 15, color: '#f59e0b' },
-  { name: 'C Items (Low Value)', value: 50, count: 624, revenue: 5, color: '#ef4444' }
-]
+import { analyticsService } from '@/lib/database'
+import { useEffect, useState } from 'react'
 
 const COLORS = ['#22c55e', '#f59e0b', '#ef4444']
 
 export function InventoryTurnoverChart() {
-  const avgTurnover = turnoverData.reduce((sum, item) => sum + item.turnover, 0) / turnoverData.length
+  const [turnoverData, setTurnoverData] = useState<any[]>([])
+  const [abcAnalysisData, setAbcAnalysisData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const [turnoverResults, abcResults] = await Promise.all([
+          analyticsService.getInventoryTurnoverByCategory(),
+          analyticsService.getABCAnalysis()
+        ])
+        
+        setTurnoverData(turnoverResults)
+        setAbcAnalysisData(abcResults)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch turnover data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        {[...Array(2)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card className="col-span-full border-red-200 bg-red-50/50">
+          <CardContent className="pt-6">
+            <p className="text-red-600">Error loading turnover data: {error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const avgTurnover = turnoverData.length > 0
+    ? turnoverData.reduce((sum, item) => sum + item.turnover, 0) / turnoverData.length
+    : 0
 
   return (
     <div className="grid gap-4 md:grid-cols-2">

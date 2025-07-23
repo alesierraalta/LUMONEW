@@ -8,6 +8,7 @@ import { LoadingButton } from '@/components/ui/loading'
 import { useToast } from '@/components/ui/toast'
 import { useModal } from '@/components/ui/modal'
 import { User, Mail, Phone, MapPin, Briefcase, Calendar, Save, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export interface UserData {
   id?: string
@@ -50,6 +51,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
   const { addToast } = useToast()
   const { closeModal } = useModal()
+  const t = useTranslations('users.form')
+  const tUsers = useTranslations('users')
 
   const isEditing = Boolean(user?.id)
   const isFormValid = Object.values(validationState).every(Boolean) && 
@@ -81,8 +84,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
     if (!isFormValid) {
       addToast({
         type: 'error',
-        title: 'Formulario incompleto',
-        description: 'Por favor completa todos los campos requeridos'
+        title: t('incompleteForm'),
+        description: t('completeRequiredFields')
       })
       return
     }
@@ -92,16 +95,18 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
       
       addToast({
         type: 'success',
-        title: isEditing ? 'Usuario actualizado' : 'Usuario creado',
-        description: `${formData.firstName} ${formData.lastName} ha sido ${isEditing ? 'actualizado' : 'creado'} exitosamente`
+        title: isEditing ? t('userUpdated') : t('userCreated'),
+        description: t(isEditing ? 'userUpdatedSuccess' : 'userCreatedSuccess', {
+          name: `${formData.firstName} ${formData.lastName}`
+        })
       })
       
       closeModal()
     } catch (error) {
       addToast({
         type: 'error',
-        title: 'Error al guardar',
-        description: 'Ocurrió un error al guardar el usuario. Inténtalo de nuevo.'
+        title: t('saveError'),
+        description: t('saveErrorDescription')
       })
     }
   }, [formData, isFormValid, isEditing, onSubmit, addToast, closeModal])
@@ -117,7 +122,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     custom: (value: string) => {
       if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Ingresa un email válido'
+        return t('validEmail')
       }
       return null
     }
@@ -129,7 +134,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
     pattern: /^[\+]?[1-9][\d]{0,15}$/,
     custom: (value: string) => {
       if (value && !/^[\+]?[1-9][\d]{0,15}$/.test(value)) {
-        return 'Ingresa un teléfono válido'
+        return t('validPhone')
       }
       return null
     }
@@ -145,10 +150,10 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
+              {isEditing ? t('editUser') : t('newUser')}
             </h2>
             <p className="text-sm text-gray-500">
-              {isEditing ? 'Actualiza la información del usuario' : 'Completa los datos del nuevo usuario'}
+              {isEditing ? t('updateUserInfo') : t('completeUserData')}
             </p>
           </div>
         </div>
@@ -165,7 +170,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
                 className="w-32 h-32"
               />
               <p className="text-xs text-gray-500 text-center mt-2">
-                Imagen de perfil (opcional)
+                {t('profileImageOptional')}
               </p>
             </div>
           </div>
@@ -174,12 +179,12 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
               <User className="h-5 w-5 text-gray-600" />
-              Información Personal
+              {t('personalInformation')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FloatingInput
-                label="Nombre *"
+                label={t('firstNameRequired')}
                 value={formData.firstName}
                 onChange={handleInputChange('firstName')}
                 onValidation={handleValidation('firstName')}
@@ -188,7 +193,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               />
               
               <FloatingInput
-                label="Apellido *"
+                label={t('lastNameRequired')}
                 value={formData.lastName}
                 onChange={handleInputChange('lastName')}
                 onValidation={handleValidation('lastName')}
@@ -198,7 +203,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             </div>
 
             <FloatingInput
-              label="Email *"
+              label={t('emailRequired')}
               type="email"
               value={formData.email}
               onChange={handleInputChange('email')}
@@ -208,7 +213,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             />
 
             <FloatingInput
-              label="Teléfono *"
+              label={t('phoneRequired')}
               type="tel"
               value={formData.phone}
               onChange={handleInputChange('phone')}
@@ -222,12 +227,12 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
               <Briefcase className="h-5 w-5 text-gray-600" />
-              Información Profesional
+              {t('professionalInformation')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FloatingInput
-                label="Cargo *"
+                label={t('positionRequired')}
                 value={formData.position}
                 onChange={handleInputChange('position')}
                 onValidation={handleValidation('position')}
@@ -236,7 +241,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               />
               
               <FloatingInput
-                label="Departamento *"
+                label={t('departmentRequired')}
                 value={formData.department}
                 onChange={handleInputChange('department')}
                 onValidation={handleValidation('department')}
@@ -246,7 +251,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             </div>
 
             <FloatingInput
-              label="Ubicación *"
+              label={t('locationRequired')}
               value={formData.location}
               onChange={handleInputChange('location')}
               onValidation={handleValidation('location')}
@@ -255,7 +260,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             />
 
             <FloatingInput
-              label="Fecha de Inicio *"
+              label={t('startDateRequired')}
               type="date"
               value={formData.startDate}
               onChange={handleInputChange('startDate')}
@@ -266,7 +271,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Estado *
+                {t('statusRequired')}
               </label>
               <select
                 value={formData.status}
@@ -274,9 +279,9 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
                 disabled={isLoading}
               >
-                <option value="active">Activo</option>
-                <option value="inactive">Inactivo</option>
-                <option value="pending">Pendiente</option>
+                <option value="active">{tUsers('active')}</option>
+                <option value="inactive">{tUsers('inactive')}</option>
+                <option value="pending">{tUsers('pending')}</option>
               </select>
             </div>
           </div>
@@ -284,15 +289,15 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           {/* Additional Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900">
-              Información Adicional
+              {t('additionalInformation')}
             </h3>
             
             <FloatingTextarea
-              label="Biografía"
+              label={t('biography')}
               value={formData.bio}
               onChange={handleInputChange('bio')}
               validation={{ maxLength: 500 }}
-              helperText="Máximo 500 caracteres"
+              helperText={t('maxCharacters')}
               rows={4}
               disabled={isLoading}
             />
@@ -303,12 +308,12 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             <LoadingButton
               type="submit"
               isLoading={isLoading}
-              loadingText={isEditing ? 'Actualizando...' : 'Creando...'}
+              loadingText={isEditing ? t('updating') : t('creating')}
               disabled={!isFormValid}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
+              {isEditing ? t('updateUser') : t('createUser')}
             </LoadingButton>
             
             <button
@@ -318,7 +323,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4 mr-2 inline" />
-              Cancelar
+              {t('cancel')}
             </button>
           </div>
         </form>

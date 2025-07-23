@@ -7,6 +7,7 @@ import { LoadingOverlay, Skeleton } from '@/components/ui/loading'
 import { useToast } from '@/components/ui/toast'
 import { useModal, ConfirmationModal } from '@/components/ui/modal'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 export interface RoleData {
   id?: string
@@ -48,12 +49,12 @@ const initialFilters: FilterState = {
   isSystem: 'all'
 }
 
-export function RoleGrid({ 
-  roles, 
-  isLoading = false, 
-  onRoleEdit, 
-  onRoleDelete, 
-  onRoleView, 
+export function RoleGrid({
+  roles,
+  isLoading = false,
+  onRoleEdit,
+  onRoleDelete,
+  onRoleView,
   onRoleCreate,
   availablePermissions
 }: RoleGridProps) {
@@ -61,6 +62,8 @@ export function RoleGrid({
   const [showFilters, setShowFilters] = useState(false)
   const { addToast } = useToast()
   const { openModal } = useModal()
+  const t = useTranslations('roles')
+  const tCommon = useTranslations('common')
 
   // Get unique colors for filter options
   const availableColors = useMemo(() => {
@@ -96,8 +99,8 @@ export function RoleGrid({
     if (role.isSystem) {
       addToast({
         type: 'error',
-        title: 'No se puede eliminar',
-        description: 'Los roles del sistema no pueden ser eliminados'
+        title: t('cannotDelete'),
+        description: t('systemRolesCannotBeDeleted')
       })
       return
     }
@@ -105,8 +108,8 @@ export function RoleGrid({
     if (role.userCount && role.userCount > 0) {
       addToast({
         type: 'error',
-        title: 'No se puede eliminar',
-        description: `Este rol está asignado a ${role.userCount} usuario(s). Reasigna los usuarios antes de eliminar el rol.`
+        title: t('cannotDelete'),
+        description: t('roleInUse', { count: role.userCount })
       })
       return
     }
@@ -114,21 +117,21 @@ export function RoleGrid({
     openModal(
       <ConfirmationModal
         type="danger"
-        title="Eliminar Rol"
-        message={`¿Estás seguro de que deseas eliminar el rol "${role.name}"? Esta acción no se puede deshacer.`}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        title={t('deleteRole')}
+        message={t('deleteConfirmation', { name: role.name })}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
         onConfirm={() => {
           onRoleDelete(role.id!)
           addToast({
             type: 'success',
-            title: 'Rol eliminado',
-            description: `El rol "${role.name}" ha sido eliminado exitosamente`
+            title: t('roleDeleted'),
+            description: t('roleDeletedSuccess', { name: role.name })
           })
         }}
       />
     )
-  }, [openModal, onRoleDelete, addToast])
+  }, [openModal, onRoleDelete, addToast, t, tCommon])
 
   const getRoleColor = (color: string) => {
     const colors = {
@@ -143,15 +146,7 @@ export function RoleGrid({
   }
 
   const getColorName = (color: string) => {
-    const names = {
-      red: 'Rojo',
-      blue: 'Azul',
-      green: 'Verde',
-      yellow: 'Amarillo',
-      gray: 'Gris',
-      purple: 'Morado'
-    }
-    return names[color as keyof typeof names] || color
+    return t(`colors.${color}`) || color
   }
 
   const RoleCard = ({ role }: { role: RoleData }) => {
@@ -171,7 +166,7 @@ export function RoleGrid({
                 <h3 className="font-semibold text-gray-900 truncate">{role.name}</h3>
                 {role.isSystem && (
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
-                    Sistema
+                    {t('systemRole')}
                   </span>
                 )}
               </div>
@@ -197,7 +192,7 @@ export function RoleGrid({
                   className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
                 >
                   <Eye className="h-4 w-4" />
-                  Ver detalles
+                  {t('viewDetails')}
                 </button>
                 <button
                   onClick={() => {
@@ -208,7 +203,7 @@ export function RoleGrid({
                   disabled={role.isSystem}
                 >
                   <Edit className="h-4 w-4" />
-                  Editar
+                  {t('edit')}
                 </button>
                 <button
                   onClick={() => {
@@ -219,7 +214,7 @@ export function RoleGrid({
                   disabled={role.isSystem}
                 >
                   <Trash2 className="h-4 w-4" />
-                  Eliminar
+                  {t('delete')}
                 </button>
               </div>
             )}
@@ -229,14 +224,14 @@ export function RoleGrid({
         {/* Role Stats */}
         <div className="space-y-3 mb-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Usuarios asignados:</span>
+            <span className="text-gray-600">{t('assignedUsers')}</span>
             <span className="font-medium text-gray-900 flex items-center gap-1">
               <Users className="h-4 w-4" />
               {role.userCount || 0}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600">Permisos:</span>
+            <span className="text-gray-600">{t('permissions')}</span>
             <span className="font-medium text-gray-900">{role.permissions.length}</span>
           </div>
         </div>
@@ -248,7 +243,7 @@ export function RoleGrid({
           </span>
           {role.createdAt && (
             <span className="text-xs text-gray-500">
-              Creado {new Date(role.createdAt).toLocaleDateString()}
+              {t('created')} {new Date(role.createdAt).toLocaleDateString()}
             </span>
           )}
         </div>
@@ -297,9 +292,9 @@ export function RoleGrid({
             <Shield className="h-6 w-6 text-purple-600" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestión de Roles</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
             <p className="text-sm text-gray-600">
-              {filteredRoles.length} de {roles.length} roles
+              {t('rolesCount', { filtered: filteredRoles.length, total: roles.length })}
             </p>
           </div>
         </div>
@@ -310,14 +305,14 @@ export function RoleGrid({
             className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
           >
             <Users className="h-4 w-4" />
-            Ver Usuarios
+            {t('viewUsers')}
           </button>
           <button
             onClick={onRoleCreate}
             className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >
             <Plus className="h-4 w-4" />
-            Nuevo Rol
+            {t('newRole')}
           </button>
         </div>
       </div>
@@ -330,7 +325,7 @@ export function RoleGrid({
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Buscar roles..."
+              placeholder={t('searchPlaceholder')}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500 transition-colors"
@@ -348,7 +343,7 @@ export function RoleGrid({
             )}
           >
             <Filter className="h-4 w-4" />
-            Filtros
+            {t('filters')}
           </button>
         </div>
 
@@ -358,29 +353,29 @@ export function RoleGrid({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Tipo
+                  {t('type')}
                 </label>
                 <select
                   value={filters.isSystem}
                   onChange={(e) => handleFilterChange('isSystem', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                 >
-                  <option value="all">Todos</option>
-                  <option value="system">Sistema</option>
-                  <option value="custom">Personalizados</option>
+                  <option value="all">{t('all')}</option>
+                  <option value="system">{t('system')}</option>
+                  <option value="custom">{t('custom')}</option>
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Color
+                  {t('color')}
                 </label>
                 <select
                   value={filters.color}
                   onChange={(e) => handleFilterChange('color', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-200 focus:border-purple-500"
                 >
-                  <option value="">Todos</option>
+                  <option value="">{t('all')}</option>
                   {availableColors.map(color => (
                     <option key={color} value={color}>{getColorName(color)}</option>
                   ))}
@@ -393,7 +388,7 @@ export function RoleGrid({
                 onClick={handleClearFilters}
                 className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
               >
-                Limpiar filtros
+                {t('clearFilters')}
               </button>
             </div>
           </div>
@@ -406,12 +401,12 @@ export function RoleGrid({
           <div className="text-center py-12">
             <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No se encontraron roles
+              {t('noRolesFound')}
             </h3>
             <p className="text-gray-600 mb-4">
-              {roles.length === 0 
-                ? 'Comienza creando tu primer rol personalizado'
-                : 'Intenta ajustar los filtros de búsqueda'
+              {roles.length === 0
+                ? t('createFirstRole')
+                : t('adjustFilters')
               }
             </p>
             {roles.length === 0 && (
@@ -420,7 +415,7 @@ export function RoleGrid({
                 className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 <Plus className="h-4 w-4" />
-                Crear Rol
+                {t('createRole')}
               </button>
             )}
           </div>

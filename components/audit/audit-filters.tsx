@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select'
 import { FilterOptions } from '@/lib/types'
 import { Search, Filter, X } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 interface AuditFiltersProps {
   filters: FilterOptions
@@ -21,6 +22,7 @@ interface AuditFiltersProps {
 
 export function AuditFilters({ filters, onFiltersChange }: AuditFiltersProps) {
   const [localFilters, setLocalFilters] = useState<FilterOptions>(filters)
+  const t = useTranslations('audit.filters')
 
   const handleFilterChange = (key: keyof FilterOptions, value: any) => {
     const newFilters = { ...localFilters, [key]: value }

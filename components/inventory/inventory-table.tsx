@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -57,6 +58,7 @@ interface InventoryTableProps {
 
 export function InventoryTable({ filters }: InventoryTableProps) {
   const router = useRouter()
+  const t = useTranslations('inventory')
   const [searchTerm, setSearchTerm] = useState('')
   const [sortField, setSortField] = useState<keyof InventoryItem>('name')
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
@@ -144,12 +146,12 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     const status = getInventoryStockStatus(item.quantity, item.min_stock)
     
     if (status === 'out_of_stock') {
-      return <Badge variant="destructive">Out of Stock</Badge>
+      return <Badge variant="destructive">{t('stockStatus.outOfStock')}</Badge>
     }
     if (status === 'low_stock') {
-      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">Low Stock</Badge>
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">{t('stockStatus.lowStock')}</Badge>
     }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800">In Stock</Badge>
+    return <Badge variant="secondary" className="bg-green-100 text-green-800">{t('stockStatus.inStock')}</Badge>
   }
 
   const handleEdit = async (item: InventoryItem) => {
@@ -180,14 +182,14 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       const data = await auditedInventoryService.getAll()
       setItems(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch inventory')
+      setError(err instanceof Error ? err.message : t('errorLoadingInventory'))
     } finally {
       setLoading(false)
     }
   }
 
   const handleDelete = async (item: InventoryItem) => {
-    if (confirm(`Are you sure you want to delete ${item.name}?`)) {
+    if (confirm(t('confirmDelete', { name: item.name }))) {
       try {
         await auditedInventoryService.delete(item.id)
         setItems(prev => prev.filter(i => i.id !== item.id))
@@ -227,7 +229,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   if (error) {
     return (
       <div className="text-center py-6">
-        <p className="text-red-600">Error loading inventory: {error}</p>
+        <p className="text-red-600">{t('errorLoadingInventory')}: {error}</p>
       </div>
     )
   }
@@ -239,7 +241,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search items..."
+            placeholder={t('searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-8"
@@ -247,7 +249,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
         </div>
         {selectedItems.length > 0 && (
           <Button className="bg-blue-600 hover:bg-blue-700">
-            Bulk Operations ({selectedItems.length})
+            {t('bulkOperations', { count: selectedItems.length })}
           </Button>
         )}
       </div>
@@ -272,7 +274,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     className="h-8 data-[state=open]:bg-accent"
                     onClick={() => handleSort('sku')}
                   >
-                    SKU
+                    {t('table.headers.sku')}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </th>
@@ -283,15 +285,15 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     className="h-8 data-[state=open]:bg-accent"
                     onClick={() => handleSort('name')}
                   >
-                    Name
+                    {t('table.headers.name')}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  Category
+                  {t('table.headers.category')}
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  Location
+                  {t('table.headers.location')}
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   <Button
@@ -300,7 +302,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     className="h-8 data-[state=open]:bg-accent"
                     onClick={() => handleSort('unit_price')}
                   >
-                    Price
+                    {t('table.headers.price')}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </th>
@@ -311,18 +313,18 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     className="h-8 data-[state=open]:bg-accent"
                     onClick={() => handleSort('quantity')}
                   >
-                    Stock
+                    {t('table.headers.stock')}
                     <ArrowUpDown className="ml-2 h-4 w-4" />
                   </Button>
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  Status
+                  {t('table.headers.status')}
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  Last Updated
+                  {t('table.headers.lastUpdated')}
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  Actions
+                  {t('table.headers.actions')}
                 </th>
               </tr>
             </thead>
@@ -344,15 +346,15 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   </td>
                   <td className="p-4 align-middle">
                     <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
+                      <div
+                        className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: item.categories?.color || '#gray' }}
                       />
-                      <span className="text-sm">{item.categories?.name || 'Unknown'}</span>
+                      <span className="text-sm">{item.categories?.name || t('unknown')}</span>
                     </div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="text-sm">{item.locations?.name || 'Unknown'}</div>
+                    <div className="text-sm">{item.locations?.name || t('unknown')}</div>
                     <div className="text-xs text-muted-foreground">{item.locations?.type}</div>
                   </td>
                   <td className="p-4 align-middle">
@@ -361,7 +363,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   <td className="p-4 align-middle">
                     <div className="font-medium">{item.quantity}</div>
                     <div className="text-sm text-muted-foreground">
-                      Min: {item.min_stock}
+                      {t('minStock')}: {item.min_stock}
                     </div>
                   </td>
                   <td className="p-4 align-middle">
@@ -375,7 +377,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Agregar stock"
+                        title={t('actions.addStock')}
                         onClick={() => handleQuickStock(item)}
                         className="text-green-600 hover:text-green-700"
                       >
@@ -384,7 +386,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Restar stock"
+                        title={t('actions.subtractStock')}
                         onClick={() => handleQuickStockSubtract(item)}
                         className="text-orange-600 hover:text-orange-700"
                       >
@@ -393,7 +395,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Edit"
+                        title={t('actions.edit')}
                         onClick={() => handleEdit(item)}
                       >
                         <Edit className="h-4 w-4" />
@@ -401,7 +403,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        title="Delete"
+                        title={t('actions.delete')}
                         onClick={() => handleDelete(item)}
                         className="text-red-600 hover:text-red-700"
                       >
@@ -418,7 +420,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
 
       {sortedItems.length === 0 && !loading && (
         <div className="text-center py-6">
-          <p className="text-muted-foreground">No items found matching your criteria.</p>
+          <p className="text-muted-foreground">{t('noItemsFound')}</p>
         </div>
       )}
 

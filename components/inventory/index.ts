@@ -1,0 +1,10 @@
+// Inventory Components Barrel Export
+export { BulkCreateModal } from './bulk-create-modal'
+export { BulkOperations } from './bulk-operations'
+export { InventoryFilters } from './inventory-filters'
+export { InventoryTable } from './inventory-table'
+export { QuickStockModal } from './quick-stock-modal'
+export { QuickStockOperations } from './quick-stock-operations'
+export { StockWarnings } from './stock-warnings'
+export { TransactionBuilder } from './transaction-builder'
+export { TransactionHistory } from './transaction-history'

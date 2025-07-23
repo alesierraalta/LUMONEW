@@ -32,10 +32,17 @@ export function ModalProvider({ children }: { children: React.ReactNode }) {
 
   const closeModal = useCallback(() => {
     setIsOpen(false)
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setContent(null)
       setOptions({})
     }, 300)
+    
+    // Store timeout ID for cleanup in tests
+    if (typeof window !== 'undefined') {
+      ;(window as any).__modalTimeoutId = timeoutId
+    }
+    
+    return timeoutId
   }, [])
 
   return (

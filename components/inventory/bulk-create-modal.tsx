@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/toast'
 import { Plus, Trash2, Zap, Save, X } from 'lucide-react'
 import { auditedInventoryService, auditedCategoryService, auditedLocationService } from '@/lib/database-with-audit'
+import { useTranslations } from 'next-intl'
 
 interface BulkItem {
   id: string
@@ -34,6 +35,8 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
   const [categories, setCategories] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
   const { addToast } = useToast()
+  const t = useTranslations('inventory.bulkCreate')
+  const tCommon = useTranslations('common')
 
   // Load categories and locations
   const loadData = useCallback(async () => {
@@ -78,12 +81,12 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
       const errors: BulkItem['errors'] = {}
       
       if (!item.sku.trim()) {
-        errors.sku = 'SKU es requerido'
+        errors.sku = t('skuRequired')
         hasErrors = true
       }
       
       if (!item.name.trim()) {
-        errors.name = 'Nombre es requerido'
+        errors.name = t('nameRequired')
         hasErrors = true
       }
       

@@ -4,43 +4,76 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts'
 import { TrendingUp, DollarSign, Zap, Target } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-
-// Mock data for sales velocity
-const salesVelocityData = [
-  { week: 'W1', velocity: 45, avgOrderValue: 125, conversionRate: 3.2, profit: 28 },
-  { week: 'W2', velocity: 52, avgOrderValue: 138, conversionRate: 3.8, profit: 32 },
-  { week: 'W3', velocity: 48, avgOrderValue: 142, conversionRate: 3.5, profit: 35 },
-  { week: 'W4', velocity: 61, avgOrderValue: 156, conversionRate: 4.1, profit: 38 },
-  { week: 'W5', velocity: 58, avgOrderValue: 149, conversionRate: 3.9, profit: 36 },
-  { week: 'W6', velocity: 67, avgOrderValue: 162, conversionRate: 4.3, profit: 42 },
-  { week: 'W7', velocity: 72, avgOrderValue: 168, conversionRate: 4.6, profit: 45 },
-  { week: 'W8', velocity: 69, avgOrderValue: 171, conversionRate: 4.4, profit: 47 }
-]
-
-// Top performing products by velocity
-const topProducts = [
-  { name: 'Wireless Headphones', velocity: 85, profit: 45, trend: 'up' },
-  { name: 'Smart Watch', velocity: 78, profit: 52, trend: 'up' },
-  { name: 'Laptop Stand', velocity: 72, profit: 38, trend: 'stable' },
-  { name: 'USB-C Hub', velocity: 68, profit: 42, trend: 'up' },
-  { name: 'Bluetooth Speaker', velocity: 65, profit: 35, trend: 'down' }
-]
-
-// Profit margin by category
-const profitMarginData = [
-  { category: 'Electronics', margin: 25.5, revenue: 45000, cost: 33525 },
-  { category: 'Accessories', margin: 42.8, revenue: 28000, cost: 16016 },
-  { category: 'Software', margin: 68.2, revenue: 22000, cost: 6996 },
-  { category: 'Hardware', margin: 18.3, revenue: 38000, cost: 31054 },
-  { category: 'Services', margin: 75.0, revenue: 15000, cost: 3750 }
-]
+import { analyticsService } from '@/lib/database'
+import { useEffect, useState } from 'react'
 
 export function SalesVelocityMetrics() {
-  const currentVelocity = salesVelocityData[salesVelocityData.length - 1].velocity
-  const previousVelocity = salesVelocityData[salesVelocityData.length - 2].velocity
-  const velocityChange = ((currentVelocity - previousVelocity) / previousVelocity * 100).toFixed(1)
+  const [salesVelocityData, setSalesVelocityData] = useState<any[]>([])
+  const [topProducts, setTopProducts] = useState<any[]>([])
+  const [profitMarginData, setProfitMarginData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true)
+        const [velocityResults, topProductsResults, profitMarginResults] = await Promise.all([
+          analyticsService.getSalesVelocityData(),
+          analyticsService.getTopPerformingProducts(),
+          analyticsService.getProfitMarginByCategory()
+        ])
+        
+        setSalesVelocityData(velocityResults)
+        setTopProducts(topProductsResults)
+        setProfitMarginData(profitMarginResults)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch sales velocity data')
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="col-span-full border-red-200 bg-red-50/50">
+          <CardContent className="pt-6">
+            <p className="text-red-600">Error loading sales velocity data: {error}</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const currentVelocity = salesVelocityData.length > 0 ? salesVelocityData[salesVelocityData.length - 1]?.velocity || 0 : 0
+  const previousVelocity = salesVelocityData.length > 1 ? salesVelocityData[salesVelocityData.length - 2]?.velocity || 0 : 0
+  const velocityChange = previousVelocity > 0 ? ((currentVelocity - previousVelocity) / previousVelocity * 100).toFixed(1) : '0'
   
-  const avgProfitMargin = profitMarginData.reduce((sum, item) => sum + item.margin, 0) / profitMarginData.length
+  const avgProfitMargin = profitMarginData.length > 0
+    ? profitMarginData.reduce((sum, item) => sum + item.margin, 0) / profitMarginData.length
+    : 0
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -66,13 +99,13 @@ export function SalesVelocityMetrics() {
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-600">
-                ${salesVelocityData[salesVelocityData.length - 1].avgOrderValue}
+                ${salesVelocityData.length > 0 ? salesVelocityData[salesVelocityData.length - 1]?.avgOrderValue || 0 : 0}
               </div>
               <div className="text-sm text-muted-foreground">Avg Order Value</div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {salesVelocityData[salesVelocityData.length - 1].conversionRate}%
+                {salesVelocityData.length > 0 ? salesVelocityData[salesVelocityData.length - 1]?.conversionRate || 0 : 0}%
               </div>
               <div className="text-sm text-muted-foreground">Conversion Rate</div>
             </div>

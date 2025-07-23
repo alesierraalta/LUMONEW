@@ -4,6 +4,7 @@ import { Search, SortAsc, SortDesc } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { useTranslations } from 'next-intl'
 
 interface UsersFiltersProps {
   searchTerm: string
@@ -30,6 +31,8 @@ export function UsersFilters({
   sortOrder,
   onSortOrderChange
 }: UsersFiltersProps) {
+  const t = useTranslations('users')
+  const tCommon = useTranslations('common')
   return (
     <Card className="mb-6">
       <CardContent className="pt-6">
@@ -38,7 +41,7 @@ export function UsersFilters({
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
-              placeholder="Search users..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
               className="pl-10"
@@ -51,10 +54,10 @@ export function UsersFilters({
             onChange={(e) => onRoleFilterChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Roles</option>
-            <option value="admin">Admin</option>
-            <option value="manager">Manager</option>
-            <option value="employee">Employee</option>
+            <option value="all">{t('filters.allRoles')}</option>
+            <option value="admin">{t('admin')}</option>
+            <option value="manager">{t('manager')}</option>
+            <option value="employee">{t('employee')}</option>
           </select>
 
           {/* Status Filter */}
@@ -63,9 +66,9 @@ export function UsersFilters({
             onChange={(e) => onStatusFilterChange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="all">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
+            <option value="all">{t('filters.allStatus')}</option>
+            <option value="active">{t('active')}</option>
+            <option value="inactive">{t('inactive')}</option>
           </select>
 
           {/* Sort Controls */}
@@ -75,10 +78,10 @@ export function UsersFilters({
               onChange={(e) => onSortByChange(e.target.value as 'name' | 'email' | 'role' | 'lastLogin')}
               className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="name">Sort by Name</option>
-              <option value="email">Sort by Email</option>
-              <option value="role">Sort by Role</option>
-              <option value="lastLogin">Sort by Last Login</option>
+              <option value="name">{t('filters.sortByName')}</option>
+              <option value="email">{t('filters.sortByEmail')}</option>
+              <option value="role">{t('filters.sortByRole')}</option>
+              <option value="lastLogin">{t('filters.sortByLastLogin')}</option>
             </select>
 
             <Button

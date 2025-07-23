@@ -1,65 +1,60 @@
 {
   "pages": {
-    "/categories/page": [
+    "/[locale]/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/categories/page.js"
+      "static/chunks/app/[locale]/page.js"
+    ],
+    "/[locale]/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/layout.js"
     ],
     "/layout": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
       "static/css/app/layout.css",
       "static/chunks/app/layout.js"
     ],
-    "/locations/page": [
+    "/loading": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/locations/page.js"
+      "static/chunks/app/loading.js"
     ],
-    "/users/page": [
+    "/[locale]/loading": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/users/page.js"
+      "static/chunks/app/[locale]/loading.js"
     ],
-    "/inventory/page": [
+    "/[locale]/inventory/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/inventory/page.js"
+      "static/chunks/app/[locale]/inventory/page.js"
     ],
-    "/auth/login/page": [
+    "/[locale]/categories/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/auth/login/page.js"
+      "static/chunks/app/[locale]/categories/page.js"
     ],
-    "/settings/page": [
+    "/[locale]/locations/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/settings/page.js"
+      "static/chunks/app/[locale]/locations/page.js"
     ],
-    "/dashboard/page": [
+    "/[locale]/settings/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/page.js"
+      "static/chunks/app/[locale]/settings/page.js"
     ],
-    "/dashboard/layout": [
+    "/[locale]/roles/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/dashboard/layout.js"
+      "static/chunks/app/[locale]/roles/page.js"
     ],
-    "/locations/edit/[id]/page": [
+    "/[locale]/audit/page": [
       "static/chunks/webpack.js",
-      "static/chunks/vendors.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/locations/edit/[id]/page.js"
+      "static/chunks/app/[locale]/audit/page.js"
     ]
   }
 }

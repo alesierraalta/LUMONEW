@@ -8,6 +8,7 @@ import { Plus, Minus, Save, X } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { auditedInventoryService } from '@/lib/database-with-audit'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useTranslations } from 'next-intl'
 
 interface InventoryItem {
   id: string
@@ -48,6 +49,8 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
   const { addToast } = useToast()
   const { user } = useAuth()
   const { openModal, closeModal } = useModal()
+  const t = useTranslations('inventory.quickStock')
+  const tCommon = useTranslations('common')
 
   const handleClose = () => {
     setQuantity('')
@@ -63,8 +66,8 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
     if (!item || !quantity || !reason.trim()) {
       addToast({
         type: 'error',
-        title: 'Error de validación',
-        description: 'Por favor completa todos los campos requeridos'
+        title: t('validationError'),
+        description: t('completeAllFields')
       })
       return
     }
@@ -73,8 +76,8 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
     if (isNaN(adjustmentQuantity) || adjustmentQuantity <= 0) {
       addToast({
         type: 'error',
-        title: 'Error de validación',
-        description: 'La cantidad debe ser un número positivo'
+        title: t('validationError'),
+        description: t('quantityMustBePositive')
       })
       return
     }
@@ -83,8 +86,8 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
     if (operation === 'subtract' && adjustmentQuantity > item.quantity) {
       addToast({
         type: 'error',
-        title: 'Stock insuficiente',
-        description: `No puedes restar ${adjustmentQuantity} unidades. Stock actual: ${item.quantity}`
+        title: t('insufficientStock'),
+        description: t('cannotSubtractUnits', { quantity: adjustmentQuantity, currentStock: item.quantity })
       })
       return
     }
@@ -113,7 +116,7 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
         newStock,
         reason: reason.trim(),
         userId: user?.id || 'unknown',
-        userName: user?.user_metadata?.full_name || user?.email || 'Usuario',
+        userName: user?.user_metadata?.full_name || user?.email || t('user'),
         timestamp: new Date()
       }
 
@@ -134,8 +137,12 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
 
       addToast({
         type: 'success',
-        title: 'Stock actualizado',
-        description: `${operation === 'add' ? 'Agregadas' : 'Restadas'} ${adjustmentQuantity} unidades de ${item.name}`
+        title: t('stockUpdated'),
+        description: t('stockUpdateSuccess', {
+          operation: operation === 'add' ? t('added') : t('subtracted'),
+          quantity: adjustmentQuantity,
+          itemName: item.name
+        })
       })
 
       onStockUpdated()
@@ -144,8 +151,8 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
       console.error('Error updating stock:', error)
       addToast({
         type: 'error',
-        title: 'Error al actualizar stock',
-        description: 'No se pudo actualizar el stock. Por favor intenta de nuevo.'
+        title: t('updateError'),
+        description: t('updateErrorMessage')
       })
     } finally {
       setIsSubmitting(false)
@@ -210,39 +217,42 @@ function QuickStockModalContent({
   onSubmit,
   onClose
 }: QuickStockModalContentProps) {
+  const t = useTranslations('inventory.quickStock')
+  const tCommon = useTranslations('common')
+  
   const reasonOptions = [
-    { value: 'received', label: 'Mercancía recibida' },
-    { value: 'sold', label: 'Venta realizada' },
-    { value: 'damaged', label: 'Producto dañado' },
-    { value: 'expired', label: 'Producto vencido' },
-    { value: 'found', label: 'Inventario encontrado' },
-    { value: 'lost', label: 'Inventario perdido' },
-    { value: 'adjustment', label: 'Ajuste de inventario' },
-    { value: 'return', label: 'Devolución' },
-    { value: 'other', label: 'Otro motivo' }
+    { value: 'received', label: t('reasons.received') },
+    { value: 'sold', label: t('reasons.sold') },
+    { value: 'damaged', label: t('reasons.damaged') },
+    { value: 'expired', label: t('reasons.expired') },
+    { value: 'found', label: t('reasons.found') },
+    { value: 'lost', label: t('reasons.lost') },
+    { value: 'adjustment', label: t('reasons.adjustment') },
+    { value: 'return', label: t('reasons.return') },
+    { value: 'other', label: t('reasons.other') }
   ]
 
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">Ajuste Rápido de Stock</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('title')}</h2>
       </div>
       
       <div className="space-y-6">
         {/* Item Info */}
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-medium text-gray-900">{item.name}</h3>
-          <p className="text-sm text-gray-600">SKU: {item.sku}</p>
-          <p className="text-sm text-gray-600">Stock actual: <span className="font-medium">{item.quantity}</span></p>
+          <p className="text-sm text-gray-600">{t('sku')}: {item.sku}</p>
+          <p className="text-sm text-gray-600">{t('currentStock')}: <span className="font-medium">{item.quantity}</span></p>
           {item.quantity <= item.min_stock && (
-            <p className="text-sm text-yellow-600 font-medium">⚠️ Stock bajo (mínimo: {item.min_stock})</p>
+            <p className="text-sm text-yellow-600 font-medium">⚠️ {t('lowStock', { minimum: item.min_stock })}</p>
           )}
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Operation Type */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">Operación</label>
+            <label className="text-sm font-medium text-gray-700">{t('operation')}</label>
             <div className="flex space-x-2">
               <Button
                 type="button"
@@ -252,7 +262,7 @@ function QuickStockModalContent({
                 className="flex-1"
               >
                 <Plus className="mr-2 h-4 w-4" />
-                Agregar Stock
+                {t('addStock')}
               </Button>
               <Button
                 type="button"
@@ -262,7 +272,7 @@ function QuickStockModalContent({
                 className="flex-1"
               >
                 <Minus className="mr-2 h-4 w-4" />
-                Restar Stock
+                {t('subtractStock')}
               </Button>
             </div>
           </div>
@@ -270,7 +280,7 @@ function QuickStockModalContent({
           {/* Quantity */}
           <div className="space-y-2">
             <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
-              Cantidad *
+              {t('quantity')} *
             </label>
             <Input
               id="quantity"
@@ -278,7 +288,7 @@ function QuickStockModalContent({
               min="1"
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
-              placeholder="Ingresa la cantidad"
+              placeholder={t('enterQuantity')}
               required
             />
           </div>
@@ -286,7 +296,7 @@ function QuickStockModalContent({
           {/* Reason */}
           <div className="space-y-2">
             <label htmlFor="reason" className="text-sm font-medium text-gray-700">
-              Motivo *
+              {t('reason')} *
             </label>
             <select
               id="reason"
@@ -295,7 +305,7 @@ function QuickStockModalContent({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Seleccionar motivo</option>
+              <option value="">{t('selectReason')}</option>
               {reasonOptions.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
@@ -308,11 +318,11 @@ function QuickStockModalContent({
           {quantity && (
             <div className="bg-blue-50 p-3 rounded-lg">
               <p className="text-sm text-blue-800">
-                <strong>Vista previa:</strong> {item.quantity} → {
-                  operation === 'add' 
+                <strong>{t('preview')}:</strong> {item.quantity} → {
+                  operation === 'add'
                     ? item.quantity + parseInt(quantity || '0')
                     : item.quantity - parseInt(quantity || '0')
-                } unidades
+                } {t('units')}
               </p>
             </div>
           )}
@@ -326,7 +336,7 @@ function QuickStockModalContent({
               disabled={isSubmitting}
             >
               <X className="mr-2 h-4 w-4" />
-              Cancelar
+              {tCommon('cancel')}
             </Button>
             <Button
               type="submit"
@@ -336,12 +346,12 @@ function QuickStockModalContent({
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  Procesando...
+                  {t('processing')}
                 </>
               ) : (
                 <>
                   <Save className="mr-2 h-4 w-4" />
-                  {operation === 'add' ? 'Agregar' : 'Restar'} Stock
+                  {operation === 'add' ? t('add') : t('subtract')} {t('stock')}
                 </>
               )}
             </Button>

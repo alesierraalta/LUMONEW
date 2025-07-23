@@ -2,34 +2,43 @@
 
 import { Button } from '@/components/ui/button'
 import { Plus, Package, FolderOpen, MapPin, Users } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 export function QuickActions() {
+  const router = useRouter()
+  const t = useTranslations('quickActions')
+  
   const actions = [
     {
-      label: 'Add Item',
+      label: t('addItem'),
       icon: Package,
-      href: '/inventory/new',
+      href: '/inventory/create',
       variant: 'default' as const
     },
     {
-      label: 'New Category',
+      label: t('newCategory'),
       icon: FolderOpen,
-      href: '/categories/new',
+      href: '/categories/create',
       variant: 'outline' as const
     },
     {
-      label: 'Add Location',
+      label: t('addLocation'),
       icon: MapPin,
-      href: '/locations/new',
+      href: '/locations/create',
       variant: 'outline' as const
     },
     {
-      label: 'Add User',
+      label: t('addUser'),
       icon: Users,
-      href: '/users/new',
+      href: '/users/create',
       variant: 'outline' as const
     }
   ]
+
+  const handleNavigation = (href: string) => {
+    router.push(href)
+  }
 
   return (
     <div className="flex items-center space-x-2">
@@ -39,10 +48,7 @@ export function QuickActions() {
           variant={action.variant}
           size="sm"
           className="flex items-center space-x-2"
-          onClick={() => {
-            // In a real app, this would navigate to the appropriate page
-            console.log(`Navigate to ${action.href}`)
-          }}
+          onClick={() => handleNavigation(action.href)}
         >
           <action.icon className="h-4 w-4" />
           <span className="hidden sm:inline">{action.label}</span>

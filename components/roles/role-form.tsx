@@ -7,6 +7,7 @@ import { LoadingButton } from '@/components/ui/loading'
 import { useToast } from '@/components/ui/toast'
 import { useModal } from '@/components/ui/modal'
 import { Shield, Save, X, Check } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export interface RoleData {
   id?: string
@@ -42,16 +43,18 @@ const initialRoleData: Omit<RoleData, 'id'> = {
   isSystem: false
 }
 
-const ROLE_COLORS = [
-  { value: 'red', name: 'Rojo', class: 'bg-red-500' },
-  { value: 'blue', name: 'Azul', class: 'bg-blue-500' },
-  { value: 'green', name: 'Verde', class: 'bg-green-500' },
-  { value: 'yellow', name: 'Amarillo', class: 'bg-yellow-500' },
-  { value: 'purple', name: 'Morado', class: 'bg-purple-500' },
-  { value: 'gray', name: 'Gris', class: 'bg-gray-500' }
+const getRoleColors = (t: any) => [
+  { value: 'red', name: t('colors.red'), class: 'bg-red-500' },
+  { value: 'blue', name: t('colors.blue'), class: 'bg-blue-500' },
+  { value: 'green', name: t('colors.green'), class: 'bg-green-500' },
+  { value: 'yellow', name: t('colors.yellow'), class: 'bg-yellow-500' },
+  { value: 'purple', name: t('colors.purple'), class: 'bg-purple-500' },
+  { value: 'gray', name: t('colors.gray'), class: 'bg-gray-500' }
 ]
 
 export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availablePermissions }: RoleFormProps) {
+  const t = useTranslations('roles.form')
+  const tCommon = useTranslations('common')
   const [formData, setFormData] = useState<RoleData>(role || { ...initialRoleData })
   const [validationState, setValidationState] = useState<Record<string, boolean>>({})
   const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
@@ -61,8 +64,9 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
   const { closeModal } = useModal()
 
   const isEditing = Boolean(role?.id)
-  const isFormValid = Object.values(validationState).every(Boolean) && 
+  const isFormValid = Object.values(validationState).every(Boolean) &&
     formData.name && formData.description && selectedPermissions.size > 0
+  const ROLE_COLORS = getRoleColors(t)
 
   const handleInputChange = useCallback((field: keyof RoleData) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -110,8 +114,8 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
     if (!isFormValid) {
       addToast({
         type: 'error',
-        title: 'Formulario incompleto',
-        description: 'Por favor completa todos los campos requeridos y selecciona al menos un permiso'
+        title: t('incompleteForm'),
+        description: t('completeAllFieldsAndPermissions')
       })
       return
     }
@@ -126,16 +130,16 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
       
       addToast({
         type: 'success',
-        title: isEditing ? 'Rol actualizado' : 'Rol creado',
-        description: `El rol "${formData.name}" ha sido ${isEditing ? 'actualizado' : 'creado'} exitosamente`
+        title: isEditing ? t('roleUpdated') : t('roleCreated'),
+        description: t(isEditing ? 'roleUpdatedSuccess' : 'roleCreatedSuccess', { name: formData.name })
       })
       
       closeModal()
     } catch (error) {
       addToast({
         type: 'error',
-        title: 'Error al guardar',
-        description: 'Ocurrió un error al guardar el rol. Inténtalo de nuevo.'
+        title: t('errorSaving'),
+        description: t('errorSavingDescription')
       })
     }
   }, [formData, selectedPermissions, isFormValid, isEditing, onSubmit, addToast, closeModal])
@@ -176,10 +180,10 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              {isEditing ? 'Editar Rol' : 'Nuevo Rol'}
+              {isEditing ? t('editRole') : t('newRole')}
             </h2>
             <p className="text-sm text-gray-500">
-              {isEditing ? 'Actualiza la información del rol' : 'Completa los datos del nuevo rol'}
+              {isEditing ? t('updateRoleInfo') : t('completeRoleData')}
             </p>
           </div>
         </div>
@@ -189,11 +193,11 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
               <Shield className="h-5 w-5 text-gray-600" />
-              Información Básica
+              {t('basicInformation')}
             </h3>
             
             <FloatingInput
-              label="Nombre del Rol *"
+              label={t('roleName')}
               value={formData.name}
               onChange={handleInputChange('name')}
               onValidation={handleValidation('name')}
@@ -202,12 +206,12 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
             />
             
             <FloatingTextarea
-              label="Descripción *"
+              label={t('description')}
               value={formData.description}
               onChange={handleInputChange('description')}
               onValidation={handleValidation('description')}
               validation={{ required: true, minLength: 10, maxLength: 200 }}
-              helperText="Describe las responsabilidades y alcance de este rol (10-200 caracteres)"
+              helperText={t('descriptionHelper')}
               rows={3}
               disabled={isLoading || role?.isSystem}
             />
@@ -215,7 +219,7 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
             {/* Color Selection */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Color del Rol *
+                {t('roleColor')}
               </label>
               <div className="flex gap-3">
                 {ROLE_COLORS.map((color) => (
@@ -244,10 +248,10 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-medium text-gray-900">
-                Permisos ({selectedPermissions.size} seleccionados)
+                {t('permissionsSelected', { count: selectedPermissions.size })}
               </h3>
               <div className="text-sm text-gray-500">
-                Selecciona los permisos que tendrá este rol
+                {t('selectPermissions')}
               </div>
             </div>
             
@@ -303,12 +307,12 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
             <LoadingButton
               type="submit"
               isLoading={isLoading}
-              loadingText={isEditing ? 'Actualizando...' : 'Creando...'}
+              loadingText={isEditing ? t('updating') : t('creating')}
               disabled={!isFormValid || role?.isSystem}
               className="flex-1 bg-purple-600 hover:bg-purple-700 text-white"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isEditing ? 'Actualizar Rol' : 'Crear Rol'}
+              {isEditing ? t('updateRole') : t('createRole')}
             </LoadingButton>
             
             <button
@@ -318,7 +322,7 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4 mr-2 inline" />
-              Cancelar
+              {tCommon('cancel')}
             </button>
           </div>
 
@@ -326,10 +330,10 @@ export function RoleForm({ role, onSubmit, onCancel, isLoading = false, availabl
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
               <div className="flex items-center gap-2 text-orange-800">
                 <Shield className="h-5 w-5" />
-                <span className="font-medium">Rol del Sistema</span>
+                <span className="font-medium">{t('systemRoleWarning')}</span>
               </div>
               <p className="text-sm text-orange-700 mt-1">
-                Los roles del sistema no pueden ser editados para mantener la integridad del sistema.
+                {t('systemRoleDescription')}
               </p>
             </div>
           )}

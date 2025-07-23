@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
 import { locationService } from '@/lib/database'
+import { useTranslations } from 'next-intl'
 
 interface Location {
   id: string
@@ -27,6 +28,8 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('locations')
+  const tCommon = useTranslations('common')
 
   // Fetch locations data
   useEffect(() => {

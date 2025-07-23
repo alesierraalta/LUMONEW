@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/toast'
 import { useModal } from '@/components/ui/modal'
 import { User, Mail, Save, X } from 'lucide-react'
 import { roleService } from '@/lib/database'
+import { useTranslations } from 'next-intl'
 
 // Interface for role data
 interface Role {
@@ -45,6 +46,9 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
   const [roles, setRoles] = useState<Role[]>([])
   const { addToast } = useToast()
   const { closeModal } = useModal()
+  const t = useTranslations('users.editForm')
+  const tCommon = useTranslations('common')
+  const tForm = useTranslations('users.form')
 
   const isEditing = Boolean(user?.id)
   const isFormValid = Object.values(validationState).every(Boolean) && 
@@ -60,8 +64,8 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
         console.error('Error loading roles:', error)
         addToast({
           type: 'error',
-          title: 'Error al cargar roles',
-          description: 'No se pudieron cargar los roles desde la base de datos'
+          title: t('errorLoadingRoles'),
+          description: t('errorLoadingRolesDescription')
         })
         // Set empty array as fallback
         setRoles([])
@@ -85,8 +89,8 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
     if (!isFormValid) {
       addToast({
         type: 'error',
-        title: 'Formulario incompleto',
-        description: 'Por favor completa todos los campos requeridos'
+        title: tForm('incompleteForm'),
+        description: tForm('completeAllFields')
       })
       return
     }
@@ -96,16 +100,16 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
       
       addToast({
         type: 'success',
-        title: 'Usuario actualizado',
-        description: `${formData.firstName} ${formData.lastName} ha sido actualizado exitosamente`
+        title: tForm('userUpdated'),
+        description: tForm('userUpdatedSuccess', { name: `${formData.firstName} ${formData.lastName}` })
       })
       
       closeModal()
     } catch (error) {
       addToast({
         type: 'error',
-        title: 'Error al guardar',
-        description: 'Ocurrió un error al actualizar el usuario. Inténtalo de nuevo.'
+        title: tForm('errorSaving'),
+        description: tForm('errorSavingDescription')
       })
     }
   }, [formData, isFormValid, onSubmit, addToast, closeModal])
@@ -121,7 +125,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
     custom: (value: string) => {
       if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Ingresa un email válido'
+        return tForm('validEmail')
       }
       return null
     }
@@ -137,10 +141,10 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              Editar Usuario
+              {t('editUser')}
             </h2>
             <p className="text-sm text-gray-500">
-              Actualiza la información básica del usuario
+              {t('updateBasicInfo')}
             </p>
           </div>
         </div>
@@ -150,12 +154,12 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
               <User className="h-5 w-5 text-gray-600" />
-              Información Personal
+              {tForm('personalInformation')}
             </h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FloatingInput
-                label="Nombre *"
+                label={tForm('firstName')}
                 value={formData.firstName}
                 onChange={handleInputChange('firstName')}
                 onValidation={handleValidation('firstName')}
@@ -164,7 +168,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
               />
               
               <FloatingInput
-                label="Apellido *"
+                label={tForm('lastName')}
                 value={formData.lastName}
                 onChange={handleInputChange('lastName')}
                 onValidation={handleValidation('lastName')}
@@ -174,7 +178,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
             </div>
 
             <FloatingInput
-              label="Email *"
+              label={tForm('email')}
               type="email"
               value={formData.email}
               onChange={handleInputChange('email')}
@@ -186,7 +190,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
             {/* Role Selection */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Rol *
+                {tForm('role')} *
               </label>
               <select
                 value={formData.role}
@@ -195,7 +199,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
                 disabled={isLoading}
                 required
               >
-                <option value="">Selecciona un rol</option>
+                <option value="">{t('selectRole')}</option>
                 {roles.map((role) => (
                   <option key={role.id} value={role.name}>
                     {role.name} - {role.description}
@@ -210,12 +214,12 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
             <LoadingButton
               type="submit"
               isLoading={isLoading}
-              loadingText="Actualizando..."
+              loadingText={tForm('updating')}
               disabled={!isFormValid}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Save className="h-4 w-4 mr-2" />
-              Actualizar Usuario
+              {tForm('updateUser')}
             </LoadingButton>
             
             <button
@@ -225,7 +229,7 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4 mr-2 inline" />
-              Cancelar
+              {tCommon('cancel')}
             </button>
           </div>
         </form>

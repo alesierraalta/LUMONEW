@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -12,6 +13,8 @@ interface InventoryFiltersProps {
 }
 
 export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersProps) {
+  const t = useTranslations('inventory.filters')
+  
   const handleFilterChange = (key: keyof FilterOptions, value: any) => {
     onFiltersChange({
       ...filters,
@@ -30,7 +33,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <Filter className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Filters</span>
+          <span className="text-sm font-medium">{t('title')}</span>
           {activeFiltersCount > 0 && (
             <Badge variant="secondary" className="ml-2">
               {activeFiltersCount}
@@ -44,7 +47,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
             onClick={clearFilters}
             className="h-8 px-2 lg:px-3"
           >
-            Clear
+            {t('clear')}
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}
@@ -56,7 +59,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           size="sm"
           onClick={() => handleFilterChange('status', filters.status === 'active' ? undefined : 'active')}
         >
-          Active Items
+          {t('activeItems')}
         </Button>
         
         <Button
@@ -64,7 +67,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           size="sm"
           onClick={() => handleFilterChange('status', filters.status === 'inactive' ? undefined : 'inactive')}
         >
-          Inactive Items
+          {t('inactiveItems')}
         </Button>
         
         {/* Enhanced Stock Status Filters */}
@@ -74,7 +77,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'good_stock' ? undefined : 'good_stock')}
           className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
         >
-          Buen Stock
+          {t('goodStock')}
         </Button>
         
         <Button
@@ -83,7 +86,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'low_stock' ? undefined : 'low_stock')}
           className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
         >
-          Stock Bajo
+          {t('lowStock')}
         </Button>
         
         <Button
@@ -92,7 +95,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'out_of_stock' ? undefined : 'out_of_stock')}
           className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
         >
-          Agotado
+          {t('outOfStock')}
         </Button>
       </div>
 
@@ -101,7 +104,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
         <div className="flex flex-wrap gap-2">
           {filters.status && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Status: {filters.status}
+              {t('activeFilters.status')}: {filters.status}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('status', undefined)}
@@ -111,8 +114,8 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           
           {filters.stockStatus && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Stock: {filters.stockStatus === 'good_stock' ? 'Buen Stock' :
-                     filters.stockStatus === 'low_stock' ? 'Stock Bajo' : 'Agotado'}
+              {t('activeFilters.stock')}: {filters.stockStatus === 'good_stock' ? t('goodStock') :
+                     filters.stockStatus === 'low_stock' ? t('lowStock') : t('outOfStock')}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('stockStatus', undefined)}
@@ -122,7 +125,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           
           {filters.lowStock && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Low Stock
+              {t('lowStock')}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('lowStock', false)}
@@ -132,7 +135,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           
           {filters.category && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Category: {filters.category}
+              {t('activeFilters.category')}: {filters.category}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('category', undefined)}
@@ -142,7 +145,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           
           {filters.location && (
             <Badge variant="secondary" className="flex items-center gap-1">
-              Location: {filters.location}
+              {t('activeFilters.location')}: {filters.location}
               <X
                 className="h-3 w-3 cursor-pointer"
                 onClick={() => handleFilterChange('location', undefined)}

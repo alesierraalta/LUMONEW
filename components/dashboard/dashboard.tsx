@@ -14,33 +14,87 @@ import { DashboardCards } from '@/components/cards/card-container'
 import { usePageCards } from '@/components/cards/card-provider'
 import { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { analyticsService, inventoryService } from '@/lib/database'
+import { auditService } from '@/lib/audit'
+import { useTranslations } from 'next-intl'
 
-// Mock data for demonstration
-const mockDashboardData = {
-  lowStockItems: [
-    { id: '1', nombre: 'Producto A', stock: 5, stockMinimo: 10 },
-    { id: '2', nombre: 'Producto B', stock: 2, stockMinimo: 15 },
-    { id: '3', nombre: 'Producto C', stock: 1, stockMinimo: 8 }
-  ],
-  recentActivity: [
-    { id: '1', action: 'Stock actualizado', product: 'Producto X', timestamp: new Date() },
-    { id: '2', action: 'Nuevo producto agregado', product: 'Producto Y', timestamp: new Date() }
-  ],
-  totalItems: 150,
-  categories: ['Electrónicos', 'Ropa', 'Hogar'],
-  criticalAlerts: 3
+interface DashboardData {
+  lowStockItems: any[]
+  recentActivity: any[]
+  totalItems: number
+  categories: string[]
+  criticalAlerts: number
 }
 
 export function Dashboard() {
-  const [dashboardData, setDashboardData] = useState(mockDashboardData)
+  const t = useTranslations('dashboard')
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  const [loading, setLoading] = useState(true)
+  
+  useEffect(() => {
+    async function fetchDashboardData() {
+      try {
+        setLoading(true)
+        
+        // Fetch real data from Supabase
+        const [metrics, lowStockItems, recentActivity] = await Promise.all([
+          analyticsService.getDashboardMetrics(),
+          inventoryService.getLowStock(),
+          auditService.getRecentLogs(5)
+        ])
+
+        const dashboardData = {
+          lowStockItems: lowStockItems || [],
+          recentActivity: recentActivity || [],
+          totalItems: metrics.totalItems,
+          categories: [], // Will be populated by other components
+          criticalAlerts: (lowStockItems?.length || 0)
+        }
+
+        setDashboardData(dashboardData)
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error)
+        // Fallback to empty data structure
+        setDashboardData({
+          lowStockItems: [],
+          recentActivity: [],
+          totalItems: 0,
+          categories: [],
+          criticalAlerts: 0
+        })
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
+  }, [])
   
   // Use the page cards hook to generate contextual cards
-  usePageCards('dashboard', dashboardData)
+  usePageCards('dashboard', dashboardData || {})
+
+  if (loading) {
+    return (
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-3xl font-bold tracking-tight">{t('businessIntelligenceDashboard')}</h2>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="h-96 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Business Intelligence Dashboard</h2>
+        <h2 className="text-3xl font-bold tracking-tight">{t('businessIntelligenceDashboard')}</h2>
         <QuickActions />
       </div>
       
@@ -53,12 +107,12 @@ export function Dashboard() {
       {/* Tabbed Analytics Interface */}
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="inventory">Inventory</TabsTrigger>
-          <TabsTrigger value="sales">Sales</TabsTrigger>
-          <TabsTrigger value="locations">Locations</TabsTrigger>
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="alerts">Alerts</TabsTrigger>
+          <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
+          <TabsTrigger value="inventory">{t('tabs.inventory')}</TabsTrigger>
+          <TabsTrigger value="sales">{t('tabs.sales')}</TabsTrigger>
+          <TabsTrigger value="locations">{t('tabs.locations')}</TabsTrigger>
+          <TabsTrigger value="financial">{t('tabs.financial')}</TabsTrigger>
+          <TabsTrigger value="alerts">{t('tabs.alerts')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
@@ -66,9 +120,9 @@ export function Dashboard() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
             <Card className="col-span-4">
               <CardHeader>
-                <CardTitle>Inventory Overview</CardTitle>
+                <CardTitle>{t('cards.inventoryOverview')}</CardTitle>
                 <CardDescription>
-                  Total inventory value and stock levels over time
+                  {t('cards.inventoryOverviewDescription')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="pl-2">

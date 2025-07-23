@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate, formatDateTime } from '@/lib/utils'
 import { userService } from '@/lib/database'
+import { useTranslations } from 'next-intl'
 
 interface User {
   id: string
@@ -54,6 +55,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const t = useTranslations('users.table')
 
   // Fetch users data
   useEffect(() => {
@@ -63,7 +65,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
         const data = await userService.getAll()
         setUsers(data || [])
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch users')
+        setError(err instanceof Error ? err.message : t('errorLoadingUsers', { error: 'Failed to fetch users' }))
       } finally {
         setLoading(false)
       }
@@ -99,19 +101,19 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
   }
 
   const handleDelete = async (user: User) => {
-    if (confirm(`Are you sure you want to delete the user "${user.name}"?`)) {
+    if (confirm(t('deleteConfirmation', { name: user.name }))) {
       try {
         await userService.delete(user.id)
         setUsers(prev => prev.filter(u => u.id !== user.id))
       } catch (err) {
         console.error('Failed to delete user:', err)
-        alert('Failed to delete user.')
+        alert(t('failedToDelete'))
       }
     }
   }
 
   const handleBulkDeactivate = async () => {
-    if (confirm(`Are you sure you want to deactivate ${selectedUsers.length} users?`)) {
+    if (confirm(t('deactivateConfirmation', { count: selectedUsers.length }))) {
       try {
         await Promise.all(selectedUsers.map(id => 
           userService.update(id, { is_active: false })
@@ -122,7 +124,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
         setSelectedUsers([])
       } catch (err) {
         console.error('Failed to deactivate users:', err)
-        alert('Failed to deactivate some users.')
+        alert(t('failedToDeactivate'))
       }
     }
   }
@@ -136,13 +138,13 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
               <th className="text-left py-3 px-4">
                 <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Email</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Last Login</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('user')}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('email')}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('role')}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('status')}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('lastLogin')}</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('created')}</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -190,7 +192,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600">Error loading users: {error}</div>
+        <div className="text-red-600">{t('errorLoadingUsers', { error })}</div>
       </div>
     )
   }
@@ -208,13 +210,13 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                 className="rounded border-gray-300"
               />
             </th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">User</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Email</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Role</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Status</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Last Login</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Created</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-900">Actions</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('user')}</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('email')}</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('role')}</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('status')}</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('lastLogin')}</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('created')}</th>
+            <th className="text-right py-3 px-4 font-medium text-gray-900">{t('actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -262,7 +264,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
               </td>
               <td className="py-4 px-4">
                 <Badge variant={user.is_active ? "default" : "secondary"}>
-                  {user.is_active ? 'Active' : 'Inactive'}
+                  {user.is_active ? t('active') : t('inactive')}
                 </Badge>
               </td>
               <td className="py-4 px-4">
@@ -275,7 +277,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                       </div>
                     </div>
                   ) : (
-                    <span className="text-gray-400">Never</span>
+                    <span className="text-gray-400">{t('never')}</span>
                   )}
                 </div>
               </td>
@@ -317,9 +319,9 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
 
       {filteredUsers.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-500">No users found</div>
+          <div className="text-gray-500">{t('noUsersFound')}</div>
           <div className="text-sm text-gray-400 mt-1">
-            {searchTerm ? 'Try adjusting your search criteria' : 'Create your first user to get started'}
+            {searchTerm ? t('adjustSearchCriteria') : t('createFirstUser')}
           </div>
         </div>
       )}
@@ -328,22 +330,22 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
         <div className="mt-4 p-4 bg-blue-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="text-sm text-blue-800">
-              {selectedUsers.length} users selected
+              {t('usersSelected', { count: selectedUsers.length })}
             </div>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm">
-                Export Selected
+                {t('exportSelected')}
               </Button>
               <Button variant="outline" size="sm">
-                Bulk Edit
+                {t('bulkEdit')}
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="text-red-600 hover:text-red-700"
                 onClick={handleBulkDeactivate}
               >
-                Deactivate Selected
+                {t('deactivateSelected')}
               </Button>
             </div>
           </div>

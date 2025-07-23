@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Bar, Area, AreaChart } from 'recharts'
 import { DollarSign, TrendingUp, TrendingDown, Calculator, Target, PieChart } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { useTranslations } from 'next-intl'
 
 // Mock financial data
 const financialTrends = [
@@ -17,56 +18,7 @@ const financialTrends = [
 ]
 
 // Key financial metrics
-const kpiMetrics = [
-  {
-    title: 'Monthly Recurring Revenue',
-    value: '$171K',
-    change: '+8.2%',
-    trend: 'up',
-    target: '$180K',
-    description: 'Current month revenue'
-  },
-  {
-    title: 'Gross Profit Margin',
-    value: '34.5%',
-    change: '+1.2%',
-    trend: 'up',
-    target: '35%',
-    description: 'Revenue minus COGS'
-  },
-  {
-    title: 'Operating Cash Flow',
-    value: '$67K',
-    change: '+9.8%',
-    trend: 'up',
-    target: '$70K',
-    description: 'Cash from operations'
-  },
-  {
-    title: 'Return on Investment',
-    value: '34.5%',
-    change: '+3.7%',
-    trend: 'up',
-    target: '30%',
-    description: 'ROI on inventory'
-  },
-  {
-    title: 'Inventory Turnover',
-    value: '8.2x',
-    change: '+0.5x',
-    trend: 'up',
-    target: '8x',
-    description: 'Annual turnover rate'
-  },
-  {
-    title: 'Days Sales Outstanding',
-    value: '28 days',
-    change: '-3 days',
-    trend: 'up',
-    target: '30 days',
-    description: 'Average collection period'
-  }
-]
+// KPI metrics will be created inside the component to access translations
 
 // Expense breakdown
 const expenseBreakdown = [
@@ -87,10 +39,63 @@ const financialRatios = [
 ]
 
 export function FinancialKPIs() {
+  const t = useTranslations('dashboard.financial')
   const currentMonth = financialTrends[financialTrends.length - 1]
   const previousMonth = financialTrends[financialTrends.length - 2]
   const revenueGrowth = ((currentMonth.revenue - previousMonth.revenue) / previousMonth.revenue * 100).toFixed(1)
   const profitGrowth = ((currentMonth.profit - previousMonth.profit) / previousMonth.profit * 100).toFixed(1)
+
+  // KPI metrics with translations
+  const kpiMetrics = [
+    {
+      title: t('monthlyRecurringRevenue'),
+      value: '$171K',
+      change: '+8.2%',
+      trend: 'up',
+      target: '$180K',
+      description: t('currentMonthRevenue')
+    },
+    {
+      title: t('grossProfitMargin'),
+      value: '34.5%',
+      change: '+1.2%',
+      trend: 'up',
+      target: '35%',
+      description: t('revenueMinusCogs')
+    },
+    {
+      title: t('operatingCashFlow'),
+      value: '$67K',
+      change: '+9.8%',
+      trend: 'up',
+      target: '$70K',
+      description: t('cashFromOperations')
+    },
+    {
+      title: t('returnOnInvestment'),
+      value: '34.5%',
+      change: '+3.7%',
+      trend: 'up',
+      target: '30%',
+      description: t('roiOnInventory')
+    },
+    {
+      title: t('inventoryTurnover'),
+      value: '8.2x',
+      change: '+0.5x',
+      trend: 'up',
+      target: '8x',
+      description: t('annualTurnoverRate')
+    },
+    {
+      title: t('daysSalesOutstanding'),
+      value: '28 days',
+      change: '-3 days',
+      trend: 'up',
+      target: '30 days',
+      description: t('averageCollectionPeriod')
+    }
+  ]
 
   return (
     <div className="space-y-6">
@@ -126,21 +131,21 @@ export function FinancialKPIs() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
-              Revenue & Profit Trends
+              {t('revenueAndProfitTrends')}
             </CardTitle>
             <CardDescription>
-              Monthly financial performance overview
+              {t('monthlyFinancialPerformance')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center p-3 bg-green-50 rounded-lg">
                 <div className="text-lg font-bold text-green-600">+{revenueGrowth}%</div>
-                <div className="text-sm text-muted-foreground">Revenue Growth</div>
+                <div className="text-sm text-muted-foreground">{t('revenueGrowth')}</div>
               </div>
               <div className="text-center p-3 bg-blue-50 rounded-lg">
                 <div className="text-lg font-bold text-blue-600">+{profitGrowth}%</div>
-                <div className="text-sm text-muted-foreground">Profit Growth</div>
+                <div className="text-sm text-muted-foreground">{t('profitGrowth')}</div>
               </div>
             </div>
 
@@ -158,15 +163,15 @@ export function FinancialKPIs() {
                           <p className="font-semibold">{label}</p>
                           <div className="grid grid-cols-1 gap-1 mt-2">
                             <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Revenue:</span>
+                              <span className="text-sm text-muted-foreground">{t('revenue')}:</span>
                               <span className="font-medium">${data.revenue.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Expenses:</span>
+                              <span className="text-sm text-muted-foreground">{t('expenses')}:</span>
                               <span className="font-medium">${data.expenses.toLocaleString()}</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-sm text-muted-foreground">Profit:</span>
+                              <span className="text-sm text-muted-foreground">{t('profit')}:</span>
                               <span className="font-medium">${data.profit.toLocaleString()}</span>
                             </div>
                           </div>
@@ -188,20 +193,20 @@ export function FinancialKPIs() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calculator className="h-5 w-5" />
-              Cash Flow Analysis
+              {t('cashFlowAnalysis')}
             </CardTitle>
             <CardDescription>
-              Operating cash flow and ROI trends
+              {t('operatingCashFlowAndRoi')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4 p-3 bg-purple-50 rounded-lg">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Current Cash Flow</span>
+                <span className="text-sm font-medium">{t('currentCashFlow')}</span>
                 <span className="text-lg font-bold text-purple-600">${currentMonth.cashFlow.toLocaleString()}</span>
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {currentMonth.roi}% ROI this month
+                {currentMonth.roi}% {t('roiThisMonth')}
               </p>
             </div>
 
@@ -252,10 +257,10 @@ export function FinancialKPIs() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Target className="h-5 w-5" />
-              Financial Ratios
+              {t('financialRatios')}
             </CardTitle>
             <CardDescription>
-              Key financial health indicators
+              {t('keyFinancialHealthIndicators')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -263,21 +268,21 @@ export function FinancialKPIs() {
               {financialRatios.map((ratio, index) => (
                 <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-card">
                   <div>
-                    <div className="font-medium text-sm">{ratio.name}</div>
+                    <div className="font-medium text-sm">{t(`ratios.${ratio.name.toLowerCase().replace(/[^a-z]/g, '')}`)}</div>
                     <div className="text-xs text-muted-foreground">
-                      Benchmark: {ratio.benchmark}
+                      {t('ratios.benchmark')}: {ratio.benchmark}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-bold">{ratio.value}</div>
-                    <Badge 
+                    <Badge
                       variant={
                         ratio.status === 'excellent' ? 'default' :
                         ratio.status === 'good' ? 'secondary' : 'destructive'
                       }
                       className="text-xs"
                     >
-                      {ratio.status}
+                      {t(`ratios.${ratio.status}`)}
                     </Badge>
                   </div>
                 </div>
@@ -290,10 +295,10 @@ export function FinancialKPIs() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <PieChart className="h-5 w-5" />
-              Expense Breakdown
+              {t('expenseBreakdown')}
             </CardTitle>
             <CardDescription>
-              Current month expense distribution
+              {t('currentMonthExpenseDistribution')}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -301,11 +306,11 @@ export function FinancialKPIs() {
               {expenseBreakdown.map((expense, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div 
-                      className="w-4 h-4 rounded-full" 
+                    <div
+                      className="w-4 h-4 rounded-full"
                       style={{ backgroundColor: expense.color }}
                     />
-                    <span className="text-sm font-medium">{expense.category}</span>
+                    <span className="text-sm font-medium">{t(`expenseCategories.${expense.category.toLowerCase().replace(/\s+/g, '')}`)}</span>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold">${expense.amount.toLocaleString()}</div>
@@ -317,7 +322,7 @@ export function FinancialKPIs() {
             
             <div className="mt-4 p-3 bg-gray-50 rounded-lg">
               <div className="flex justify-between items-center">
-                <span className="font-medium">Total Expenses</span>
+                <span className="font-medium">{t('totalExpenses')}</span>
                 <span className="font-bold text-lg">
                   ${expenseBreakdown.reduce((sum, exp) => sum + exp.amount, 0).toLocaleString()}
                 </span>

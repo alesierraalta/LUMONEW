@@ -1,6 +1,8 @@
 {
-  "/users/page": "app/users/page.js",
-  "/locations/edit/[id]/page": "app/locations/edit/[id]/page.js",
-  "/inventory/page": "app/inventory/page.js",
-  "/categories/page": "app/categories/page.js"
+  "/api/transactions/route": "app/api/transactions/route.js",
+  "/[locale]/categories/page": "app/[locale]/categories/page.js",
+  "/[locale]/locations/page": "app/[locale]/locations/page.js",
+  "/[locale]/settings/page": "app/[locale]/settings/page.js",
+  "/[locale]/page": "app/[locale]/page.js",
+  "/[locale]/inventory/page": "app/[locale]/inventory/page.js"
 }

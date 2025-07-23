@@ -5,6 +5,7 @@ import { Package, DollarSign, AlertTriangle, FolderOpen } from 'lucide-react'
 import { formatCurrency, formatNumber } from '@/lib/utils'
 import { analyticsService } from '@/lib/database'
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface DashboardMetrics {
   totalItems: number
@@ -15,6 +16,7 @@ interface DashboardMetrics {
 }
 
 export function MetricsCards() {
+  const t = useTranslations('dashboard.metrics')
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +61,7 @@ export function MetricsCards() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="col-span-full border-red-200 bg-red-50/50">
           <CardContent className="pt-6">
-            <p className="text-red-600">Error loading metrics: {error}</p>
+            <p className="text-red-600">{t('errorLoadingMetrics')}: {error}</p>
           </CardContent>
         </Card>
       </div>
@@ -70,33 +72,33 @@ export function MetricsCards() {
 
   const metricsData = [
     {
-      title: 'Total Items',
+      title: t('totalItems'),
       value: formatNumber(metrics.totalItems),
-      description: 'Items in inventory',
+      description: t('itemsInInventory'),
       icon: Package,
-      trend: 'Real-time data'
+      trend: t('realTimeData')
     },
     {
-      title: 'Total Value',
+      title: t('totalValue'),
       value: formatCurrency(metrics.totalValue),
-      description: 'Inventory value',
+      description: t('inventoryValue'),
       icon: DollarSign,
-      trend: 'Real-time data'
+      trend: t('realTimeData')
     },
     {
-      title: 'Low Stock',
+      title: t('lowStock'),
       value: formatNumber(metrics.lowStockCount),
-      description: 'Items need restocking',
+      description: t('itemsNeedRestocking'),
       icon: AlertTriangle,
-      trend: 'Requires attention',
+      trend: t('requiresAttention'),
       isAlert: metrics.lowStockCount > 0
     },
     {
-      title: 'Categories',
+      title: t('categories'),
       value: formatNumber(metrics.categoriesCount),
-      description: 'Product categories',
+      description: t('productCategories'),
       icon: FolderOpen,
-      trend: 'Active categories'
+      trend: t('activeCategories')
     }
   ]
 
