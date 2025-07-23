@@ -20,9 +20,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [mounted, setMounted] = useState(false)
   const supabase = createClient()
 
   useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+
     // Get initial session
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
@@ -43,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     )
 
     return () => subscription.unsubscribe()
-  }, [supabase.auth])
+  }, [supabase.auth, mounted])
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -70,6 +77,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const resetPassword = async (email: string) => {
+    if (typeof window === 'undefined') {
+      return { error: new Error('Window is not available') as AuthError }
+    }
+    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/reset-password`,
     })
@@ -79,11 +90,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = {
     user,
     session,
-    loading,
+    loading: !mounted || loading,
     signIn,
     signUp,
     signOut,
     resetPassword,
+  }
+
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <AuthContext.Provider value={{
+        user: null,
+        session: null,
+        loading: true,
+        signIn,
+        signUp,
+        signOut,
+        resetPassword,
+      }}>
+        {children}
+      </AuthContext.Provider>
+    )
   }
 
   return (

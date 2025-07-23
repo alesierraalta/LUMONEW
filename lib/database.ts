@@ -556,8 +556,8 @@ export const analyticsService = {
       // Add sales data
       transactionData?.forEach((transaction: any) => {
         const item = inventoryData?.find((inv: any) => inv.id === transaction.product_id)
-        if (item?.categories?.name) {
-          const categoryName = item.categories.name
+        if (item?.categories && typeof item.categories === 'object' && 'name' in item.categories) {
+          const categoryName = String(item.categories.name)
           if (categoryTurnover[categoryName]) {
             categoryTurnover[categoryName].totalSold += transaction.quantity
           }

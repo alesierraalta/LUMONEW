@@ -22,17 +22,27 @@ import {
 
 interface AuditLog {
   id: string
-  user_id: string
-  operation: string
+  user_id: string | null
+  user_email: string | null
+  operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'VIEW' | 'EXPORT' | 'IMPORT' | 'BULK_OPERATION'
   table_name: string
   record_id: string
-  old_values: any
-  new_values: any
-  ip_address: string
-  user_agent: string
-  session_id: string
-  metadata: any
+  old_values: any | null
+  new_values: any | null
+  ip_address: string | null
+  user_agent: string | null
+  session_id: string | null
   created_at: string
+  metadata?: {
+    action_type?: string
+    affected_fields?: string[]
+    bulk_operation_id?: string
+    reason?: string
+    notes?: string
+    record_count?: number
+    error?: string
+    [key: string]: any
+  }
 }
 
 const operationIcons = {

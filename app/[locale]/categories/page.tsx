@@ -264,7 +264,43 @@ export default function CategoriesPage() {
                   updatedAt: new Date(),
                   createdBy: 'system',
                   updatedBy: 'system'
-                } : undefined}
+                } : {
+                  id: 'guest',
+                  name: 'Guest User',
+                  email: 'guest@example.com',
+                  role: 'viewer' as const,
+                  avatar: undefined,
+                  isActive: true,
+                  lastLogin: new Date(),
+                  permissions: {
+                    canCreate: false,
+                    canEdit: false,
+                    canDelete: false,
+                    canViewReports: false,
+                    canManageUsers: false,
+                    canBulkOperations: false,
+                    canQuickStock: false,
+                    canViewAuditLogs: false
+                  },
+                  accessibleLocations: [],
+                  defaultLocation: undefined,
+                  preferences: {
+                    language: 'es' as const,
+                    theme: 'light' as const,
+                    dateFormat: 'DD/MM/YYYY',
+                    currency: 'USD',
+                    notifications: {
+                      email: false,
+                      push: false,
+                      lowStock: false,
+                      bulkOperations: false
+                    }
+                  },
+                  createdAt: new Date(),
+                  updatedAt: new Date(),
+                  createdBy: 'system',
+                  updatedBy: 'system'
+                }}
               >
                 <CategoriesContent />
               </CardProvider>

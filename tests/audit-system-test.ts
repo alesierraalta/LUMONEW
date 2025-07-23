@@ -175,7 +175,7 @@ export class AuditSystemTest {
       console.log('Updating test location...')
       await auditedLocationService.update(testIds.locationId, {
         name: 'Updated Test Warehouse',
-        capacity: 1500
+        address: '456 Updated Test Street'
       })
       this.testResults.push({
         operation: 'UPDATE Location',

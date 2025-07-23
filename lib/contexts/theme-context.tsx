@@ -9,14 +9,16 @@ interface Props {
 
 export function ThemeProvider({ children }: Props) {
   return (
-    <NextThemesProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      {children}
-    </NextThemesProvider>
+    <div suppressHydrationWarning>
+      <NextThemesProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        {children}
+      </NextThemesProvider>
+    </div>
   )
 }
 
