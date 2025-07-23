@@ -12,9 +12,19 @@ import { useTranslations } from 'next-intl'
 
 export interface UserData {
   id?: string
+  firstName: string
+  lastName: string
   email: string
-  password: string
-  roleId: string
+  phone: string
+  position: string
+  department: string
+  location: string
+  bio: string
+  profileImage?: string
+  startDate: string
+  status: 'active' | 'inactive' | 'pending'
+  password?: string
+  roleId?: string
 }
 
 interface UserFormProps {
@@ -25,7 +35,17 @@ interface UserFormProps {
 }
 
 const initialUserData: Omit<UserData, 'id'> = {
+  firstName: '',
+  lastName: '',
   email: '',
+  phone: '',
+  position: '',
+  department: '',
+  location: '',
+  bio: '',
+  profileImage: '',
+  startDate: new Date().toISOString().split('T')[0],
+  status: 'active',
   password: '',
   roleId: ''
 }
@@ -41,7 +61,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
 
   const isEditing = Boolean(user?.id)
   const isFormValid = Object.values(validationState).every(Boolean) &&
-    formData.email && formData.password && formData.roleId
+    formData.email && formData.firstName && formData.lastName &&
+    (!isEditing ? formData.password : true) && formData.roleId
 
   const handleInputChange = useCallback((field: keyof UserData) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -147,6 +168,28 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               Información del Usuario
             </h3>
             
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FloatingInput
+                label="Nombre *"
+                type="text"
+                value={formData.firstName}
+                onChange={handleInputChange('firstName')}
+                onValidation={handleValidation('firstName')}
+                validation={{ required: true }}
+                disabled={isLoading}
+              />
+              
+              <FloatingInput
+                label="Apellido *"
+                type="text"
+                value={formData.lastName}
+                onChange={handleInputChange('lastName')}
+                onValidation={handleValidation('lastName')}
+                validation={{ required: true }}
+                disabled={isLoading}
+              />
+            </div>
+
             <FloatingInput
               label="Correo Electrónico *"
               type="email"
