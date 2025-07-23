@@ -117,9 +117,15 @@ export const Sidebar = memo(() => {
   const [expandedSections, setExpandedSections] = useState<string[]>(['Inventario'])
   const [navigation, setNavigation] = useState<NavigationItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isClient, setIsClient] = useState(false)
   const pathname = usePathname()
   const t = useTranslations()
   const locale = useLocale()
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
 
   // Load navigation configuration and icons asynchronously
   useEffect(() => {
@@ -162,7 +168,7 @@ export const Sidebar = memo(() => {
 
   // Memoize navigation items with smaller dependency arrays
   const navigationItems = useMemo(() => {
-    if (isLoading || navigation.length === 0) {
+    if (!isClient || isLoading || navigation.length === 0) {
       return <div className="p-4 text-center text-muted-foreground">{t('common.loading')}</div>
     }
 
@@ -177,7 +183,7 @@ export const Sidebar = memo(() => {
         t={t}
       />
     ))
-  }, [navigation, pathname, collapsed, expandedSections, toggleSection, isLoading, t])
+  }, [navigation, pathname, collapsed, expandedSections, toggleSection, isLoading, isClient, t])
 
   // Memoize collapsed classes
   const collapsedClasses = useMemo(() => cn(
@@ -242,11 +248,11 @@ export const Sidebar = memo(() => {
   ), [collapsed])
 
   return (
-    <div className={collapsedClasses}>
+    <div className={collapsedClasses} suppressHydrationWarning>
       {headerContent}
       
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2 custom-scrollbar overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-2 custom-scrollbar overflow-y-auto" suppressHydrationWarning>
         {navigationItems}
       </nav>
 

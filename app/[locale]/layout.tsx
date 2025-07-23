@@ -4,6 +4,7 @@ import {AuthProvider} from '@/lib/auth/auth-context';
 import {ThemeProvider} from '@/lib/contexts/theme-context';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
+import ErrorBoundary from '@/components/error-boundary';
 
 export default async function LocaleLayout({
   children,
@@ -22,16 +23,14 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            <AuthProvider>
-              {children}
-            </AuthProvider>
-          </NextIntlClientProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </NextIntlClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
