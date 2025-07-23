@@ -24,11 +24,9 @@ import {
 
 export interface UserData {
   id?: string
-  firstName: string
-  lastName: string
   email: string
   password: string
-  roleId?: string
+  roleId: string
 }
 
 export interface Role {
@@ -73,8 +71,6 @@ const getMockRoles = (t: any): Role[] => [
 ]
 
 const initialUserData: Omit<UserData, 'id'> = {
-  firstName: '',
-  lastName: '',
   email: '',
   password: '',
   roleId: ''
@@ -96,7 +92,7 @@ function CreateUserContent() {
   const mockRoles = getMockRoles(t)
 
   const isFormValid = Object.values(validationState).every(Boolean) &&
-    formData.firstName && formData.lastName && formData.email && formData.password && formData.roleId
+    formData.email && formData.password && formData.roleId
 
   const handleInputChange = useCallback((field: keyof UserData) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -112,16 +108,6 @@ function CreateUserContent() {
     setValidationState(prev => ({ ...prev, [field]: isValid }))
   }, [])
 
-  const handleImageSelect = useCallback((file: File) => {
-    setProfileImageFile(file)
-    const imageUrl = URL.createObjectURL(file)
-    setFormData(prev => ({ ...prev, profileImage: imageUrl }))
-  }, [])
-
-  const handleImageRemove = useCallback(() => {
-    setProfileImageFile(null)
-    setFormData(prev => ({ ...prev, profileImage: undefined }))
-  }, [])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -145,7 +131,7 @@ function CreateUserContent() {
         type: 'success',
         title: t('userCreatedSuccess'),
         description: t('userCreatedWithRole', {
-          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
           role: selectedRole?.name || ''
         })
       })
@@ -223,32 +209,12 @@ function CreateUserContent() {
                   <div className="bg-white rounded-xl border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
                       <User className="h-5 w-5 text-gray-600" />
-                      {t('userInformation')}
+                      Información del Usuario
                     </h2>
                     
                     <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FloatingInput
-                          label={`${t('firstName')} *`}
-                          value={formData.firstName}
-                          onChange={handleInputChange('firstName')}
-                          onValidation={handleValidation('firstName')}
-                          validation={{ required: true, minLength: 2 }}
-                          disabled={isLoading}
-                        />
-                        
-                        <FloatingInput
-                          label={`${t('lastName')} *`}
-                          value={formData.lastName}
-                          onChange={handleInputChange('lastName')}
-                          onValidation={handleValidation('lastName')}
-                          validation={{ required: true, minLength: 2 }}
-                          disabled={isLoading}
-                        />
-                      </div>
-
                       <FloatingInput
-                        label={`${t('email')} *`}
+                        label="Correo Electrónico *"
                         type="email"
                         value={formData.email}
                         onChange={handleInputChange('email')}
@@ -258,7 +224,7 @@ function CreateUserContent() {
                       />
 
                       <FloatingInput
-                        label={`${t('password')} *`}
+                        label="Contraseña *"
                         type="password"
                         value={formData.password}
                         onChange={handleInputChange('password')}
@@ -326,12 +292,12 @@ function CreateUserContent() {
                       <LoadingButton
                         type="submit"
                         isLoading={isLoading}
-                        loadingText={t('creatingUser')}
+                        loadingText={'Creando Usuario...'}
                         disabled={!isFormValid}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white"
                       >
                         <Save className="h-4 w-4 mr-2" />
-                        {t('createUser')}
+                        Crear Usuario
                       </LoadingButton>
                       
                       <button
@@ -340,7 +306,7 @@ function CreateUserContent() {
                         disabled={isLoading}
                         className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
                       >
-                        {tCommon('cancel')}
+                        Cancelar
                       </button>
                     </div>
                   </div>

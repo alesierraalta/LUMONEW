@@ -307,6 +307,11 @@
       "addRow": "Add Row",
       "create": "Create",
       "createItems": "Create {count} Items"
+    },
+    "actions": {
+      "addStock": "Add stock",
+      "subtractStock": "Subtract stock",
+      "edit": "Edit"
     }
   },
   "users": {

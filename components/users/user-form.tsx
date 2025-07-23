@@ -12,17 +12,9 @@ import { useTranslations } from 'next-intl'
 
 export interface UserData {
   id?: string
-  firstName: string
-  lastName: string
   email: string
-  phone: string
-  position: string
-  department: string
-  location: string
-  bio: string
-  profileImage?: string
-  startDate: string
-  status: 'active' | 'inactive' | 'pending'
+  password: string
+  roleId: string
 }
 
 interface UserFormProps {
@@ -33,16 +25,9 @@ interface UserFormProps {
 }
 
 const initialUserData: Omit<UserData, 'id'> = {
-  firstName: '',
-  lastName: '',
   email: '',
-  phone: '',
-  position: '',
-  department: '',
-  location: '',
-  bio: '',
-  startDate: '',
-  status: 'active'
+  password: '',
+  roleId: ''
 }
 
 export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFormProps) {
@@ -55,8 +40,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
   const tUsers = useTranslations('users')
 
   const isEditing = Boolean(user?.id)
-  const isFormValid = Object.values(validationState).every(Boolean) && 
-    formData.firstName && formData.lastName && formData.email
+  const isFormValid = Object.values(validationState).every(Boolean) &&
+    formData.email && formData.password && formData.roleId
 
   const handleInputChange = useCallback((field: keyof UserData) => (value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -66,17 +51,6 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
     setValidationState(prev => ({ ...prev, [field]: isValid }))
   }, [])
 
-  const handleImageSelect = useCallback((file: File) => {
-    setProfileImageFile(file)
-    // In a real app, you might upload the image immediately or show a preview
-    const imageUrl = URL.createObjectURL(file)
-    setFormData(prev => ({ ...prev, profileImage: imageUrl }))
-  }, [])
-
-  const handleImageRemove = useCallback(() => {
-    setProfileImageFile(null)
-    setFormData(prev => ({ ...prev, profileImage: undefined }))
-  }, [])
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault()
@@ -97,7 +71,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
         type: 'success',
         title: isEditing ? t('userUpdated') : t('userCreated'),
         description: t(isEditing ? 'userUpdatedSuccess' : 'userCreatedSuccess', {
-          name: `${formData.firstName} ${formData.lastName}`
+          email: formData.email
         })
       })
       
@@ -128,17 +102,24 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
     }
   }
 
-  // Phone validation
-  const phoneValidation = {
+  // Password validation
+  const passwordValidation = {
     required: true,
-    pattern: /^[\+]?[1-9][\d]{0,15}$/,
+    minLength: 6,
     custom: (value: string) => {
-      if (value && !/^[\+]?[1-9][\d]{0,15}$/.test(value)) {
-        return t('validPhone')
+      if (value && value.length < 6) {
+        return t('passwordMinLength')
       }
       return null
     }
   }
+
+  // Mock roles for selection
+  const roles = [
+    { id: '1', name: 'Administrador' },
+    { id: '2', name: 'Manager' },
+    { id: '3', name: 'Usuario' }
+  ]
 
   return (
     <div className="max-h-[80vh] overflow-y-auto custom-scrollbar">
@@ -150,60 +131,24 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              {isEditing ? t('editUser') : t('newUser')}
+              {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h2>
             <p className="text-sm text-gray-500">
-              {isEditing ? t('updateUserInfo') : t('completeUserData')}
+              {isEditing ? 'Actualizar información del usuario' : 'Completa los datos básicos del usuario'}
             </p>
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Profile Image */}
-          <div className="flex justify-center">
-            <div className="w-32">
-              <ImageUpload
-                onImageSelect={handleImageSelect}
-                onImageRemove={handleImageRemove}
-                currentImage={formData.profileImage}
-                maxSize={2}
-                className="w-32 h-32"
-              />
-              <p className="text-xs text-gray-500 text-center mt-2">
-                {t('profileImageOptional')}
-              </p>
-            </div>
-          </div>
-
-          {/* Personal Information */}
+          {/* User Information */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-              <User className="h-5 w-5 text-gray-600" />
-              {t('personalInformation')}
+              <Mail className="h-5 w-5 text-gray-600" />
+              Información del Usuario
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatingInput
-                label={t('firstNameRequired')}
-                value={formData.firstName}
-                onChange={handleInputChange('firstName')}
-                onValidation={handleValidation('firstName')}
-                validation={{ required: true, minLength: 2 }}
-                disabled={isLoading}
-              />
-              
-              <FloatingInput
-                label={t('lastNameRequired')}
-                value={formData.lastName}
-                onChange={handleInputChange('lastName')}
-                onValidation={handleValidation('lastName')}
-                validation={{ required: true, minLength: 2 }}
-                disabled={isLoading}
-              />
-            </div>
-
             <FloatingInput
-              label={t('emailRequired')}
+              label="Correo Electrónico *"
               type="email"
               value={formData.email}
               onChange={handleInputChange('email')}
@@ -212,95 +157,37 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               disabled={isLoading}
             />
 
-            <FloatingInput
-              label={t('phoneRequired')}
-              type="tel"
-              value={formData.phone}
-              onChange={handleInputChange('phone')}
-              onValidation={handleValidation('phone')}
-              validation={phoneValidation}
-              disabled={isLoading}
-            />
-          </div>
-
-          {/* Professional Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-gray-600" />
-              {t('professionalInformation')}
-            </h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {!isEditing && (
               <FloatingInput
-                label={t('positionRequired')}
-                value={formData.position}
-                onChange={handleInputChange('position')}
-                onValidation={handleValidation('position')}
-                validation={{ required: true, minLength: 2 }}
+                label="Contraseña *"
+                type="password"
+                value={formData.password}
+                onChange={handleInputChange('password')}
+                onValidation={handleValidation('password')}
+                validation={passwordValidation}
                 disabled={isLoading}
               />
-              
-              <FloatingInput
-                label={t('departmentRequired')}
-                value={formData.department}
-                onChange={handleInputChange('department')}
-                onValidation={handleValidation('department')}
-                validation={{ required: true, minLength: 2 }}
-                disabled={isLoading}
-              />
-            </div>
-
-            <FloatingInput
-              label={t('locationRequired')}
-              value={formData.location}
-              onChange={handleInputChange('location')}
-              onValidation={handleValidation('location')}
-              validation={{ required: true, minLength: 2 }}
-              disabled={isLoading}
-            />
-
-            <FloatingInput
-              label={t('startDateRequired')}
-              type="date"
-              value={formData.startDate}
-              onChange={handleInputChange('startDate')}
-              onValidation={handleValidation('startDate')}
-              validation={{ required: true }}
-              disabled={isLoading}
-            />
+            )}
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                {t('statusRequired')}
+                Rol *
               </label>
               <select
-                value={formData.status}
-                onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as UserData['status'] }))}
+                value={formData.roleId}
+                onChange={(e) => setFormData(prev => ({ ...prev, roleId: e.target.value }))}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
                 disabled={isLoading}
+                required
               >
-                <option value="active">{tUsers('active')}</option>
-                <option value="inactive">{tUsers('inactive')}</option>
-                <option value="pending">{tUsers('pending')}</option>
+                <option value="">Seleccionar rol...</option>
+                {roles.map((role) => (
+                  <option key={role.id} value={role.id}>
+                    {role.name}
+                  </option>
+                ))}
               </select>
             </div>
-          </div>
-
-          {/* Additional Information */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">
-              {t('additionalInformation')}
-            </h3>
-            
-            <FloatingTextarea
-              label={t('biography')}
-              value={formData.bio}
-              onChange={handleInputChange('bio')}
-              validation={{ maxLength: 500 }}
-              helperText={t('maxCharacters')}
-              rows={4}
-              disabled={isLoading}
-            />
           </div>
 
           {/* Form Actions */}
@@ -308,12 +195,12 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             <LoadingButton
               type="submit"
               isLoading={isLoading}
-              loadingText={isEditing ? t('updating') : t('creating')}
+              loadingText={isEditing ? 'Actualizando...' : 'Creando...'}
               disabled={!isFormValid}
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Save className="h-4 w-4 mr-2" />
-              {isEditing ? t('updateUser') : t('createUser')}
+              {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
             </LoadingButton>
             
             <button
@@ -323,7 +210,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               className="px-6 py-2 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
             >
               <X className="h-4 w-4 mr-2 inline" />
-              {t('cancel')}
+              Cancelar
             </button>
           </div>
         </form>

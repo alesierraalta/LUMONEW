@@ -307,6 +307,11 @@
       "addRow": "Agregar Fila",
       "create": "Crear",
       "createItems": "Crear {count} Items"
+    },
+    "actions": {
+      "addStock": "Agregar stock",
+      "subtractStock": "Restar stock",
+      "edit": "Editar"
     }
   },
   "users": {
