@@ -1,8 +1,0 @@
-{
-  "/api/transactions/route": "app/api/transactions/route.js",
-  "/[locale]/categories/page": "app/[locale]/categories/page.js",
-  "/[locale]/locations/page": "app/[locale]/locations/page.js",
-  "/[locale]/settings/page": "app/[locale]/settings/page.js",
-  "/[locale]/inventory/page": "app/[locale]/inventory/page.js",
-  "/[locale]/page": "app/[locale]/page.js"
-}
