@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform the data to match the frontend interface
-    const transformedTransactions = transactions?.map(transaction => ({
+    const transformedTransactions = transactions?.map((transaction: any) => ({
       id: transaction.id,
       type: transaction.type,
       lineItems: transaction.transaction_items?.map((item: any) => ({

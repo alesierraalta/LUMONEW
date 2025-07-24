@@ -54,9 +54,9 @@ function InventoryContent() {
       
       // Calculate low stock items
       const lowStockItems = inventory
-        .filter(item => item.quantity <= item.min_stock)
+        .filter((item: any) => item.quantity <= item.min_stock)
         .slice(0, 5)
-        .map(item => ({
+        .map((item: any) => ({
           id: item.id,
           nombre: item.name,
           stock: item.quantity,
@@ -64,13 +64,13 @@ function InventoryContent() {
         }))
       
       // Calculate total value
-      const totalValue = inventory.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+      const totalValue = inventory.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0)
       
       // Generate inventory data for cards
       const cardData = {
         totalItems: inventory.length,
         lowStockItems,
-        categories: categories.map(cat => cat.name),
+        categories: categories.map((cat: any) => cat.name),
         recentActivity: [
           { id: '1', action: 'Inventario cargado', product: 'Sistema', timestamp: new Date() }
         ],

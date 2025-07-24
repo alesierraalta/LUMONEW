@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     let data = await locationService.getAll()
     
     // Apply filters
-    if (data && search) {
+        if (data && search) {
       const searchLower = search.toLowerCase()
-      data = data.filter(location => 
+      data = data.filter((location: any) =>
         location.name.toLowerCase().includes(searchLower) ||
         (location.address && location.address.toLowerCase().includes(searchLower))
       )

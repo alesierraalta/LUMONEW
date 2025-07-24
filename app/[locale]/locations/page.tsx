@@ -46,9 +46,9 @@ function LocationsContent() {
       const inventory = await inventoryService.getAll()
       
       // Calculate item counts for each location
-      const locationsWithCounts = dbLocations.map(location => {
-        const locationItems = inventory.filter(item => item.location_id === location.id)
-        const itemQuantity = locationItems.reduce((sum, item) => sum + item.quantity, 0)
+      const locationsWithCounts = dbLocations.map((location: any) => {
+        const locationItems = inventory.filter((item: any) => item.location_id === location.id)
+        const itemQuantity = locationItems.reduce((sum: number, item: any) => sum + item.quantity, 0)
         
         return mapDatabaseToLocation(location, itemQuantity)
       })
@@ -57,15 +57,15 @@ function LocationsContent() {
       
       // Generate locations data for cards
       const totalLocations = locationsWithCounts.length
-      const totalItems = locationsWithCounts.reduce((sum, location) => sum + location.itemQuantity, 0)
+      const totalItems = locationsWithCounts.reduce((sum: number, location: any) => sum + location.itemQuantity, 0)
       const averageItemsPerLocation = totalLocations > 0 ? Math.round(totalItems / totalLocations) : 0
       const highestCapacityLocation = locationsWithCounts.length > 0
-        ? locationsWithCounts.reduce((max, location) =>
+        ? locationsWithCounts.reduce((max: any, location: any) =>
             location.itemQuantity > max.itemQuantity ? location : max, locationsWithCounts[0])
         : null
-      const emptyLocations = locationsWithCounts.filter(loc => loc.itemQuantity === 0).length
+      const emptyLocations = locationsWithCounts.filter((loc: any) => loc.itemQuantity === 0).length
       const utilizationRate = totalLocations > 0
-        ? Math.round((locationsWithCounts.filter(loc => loc.itemQuantity > 0).length / totalLocations) * 100)
+        ? Math.round((locationsWithCounts.filter((loc: any) => loc.itemQuantity > 0).length / totalLocations) * 100)
         : 0
       
       const cardData = {
@@ -76,13 +76,13 @@ function LocationsContent() {
         emptyLocations,
         utilizationRate,
         topLocations: locationsWithCounts
-          .sort((a, b) => b.itemQuantity - a.itemQuantity)
+          .sort((a: any, b: any) => b.itemQuantity - a.itemQuantity)
           .slice(0, 3)
-          .map(loc => ({ id: loc.id, name: loc.name, itemQuantity: loc.itemQuantity })),
+          .map((loc: any) => ({ id: loc.id, name: loc.name, itemQuantity: loc.itemQuantity })),
         recentActivity: [
           { id: '1', action: 'Ubicaciones cargadas', location: 'Sistema', timestamp: new Date() }
         ],
-        locationDistribution: locationsWithCounts.map(loc => ({
+        locationDistribution: locationsWithCounts.map((loc: any) => ({
           name: loc.name,
           value: loc.itemQuantity,
           utilization: loc.itemQuantity > 0 ? 'En Uso' : 'Vacío'

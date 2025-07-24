@@ -17,17 +17,17 @@ export async function GET(request: NextRequest) {
     
     // Apply filters
     if (data && role) {
-      data = data.filter(user => user.role === role)
+      data = data.filter((user: any) => user.role === role)
     }
     
     if (data && status) {
       const isActive = status === 'active'
-      data = data.filter(user => user.is_active === isActive)
+      data = data.filter((user: any) => user.is_active === isActive)
     }
     
     if (data && search) {
       const searchLower = search.toLowerCase()
-      data = data.filter(user => 
+      data = data.filter((user: any) => 
         user.name.toLowerCase().includes(searchLower) ||
         user.email.toLowerCase().includes(searchLower)
       )

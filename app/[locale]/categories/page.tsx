@@ -68,10 +68,10 @@ function CategoriesContent() {
       const inventory = await inventoryService.getAll()
       
       // Calculate item counts and values for each category
-      const categoriesWithCounts = mappedCategories.map(category => {
-        const categoryItems = inventory.filter(item => item.category_id === category.id)
+      const categoriesWithCounts = mappedCategories.map((category: Category) => {
+        const categoryItems = inventory.filter((item: any) => item.category_id === category.id)
         const itemCount = categoryItems.length
-        const totalValue = categoryItems.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0)
+        const totalValue = categoryItems.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0)
         
         return {
           ...category,
@@ -84,8 +84,8 @@ function CategoriesContent() {
       
       // Generate categories data for cards
       const totalCategories = categoriesWithCounts.length
-      const totalItems = categoriesWithCounts.reduce((sum, category) => sum + category.itemCount, 0)
-      const totalValue = categoriesWithCounts.reduce((sum, category) => sum + category.totalValue, 0)
+      const totalItems = categoriesWithCounts.reduce((sum: number, category: any) => sum + category.itemCount, 0)
+      const totalValue = categoriesWithCounts.reduce((sum: number, category: any) => sum + category.totalValue, 0)
       const averageItemsPerCategory = totalCategories > 0 ? Math.round(totalItems / totalCategories) : 0
       
       const cardData = {
@@ -94,13 +94,13 @@ function CategoriesContent() {
         totalValue,
         averageItemsPerCategory,
         topCategories: categoriesWithCounts
-          .sort((a, b) => b.itemCount - a.itemCount)
+          .sort((a: any, b: any) => b.itemCount - a.itemCount)
           .slice(0, 3)
-          .map(cat => ({ id: cat.id, name: cat.name, itemCount: cat.itemCount, value: cat.totalValue })),
+          .map((cat: any) => ({ id: cat.id, name: cat.name, itemCount: cat.itemCount, value: cat.totalValue })),
         recentActivity: [
           { id: '1', action: t('systemLoaded'), category: tCommon('system'), timestamp: new Date() }
         ],
-        categoryDistribution: categoriesWithCounts.map(cat => ({
+        categoryDistribution: categoriesWithCounts.map((cat: any) => ({
           name: cat.name,
           value: cat.itemCount,
           color: cat.color

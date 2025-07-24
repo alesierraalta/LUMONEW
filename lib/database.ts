@@ -335,7 +335,7 @@ export const inventoryService = {
     if (error) throw error
     
     // Filter items where quantity <= min_stock on the client side
-    return data?.filter(item => item.quantity <= item.min_stock) || []
+    return data?.filter((item: any) => item.quantity <= item.min_stock) || []
   },
 
   async getByCategory(categoryId: string) {
@@ -449,7 +449,7 @@ export const analyticsService = {
       .select('quantity, min_stock')
       .eq('status', 'active')
 
-    const lowStockCount = lowStockItems?.filter(item => item.quantity <= item.min_stock).length || 0
+    const lowStockCount = lowStockItems?.filter((item: any) => item.quantity <= item.min_stock).length || 0
 
     // Get total value
     const { data: inventoryValues } = await supabase
@@ -457,7 +457,7 @@ export const analyticsService = {
       .select('quantity, unit_price')
       .eq('status', 'active')
 
-    const totalValue = inventoryValues?.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0) || 0
+    const totalValue = inventoryValues?.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0) || 0
 
     // Get categories count
     const { count: categoriesCount } = await supabase
@@ -598,22 +598,22 @@ export const analyticsService = {
       if (error) throw error
 
       // Calculate total value for each item
-      const itemValues = inventoryData?.map(item => ({
+      const itemValues = inventoryData?.map((item: any) => ({
         ...item,
         totalValue: item.quantity * item.unit_price
       })) || []
 
       // Sort by value descending
-      itemValues.sort((a, b) => b.totalValue - a.totalValue)
+      itemValues.sort((a: any, b: any) => b.totalValue - a.totalValue)
 
-      const totalValue = itemValues.reduce((sum, item) => sum + item.totalValue, 0)
+      const totalValue = itemValues.reduce((sum: number, item: any) => sum + item.totalValue, 0)
       const totalItems = itemValues.length
 
       let cumulativeValue = 0
       let aItems = 0, bItems = 0, cItems = 0
       let aRevenue = 0, bRevenue = 0, cRevenue = 0
 
-      itemValues.forEach((item, index) => {
+      itemValues.forEach((item: any, index: number) => {
         cumulativeValue += item.totalValue
         const cumulativePercentage = (cumulativeValue / totalValue) * 100
 
@@ -682,7 +682,7 @@ export const analyticsService = {
       // Group by week
       const weeklyData: Record<string, any> = {}
       
-      salesData?.forEach(transaction => {
+      salesData?.forEach((transaction: any) => {
         const date = new Date(transaction.created_at)
         const weekStart = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay())
         const weekKey = `W${Math.ceil((date.getTime() - startDate.getTime()) / (7 * 24 * 60 * 60 * 1000))}`
@@ -698,7 +698,7 @@ export const analyticsService = {
           }
         }
         
-        const totalItems = transaction.transaction_items?.reduce((sum, item) => sum + item.quantity, 0) || 0
+        const totalItems = transaction.transaction_items?.reduce((sum: number, item: any) => sum + item.quantity, 0) || 0
         weeklyData[weekKey].velocity += totalItems
         weeklyData[weekKey].totalRevenue += transaction.total
         weeklyData[weekKey].orderCount += 1
@@ -742,7 +742,7 @@ export const analyticsService = {
       // Group by product and calculate metrics
       const productMetrics: Record<string, any> = {}
       
-      productSales?.forEach(item => {
+      productSales?.forEach((item: any) => {
         if (!productMetrics[item.product_name]) {
           productMetrics[item.product_name] = {
             name: item.product_name,

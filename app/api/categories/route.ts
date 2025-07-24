@@ -14,12 +14,12 @@ export async function GET(request: NextRequest) {
     
     // Apply filters
     if (data && !includeInactive) {
-      data = data.filter(category => category.is_active !== false)
+      data = data.filter((category: any) => category.is_active !== false)
     }
     
     if (data && search) {
       const searchLower = search.toLowerCase()
-      data = data.filter(category => 
+      data = data.filter((category: any) => 
         category.name.toLowerCase().includes(searchLower) ||
         (category.description && category.description.toLowerCase().includes(searchLower))
       )

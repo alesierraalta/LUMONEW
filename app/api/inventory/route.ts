@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
     
     // Apply additional filters
     if (data && status) {
-      data = data.filter(item => item.status === status)
+      data = data.filter((item: any) => item.status === status)
     }
     
     if (data && search) {
       const searchLower = search.toLowerCase()
-      data = data.filter(item => 
+      data = data.filter((item: any) => 
         item.name.toLowerCase().includes(searchLower) ||
         item.sku.toLowerCase().includes(searchLower) ||
         (item.description && item.description.toLowerCase().includes(searchLower))

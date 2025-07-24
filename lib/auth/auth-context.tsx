@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Listen for auth changes with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event: any, session: any) => {
         try {
           console.log('🔄 Auth state changed:', event, session ? 'authenticated' : 'not authenticated')
           setSession(session)
