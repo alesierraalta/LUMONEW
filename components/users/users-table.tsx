@@ -199,7 +199,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="w-full min-w-[800px]">
         <thead>
           <tr className="border-b border-gray-200">
             <th className="text-left py-3 px-4">
@@ -328,21 +328,21 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
 
       {selectedUsers.length > 0 && (
         <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="text-sm text-blue-800">
               {t('usersSelected', { count: selectedUsers.length })}
             </div>
-            <div className="flex space-x-2">
-              <Button variant="outline" size="sm">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 {t('exportSelected')}
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 {t('bulkEdit')}
               </Button>
               <Button
                 variant="outline"
                 size="sm"
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 w-full sm:w-auto"
                 onClick={handleBulkDeactivate}
               >
                 {t('deactivateSelected')}

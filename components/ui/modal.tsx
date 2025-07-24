@@ -91,17 +91,17 @@ function ModalOverlay({ content, options }: ModalOverlayProps) {
   }
 
   const sizeClasses = {
-    sm: 'max-w-md',
-    md: 'max-w-lg',
-    lg: 'max-w-2xl',
-    xl: 'max-w-4xl',
-    full: 'max-w-full mx-4'
+    sm: 'max-w-sm mx-2 xs:mx-3 sm:mx-4',
+    md: 'max-w-md xs:max-w-lg mx-2 xs:mx-3 sm:mx-4',
+    lg: 'max-w-lg xs:max-w-xl sm:max-w-2xl mx-2 xs:mx-3 sm:mx-4',
+    xl: 'max-w-xl xs:max-w-2xl sm:max-w-4xl mx-2 xs:mx-3 sm:mx-4',
+    full: 'max-w-full mx-2 xs:mx-3 sm:mx-4'
   }
 
   return (
     <div
       className={cn(
-        'fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300',
+        'fixed inset-0 z-50 flex items-center justify-center p-1 xs:p-2 sm:p-4 transition-all duration-300',
         options.overlay !== false && 'bg-black/50 backdrop-blur-sm',
         isVisible ? 'opacity-100' : 'opacity-0'
       )}
@@ -109,7 +109,7 @@ function ModalOverlay({ content, options }: ModalOverlayProps) {
     >
       <div
         className={cn(
-          'relative w-full bg-card rounded-xl shadow-2xl transition-all duration-300 transform',
+          'relative w-full bg-card rounded-lg xs:rounded-xl shadow-2xl transition-all duration-300 transform max-h-[95vh] xs:max-h-[90vh] overflow-y-auto',
           sizeClasses[options.size || 'md'],
           isVisible ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'
         )}

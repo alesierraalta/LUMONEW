@@ -1,4 +1,10 @@
-import { supabase } from './supabase'
+import { createClient as createBrowserClient } from './supabase/client'
+import { getServiceRoleClient } from './supabase/service-role'
+import { ensureUserExists } from './auth/user-sync'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// Use browser client for regular operations (compatible with both server and client)
+const supabase = createBrowserClient()
 
 // Enhanced audit log interface
 export interface AuditLog {
@@ -50,7 +56,7 @@ export class AuditService {
     try {
       // For client-side components, we'll use browser APIs when available
       const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : 'server-side'
-      const ipAddress = 'client-request' // Will be populated server-side when available
+      const ipAddress = null // Set to null instead of invalid IP format
       
       return {
         ip_address: ipAddress,
@@ -65,6 +71,28 @@ export class AuditService {
     }
   }
 
+  // Get supabase client for audit operations
+  private getSupabaseClient(providedClient?: SupabaseClient): SupabaseClient {
+    // Use provided client if available (should be authenticated server client)
+    if (providedClient) {
+      return providedClient
+    }
+    
+    // Check if we're in a server environment where service role key is available
+    if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        return getServiceRoleClient()
+      } catch (error) {
+        console.warn('Could not create service client for audit operations:', error)
+        return supabase
+      }
+    }
+    
+    // For client-side operations, use the regular browser client
+    // Note: This means audit operations from client-side will use user permissions
+    return supabase
+  }
+
   // Log any operation with comprehensive details
   async logOperation(params: {
     operation: AuditLog['operation']
@@ -75,12 +103,26 @@ export class AuditService {
     user_id?: string
     user_email?: string
     metadata?: AuditLog['metadata']
+    supabaseClient?: SupabaseClient
   }) {
     try {
       const clientInfo = await this.getClientInfo()
       
+      // Get user ID and ensure user exists in users table
+      const userId = params.user_id || this.currentUser?.id || null
+      
+      // If we have a user ID, try to ensure the user exists in the users table
+      if (userId && typeof window === 'undefined') {
+        // Only attempt user sync on server-side to avoid browser context issues
+        try {
+          await ensureUserExists(userId)
+        } catch (syncError) {
+          console.warn('Could not sync user, will proceed without user reference:', syncError)
+        }
+      }
+      
       const auditEntry = {
-        user_id: params.user_id || this.currentUser?.id || null,
+        user_id: userId,
         user_email: params.user_email || this.currentUser?.email || null,
         operation: params.operation,
         table_name: params.table_name,
@@ -92,13 +134,43 @@ export class AuditService {
         metadata: params.metadata || null
       }
 
-      const { data, error } = await supabase
+      // Use provided client or get fallback client
+      const client = this.getSupabaseClient(params.supabaseClient)
+      
+      const { data, error } = await client
         .from('audit_logs')
         .insert([auditEntry])
         .select()
         .single()
 
       if (error) {
+        // If it's a foreign key constraint error, try again without user_id
+        if (error.code === '23503' && error.message.includes('user_id')) {
+          console.warn('User ID not found in users table, logging audit without user reference')
+          const auditEntryWithoutUser = {
+            ...auditEntry,
+            user_id: null,
+            metadata: {
+              ...auditEntry.metadata,
+              original_user_id: userId,
+              note: 'User ID not found in users table - user sync may be needed'
+            }
+          }
+          
+          const { data: retryData, error: retryError } = await client
+            .from('audit_logs')
+            .insert([auditEntryWithoutUser])
+            .select()
+            .single()
+            
+          if (retryError) {
+            console.error('Audit logging failed on retry:', retryError)
+            return null
+          }
+          
+          return retryData
+        }
+        
         console.error('Audit logging failed:', error)
         return null
       }
@@ -111,7 +183,7 @@ export class AuditService {
   }
 
   // Log CREATE operations
-  async logCreate(table_name: string, record_id: string, new_values: any, metadata?: AuditLog['metadata']) {
+  async logCreate(table_name: string, record_id: string, new_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
     return this.logOperation({
       operation: 'INSERT',
       table_name,
@@ -120,14 +192,15 @@ export class AuditService {
       metadata: {
         ...metadata,
         action_type: 'create'
-      }
+      },
+      supabaseClient
     })
   }
 
   // Log UPDATE operations with field-level tracking
-  async logUpdate(table_name: string, record_id: string, old_values: any, new_values: any, metadata?: AuditLog['metadata']) {
+  async logUpdate(table_name: string, record_id: string, old_values: any, new_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
     // Identify changed fields
-    const affected_fields = Object.keys(new_values).filter(key => 
+    const affected_fields = Object.keys(new_values).filter(key =>
       JSON.stringify(old_values[key]) !== JSON.stringify(new_values[key])
     )
 
@@ -141,12 +214,13 @@ export class AuditService {
         ...metadata,
         action_type: 'update',
         affected_fields
-      }
+      },
+      supabaseClient
     })
   }
 
   // Log DELETE operations
-  async logDelete(table_name: string, record_id: string, old_values: any, metadata?: AuditLog['metadata']) {
+  async logDelete(table_name: string, record_id: string, old_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
     return this.logOperation({
       operation: 'DELETE',
       table_name,
@@ -155,7 +229,8 @@ export class AuditService {
       metadata: {
         ...metadata,
         action_type: 'delete'
-      }
+      },
+      supabaseClient
     })
   }
 
@@ -209,9 +284,10 @@ export class AuditService {
     })
   }
 // Get recent audit logs
-  async getRecentLogs(limit: number = 10): Promise<AuditLog[]> {
+  async getRecentLogs(limit: number = 10, supabaseClient?: SupabaseClient): Promise<AuditLog[]> {
     try {
-      const { data, error } = await supabase
+      const client = this.getSupabaseClient(supabaseClient)
+      const { data, error } = await client
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
@@ -235,8 +311,9 @@ export class AuditService {
     date_from?: string
     date_to?: string
     search?: string
-  } = {}) {
-    let query = supabase
+  } = {}, supabaseClient?: SupabaseClient) {
+    const client = this.getSupabaseClient(supabaseClient)
+    let query = client
       .from('audit_logs')
       .select(`
         *,
@@ -292,9 +369,10 @@ export class AuditService {
   }
 
   // Get audit statistics
-  async getAuditStats(date_from?: string, date_to?: string) {
+  async getAuditStats(date_from?: string, date_to?: string, supabaseClient?: SupabaseClient) {
     try {
-      let query = supabase
+      const client = this.getSupabaseClient(supabaseClient)
+      let query = client
         .from('audit_logs')
         .select('operation, table_name, created_at')
 
@@ -337,8 +415,9 @@ export class AuditService {
   }
 
   // Get recent activity for dashboard
-  async getRecentActivity(limit: number = 10) {
-    const { data, error } = await supabase
+  async getRecentActivity(limit: number = 10, supabaseClient?: SupabaseClient) {
+    const client = this.getSupabaseClient(supabaseClient)
+    const { data, error } = await client
       .from('audit_logs')
       .select(`
         *,
@@ -356,8 +435,9 @@ export class AuditService {
   }
 
   // Get user activity history
-  async getUserActivity(user_id: string, limit: number = 20) {
-    const { data, error } = await supabase
+  async getUserActivity(user_id: string, limit: number = 20, supabaseClient?: SupabaseClient) {
+    const client = this.getSupabaseClient(supabaseClient)
+    const { data, error } = await client
       .from('audit_logs')
       .select('*')
       .eq('user_id', user_id)
@@ -373,11 +453,12 @@ export class AuditService {
   }
 
   // Clean up old audit logs (for maintenance)
-  async cleanupOldLogs(days_to_keep: number = 90) {
+  async cleanupOldLogs(days_to_keep: number = 90, supabaseClient?: SupabaseClient) {
     const cutoff_date = new Date()
     cutoff_date.setDate(cutoff_date.getDate() - days_to_keep)
 
-    const { error } = await supabase
+    const client = this.getSupabaseClient(supabaseClient)
+    const { error } = await client
       .from('audit_logs')
       .delete()
       .lt('created_at', cutoff_date.toISOString())

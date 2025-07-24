@@ -3,13 +3,12 @@
 import { useAuth } from '@/lib/auth/auth-context'
 import { Dashboard } from '@/components/dashboard/dashboard'
 import { CardProvider } from '@/components/cards/card-provider'
-import { ProtectedLayout } from '@/components/layout/protected-layout'
 
 export default function Home() {
   const { user } = useAuth()
 
   return (
-    <ProtectedLayout>
+    <>
       {user && (
         <CardProvider
           currentPage="dashboard"
@@ -51,6 +50,6 @@ export default function Home() {
           <Dashboard />
         </CardProvider>
       )}
-    </ProtectedLayout>
+    </>
   )
 }

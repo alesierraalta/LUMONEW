@@ -1,5 +1,26 @@
-import { supabase } from './supabase'
+import { createClient as createBrowserClient } from './supabase/client'
+import { getServiceRoleClient } from './supabase/service-role'
 import { auditService } from './audit'
+
+// Use browser client for regular operations (compatible with both server and client)
+const supabase = createBrowserClient()
+
+// Get appropriate client for audit operations based on context
+function getAuditClient() {
+  // Check if we're in a server environment where service role key is available
+  if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      return getServiceRoleClient()
+    } catch (error) {
+      console.warn('Service role client not available, using browser client for audit operations:', error)
+      return supabase
+    }
+  }
+  
+  // For client-side operations, use the regular browser client
+  // Note: This means audit operations from client-side will use user permissions
+  return supabase
+}
 
 // Enhanced database operations with automatic audit logging
 export const auditedUserService = {
@@ -34,15 +55,15 @@ export const auditedUserService = {
       
       if (error) throw error
 
-      // Log the creation
+      // Log the creation (audit service will use service role client)
       await auditService.logCreate('users', data.id, data, {
         action_type: 'user_created',
         reason: 'New user registration'
-      })
+      }, getAuditClient())
       
       return data
     } catch (error) {
-      // Log failed operation
+      // Log failed operation (audit service will use service role client)
       await auditService.logOperation({
         operation: 'INSERT',
         table_name: 'users',
@@ -51,7 +72,8 @@ export const auditedUserService = {
         metadata: {
           action_type: 'failed_user_creation',
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
+        },
+        supabaseClient: getAuditClient()
       })
       throw error
     }
@@ -71,11 +93,11 @@ export const auditedUserService = {
       
       if (error) throw error
 
-      // Log the update with field-level changes
+      // Log the update with field-level changes (audit service will use service role client)
       await auditService.logUpdate('users', id, oldData, data, {
         action_type: 'user_updated',
         reason: 'User information modified'
-      })
+      }, getAuditClient())
       
       return data
     } catch (error) {
@@ -105,7 +127,7 @@ export const auditedUserService = {
       
       if (error) throw error
 
-      // Log the deletion
+      // Log the deletion (audit service will use service role client)
       await auditService.logDelete('users', id, oldData, {
         action_type: 'user_deleted',
         reason: 'User account removed'
@@ -298,10 +320,13 @@ export const auditedInventoryService = {
       
       if (error) throw error
 
-      await auditService.logCreate('inventory', data.id, data, {
+      // Log the creation (non-blocking to prevent audit failures from affecting main operation)
+      auditService.logCreate('inventory', data.id, data, {
         action_type: 'inventory_item_created',
         reason: 'New inventory item added',
         notes: `Item: ${item.name} (SKU: ${item.sku})`
+      }, getAuditClient()).catch(error => {
+        console.warn('Audit logging failed for inventory creation:', error)
       })
       
       return data
@@ -314,7 +339,8 @@ export const auditedInventoryService = {
         metadata: {
           action_type: 'failed_inventory_creation',
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
+        },
+        supabaseClient: getAuditClient()
       })
       throw error
     }
@@ -364,7 +390,10 @@ export const auditedInventoryService = {
         metadata.reason = 'Stock quantity adjusted'
       }
 
-      await auditService.logUpdate('inventory', id, oldData, data, metadata)
+      // Log the update (non-blocking to prevent audit failures from affecting main operation)
+      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient()).catch(error => {
+        console.warn('Audit logging failed for inventory update:', error)
+      })
       
       return data
     } catch (error) {
@@ -376,7 +405,8 @@ export const auditedInventoryService = {
         metadata: {
           action_type: 'failed_inventory_update',
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
+        },
+        supabaseClient: getAuditClient()
       })
       throw error
     }
@@ -393,10 +423,13 @@ export const auditedInventoryService = {
       
       if (error) throw error
 
-      await auditService.logDelete('inventory', id, oldData, {
+      // Log the deletion (non-blocking to prevent audit failures from affecting main operation)
+      auditService.logDelete('inventory', id, oldData, {
         action_type: 'inventory_item_deleted',
         reason: 'Inventory item removed from system',
         notes: `Deleted item: ${oldData.name} (SKU: ${oldData.sku})`
+      }, getAuditClient()).catch(error => {
+        console.warn('Audit logging failed for inventory deletion:', error)
       })
     } catch (error) {
       await auditService.logOperation({
@@ -406,7 +439,8 @@ export const auditedInventoryService = {
         metadata: {
           action_type: 'failed_inventory_deletion',
           error: error instanceof Error ? error.message : 'Unknown error'
-        }
+        },
+        supabaseClient: getAuditClient()
       })
       throw error
     }

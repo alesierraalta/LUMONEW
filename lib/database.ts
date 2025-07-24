@@ -1,4 +1,7 @@
-import { supabase } from './supabase'
+import { createClient as createBrowserClient } from './supabase/client'
+
+// Use browser client for database operations (compatible with both server and client)
+const supabase = createBrowserClient()
 
 // User operations
 export const userService = {
@@ -264,6 +267,7 @@ export const inventoryService = {
     min_stock: number
     max_stock: number
     unit_price: number
+    unit_of_measure?: string
     status?: string
   }) {
     const { data, error } = await supabase
@@ -289,6 +293,7 @@ export const inventoryService = {
     min_stock: number
     max_stock: number
     unit_price: number
+    unit_of_measure: string
     status: string
   }>) {
     const { data, error } = await supabase
@@ -316,6 +321,8 @@ export const inventoryService = {
   },
 
   async getLowStock() {
+    // Use a more efficient approach: fetch all active inventory and filter client-side
+    // This avoids the PostgREST column comparison limitation
     const { data, error } = await supabase
       .from('inventory')
       .select(`
@@ -323,11 +330,12 @@ export const inventoryService = {
         categories (id, name, color),
         locations (id, name, address)
       `)
-      .filter('quantity', 'lte', 'min_stock')
       .eq('status', 'active')
     
     if (error) throw error
-    return data
+    
+    // Filter items where quantity <= min_stock on the client side
+    return data?.filter(item => item.quantity <= item.min_stock) || []
   },
 
   async getByCategory(categoryId: string) {

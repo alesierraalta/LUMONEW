@@ -9,6 +9,13 @@ export const metadata: Metadata = {
   description: 'Sistema moderno de gestión de inventario construido con Next.js y Supabase',
 }
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
+
 export default function RootLayout({
   children,
 }: {

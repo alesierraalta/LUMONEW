@@ -15,6 +15,7 @@ interface NavigationItemProps {
   collapsed: boolean
   expandedSections: string[]
   onToggleSection: (sectionName: string) => void
+  onMobileClose?: () => void
   t: (key: string) => string
 }
 
@@ -24,6 +25,7 @@ const NavigationItemComponent = memo(({
   collapsed,
   expandedSections,
   onToggleSection,
+  onMobileClose,
   t
 }: NavigationItemProps) => {
 
@@ -69,6 +71,7 @@ const NavigationItemComponent = memo(({
                     key={child.name}
                     href={child.href || '#'}
                     prefetch={true}
+                    onClick={onMobileClose}
                     className={cn(
                       "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium sidebar-nav-item transition-colors",
                       isActive
@@ -94,6 +97,7 @@ const NavigationItemComponent = memo(({
         key={item.name}
         href={item.href || '#'}
         prefetch={true}
+        onClick={onMobileClose}
         className={cn(
           "flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium sidebar-nav-item transition-colors animate-fade-in",
           isActive
@@ -112,7 +116,11 @@ const NavigationItemComponent = memo(({
 
 NavigationItemComponent.displayName = 'NavigationItem'
 
-export const Sidebar = memo(() => {
+interface SidebarProps {
+  onMobileClose?: () => void
+}
+
+export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
   const [collapsed, setCollapsed] = useState(false)
   const [expandedSections, setExpandedSections] = useState<string[]>(['Inventario'])
   const [navigation, setNavigation] = useState<NavigationItem[]>([])
@@ -180,10 +188,11 @@ export const Sidebar = memo(() => {
         collapsed={collapsed}
         expandedSections={expandedSections}
         onToggleSection={toggleSection}
+        onMobileClose={onMobileClose}
         t={t}
       />
     ))
-  }, [navigation, pathname, collapsed, expandedSections, toggleSection, isLoading, isClient, t])
+  }, [navigation, pathname, collapsed, expandedSections, toggleSection, onMobileClose, isLoading, isClient, t])
 
   // Memoize collapsed classes
   const collapsedClasses = useMemo(() => cn(

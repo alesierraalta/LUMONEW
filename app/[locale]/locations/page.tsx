@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -256,91 +255,84 @@ export default function LocationsPage() {
   return (
     <ToastProvider>
       <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <CardProvider
-                currentPage="locations"
-                currentUser={user ? {
-                  id: user.id,
-                  name: user.user_metadata?.full_name || user.email || 'Usuario',
-                  email: user.email || '',
-                  role: 'admin' as const,
-                  avatar: user.user_metadata?.avatar_url,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: true,
-                    canEdit: true,
-                    canDelete: true,
-                    canViewReports: true,
-                    canManageUsers: true,
-                    canBulkOperations: true,
-                    canQuickStock: true,
-                    canViewAuditLogs: true
-                  },
-                  accessibleLocations: ['1', '2', '3'],
-                  defaultLocation: '1',
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: true,
-                      push: true,
-                      lowStock: true,
-                      bulkOperations: true
-                    }
-                  },
-                  createdAt: new Date(user.created_at),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                } : {
-                  id: 'guest',
-                  name: 'Guest User',
-                  email: 'guest@example.com',
-                  role: 'admin' as const,
-                  avatar: undefined,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: true,
-                    canEdit: true,
-                    canDelete: true,
-                    canViewReports: true,
-                    canManageUsers: true,
-                    canBulkOperations: true,
-                    canQuickStock: true,
-                    canViewAuditLogs: true
-                  },
-                  accessibleLocations: ['1', '2', '3'],
-                  defaultLocation: '1',
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: true,
-                      push: true,
-                      lowStock: true,
-                      bulkOperations: true
-                    }
-                  },
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                }}
-              >
-                <LocationsContent />
-              </CardProvider>
-            </div>
-          </main>
-        </div>
+        <CardProvider
+          currentPage="locations"
+          currentUser={user ? {
+            id: user.id,
+            name: user.user_metadata?.full_name || user.email || 'Usuario',
+            email: user.email || '',
+            role: 'admin' as const,
+            avatar: user.user_metadata?.avatar_url,
+            isActive: true,
+            lastLogin: new Date(),
+            permissions: {
+              canCreate: true,
+              canEdit: true,
+              canDelete: true,
+              canViewReports: true,
+              canManageUsers: true,
+              canBulkOperations: true,
+              canQuickStock: true,
+              canViewAuditLogs: true
+            },
+            accessibleLocations: ['1', '2', '3'],
+            defaultLocation: '1',
+            preferences: {
+              language: 'es' as const,
+              theme: 'light' as const,
+              dateFormat: 'DD/MM/YYYY',
+              currency: 'USD',
+              notifications: {
+                email: true,
+                push: true,
+                lowStock: true,
+                bulkOperations: true
+              }
+            },
+            createdAt: new Date(user.created_at),
+            updatedAt: new Date(),
+            createdBy: 'system',
+            updatedBy: 'system'
+          } : {
+            id: 'guest',
+            name: 'Guest User',
+            email: 'guest@example.com',
+            role: 'admin' as const,
+            avatar: undefined,
+            isActive: true,
+            lastLogin: new Date(),
+            permissions: {
+              canCreate: true,
+              canEdit: true,
+              canDelete: true,
+              canViewReports: true,
+              canManageUsers: true,
+              canBulkOperations: true,
+              canQuickStock: true,
+              canViewAuditLogs: true
+            },
+            accessibleLocations: ['1', '2', '3'],
+            defaultLocation: '1',
+            preferences: {
+              language: 'es' as const,
+              theme: 'light' as const,
+              dateFormat: 'DD/MM/YYYY',
+              currency: 'USD',
+              notifications: {
+                email: true,
+                push: true,
+                lowStock: true,
+                bulkOperations: true
+              }
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: 'system',
+            updatedBy: 'system'
+          }}
+        >
+          <LocationsContent />
+        </CardProvider>
       </ModalProvider>
     </ToastProvider>
   )

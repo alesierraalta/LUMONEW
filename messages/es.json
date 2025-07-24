@@ -25,7 +25,8 @@
     "total": "Total",
     "settings": "Configuración",
     "profile": "Perfil",
-    "logout": "Cerrar Sesión"
+    "logout": "Cerrar Sesión",
+    "system": "Sistema"
   },
   "navigation": {
     "dashboard": "Panel de Control",
@@ -447,7 +448,8 @@
       "creating": "Creando...",
       "updateUser": "Actualizar Usuario",
       "createUser": "Crear Usuario",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "role": "Rol"
     },
     "editForm": {
       "editUser": "Editar Usuario",
@@ -519,7 +521,20 @@
     "searchPlaceholder": "Buscar categorías...",
     "deleteSelected": "Eliminar Seleccionadas",
     "adjustSearchCriteria": "Intenta ajustar los criterios de búsqueda",
-    "createFirstCategory": "Crea tu primera categoría para comenzar"
+    "createFirstCategory": "Crea tu primera categoría para comenzar",
+    "createCategory": "Crear Categoría",
+    "createCategoryDescription": "Completa la información para crear una nueva categoría",
+    "categoryNamePlaceholder": "Ej: Electrónicos, Ropa, Hogar...",
+    "descriptionPlaceholder": "Descripción opcional de la categoría...",
+    "categoryColor": "Color de la Categoría",
+    "selectedColor": "Color seleccionado",
+    "nameRequired": "El nombre es obligatorio",
+    "nameMinLength": "El nombre debe tener al menos 2 caracteres",
+    "categoryCreated": "Categoría creada",
+    "categoryCreatedDescription": "La categoría '{name}' ha sido creada exitosamente",
+    "createError": "Error al crear categoría",
+    "createErrorDescription": "No se pudo crear la categoría. Inténtalo de nuevo.",
+    "creating": "Creando..."
   },
   "audit": {
     "title": "Registro de Auditoría",

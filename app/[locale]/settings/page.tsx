@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useTranslations, useLocale } from 'next-intl'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,8 +9,6 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { CardProvider } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
-import { ToastProvider } from '@/components/ui/toast'
-import { ModalProvider } from '@/components/ui/modal'
 import { Settings, User, Bell, Palette, Database, Shield } from 'lucide-react'
 import { setLocale } from '@/lib/actions/locale'
 import { useTheme } from '@/lib/contexts/theme-context'
@@ -287,22 +284,11 @@ function SettingsContent() {
 
 export default function SettingsPage() {
   return (
-    <ToastProvider>
-      <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <CardProvider
-                currentPage="settings"
-                currentUser={mockUser}
-              >
-                <SettingsContent />
-              </CardProvider>
-            </div>
-          </main>
-        </div>
-      </ModalProvider>
-    </ToastProvider>
+    <CardProvider
+      currentPage="settings"
+      currentUser={mockUser}
+    >
+      <SettingsContent />
+    </CardProvider>
   )
 }

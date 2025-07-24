@@ -1,8 +1,7 @@
- 'use client'
+'use client'
 
 import { useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -520,14 +519,7 @@ export default function CreateInventoryItemPage() {
   return (
     <ToastProvider>
       <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <CreateInventoryItemContent />
-            </div>
-          </main>
-        </div>
+        <CreateInventoryItemContent />
       </ModalProvider>
     </ToastProvider>
   )

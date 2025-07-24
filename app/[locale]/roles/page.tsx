@@ -9,7 +9,6 @@ import { ModalProvider } from '@/components/ui/modal'
 import { useModal } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { LoadingSpinner } from '@/components/ui/loading'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Shield } from 'lucide-react'
 import { AVAILABLE_PERMISSIONS } from '@/lib/permissions'
 import { roleService } from '@/lib/database'
@@ -306,14 +305,7 @@ export default function RolesPage() {
   return (
     <ToastProvider>
       <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <RoleManagementContent />
-            </div>
-          </main>
-        </div>
+        <RoleManagementContent />
       </ModalProvider>
     </ToastProvider>
   )

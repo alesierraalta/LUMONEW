@@ -3,15 +3,12 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Download, Upload, ShoppingCart, Package, History, Zap } from 'lucide-react'
 import { FilterOptions } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
-import { ToastProvider } from '@/components/ui/toast'
-import { ModalProvider } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth/auth-context'
 import { auditedInventoryService, auditedCategoryService } from '@/lib/database-with-audit'
@@ -215,71 +212,95 @@ function InventoryContent() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-fade-in">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">Inventory</h2>
-          <p className="text-muted-foreground">
-            Manage your inventory items, stock levels, and product information.
+    <div className="space-y-1 xs:space-y-2 sm:space-y-3 animate-fade-in">
+      <div className="flex flex-col gap-1 xs:gap-2 sm:gap-3">
+        <div className="px-1">
+          <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Inventory</h2>
+          <p className="text-muted-foreground text-xs leading-tight">
+            Manage inventory items
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        
+        {/* Ultra-compact button grid for smallest screens */}
+        <div className="grid grid-cols-4 xs:grid-cols-3 sm:flex sm:flex-wrap gap-0.5 xs:gap-1 sm:gap-2 px-1">
           <Button
             variant="outline"
             size="sm"
-            className="hover:scale-105 transition-transform"
+            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
             onClick={() => setIsTransactionHistoryOpen(true)}
           >
-            <History className="mr-2 h-4 w-4" />
-            History
+            <History className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">Hist</span>
+            <span className="hidden sm:inline ml-1 text-sm">History</span>
           </Button>
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Upload className="mr-2 h-4 w-4" />
-            Import
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+          >
+            <Upload className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">Imp</span>
+            <span className="hidden sm:inline ml-1 text-sm">Import</span>
           </Button>
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Download className="mr-2 h-4 w-4" />
-            Export
+          
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+          >
+            <Download className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">Exp</span>
+            <span className="hidden sm:inline ml-1 text-sm">Export</span>
           </Button>
+          
           <Button
             size="sm"
-            className="hover:scale-105 transition-transform bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
+            className="bg-green-600 hover:bg-green-700 text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
             onClick={() => {
               setTransactionMode('stock_addition')
               setIsTransactionBuilderOpen(true)
             }}
           >
-            <Package className="mr-2 h-4 w-4" />
-            Add Stock
+            <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">+St</span>
+            <span className="hidden sm:inline ml-1 text-sm">Stock</span>
           </Button>
+          
           <Button
             size="sm"
-            className="hover:scale-105 transition-transform"
+            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
             onClick={() => {
               setTransactionMode('sale')
               setIsTransactionBuilderOpen(true)
             }}
           >
-            <ShoppingCart className="mr-2 h-4 w-4" />
-            New Sale
+            <ShoppingCart className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">Sale</span>
+            <span className="hidden sm:inline ml-1 text-sm">Sale</span>
           </Button>
+          
           <Button
             size="sm"
             variant="outline"
-            className="hover:scale-105 transition-transform bg-yellow-50 dark:bg-yellow-900/20 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-900/30"
+            className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
             onClick={handleBulkCreate}
           >
-            <Zap className="mr-2 h-4 w-4" />
-            Creación Rápida
+            <Zap className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden xs:inline ml-1 text-xs">Bulk</span>
+            <span className="hidden sm:inline ml-1 text-sm">Bulk</span>
           </Button>
+          
           <Button
             size="sm"
             variant="outline"
-            className="hover:scale-105 transition-transform"
+            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0 col-span-2 xs:col-span-1"
             onClick={() => router.push('/inventory/create')}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Add Item
+            <Plus className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
+            <span className="ml-1 text-xs xs:hidden">Add</span>
+            <span className="hidden xs:inline ml-1 text-xs">Add</span>
+            <span className="hidden sm:inline ml-1 text-sm">Add Item</span>
           </Button>
         </div>
       </div>
@@ -287,9 +308,9 @@ function InventoryContent() {
       {/* Information Cards */}
       <CardContainer
         layout="grid"
-        columns={3}
-        maxCards={6}
-        className="mb-6"
+        columns={1}
+        maxCards={2}
+        className="mb-1 xs:mb-2 sm:mb-4 grid-cols-1 xs:grid-cols-2 gap-1 xs:gap-2 sm:gap-4"
       />
 
       <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
@@ -345,94 +366,83 @@ export default function InventoryPage() {
   const { user } = useAuth()
   
   return (
-    <ToastProvider>
-      <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <CardProvider
-                currentPage="inventory"
-                currentUser={user ? {
-                  id: user.id,
-                  name: user.user_metadata?.full_name || user.email || 'Usuario',
-                  email: user.email || '',
-                  role: 'admin' as const,
-                  avatar: user.user_metadata?.avatar_url,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: true,
-                    canEdit: true,
-                    canDelete: true,
-                    canViewReports: true,
-                    canManageUsers: true,
-                    canBulkOperations: true,
-                    canQuickStock: true,
-                    canViewAuditLogs: true
-                  },
-                  accessibleLocations: ['1', '2', '3'],
-                  defaultLocation: '1',
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: true,
-                      push: true,
-                      lowStock: true,
-                      bulkOperations: true
-                    }
-                  },
-                  createdAt: new Date(user.created_at),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                } : {
-                  id: 'guest',
-                  name: 'Guest User',
-                  email: 'guest@example.com',
-                  role: 'admin' as const,
-                  avatar: undefined,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: true,
-                    canEdit: true,
-                    canDelete: true,
-                    canViewReports: true,
-                    canManageUsers: true,
-                    canBulkOperations: true,
-                    canQuickStock: true,
-                    canViewAuditLogs: true
-                  },
-                  accessibleLocations: ['1', '2', '3'],
-                  defaultLocation: '1',
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: true,
-                      push: true,
-                      lowStock: true,
-                      bulkOperations: true
-                    }
-                  },
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                }}
-              >
-                <InventoryContent />
-              </CardProvider>
-            </div>
-          </main>
-        </div>
-      </ModalProvider>
-    </ToastProvider>
+    <CardProvider
+      currentPage="inventory"
+      currentUser={user ? {
+        id: user.id,
+        name: user.user_metadata?.full_name || user.email || 'Usuario',
+        email: user.email || '',
+        role: 'admin' as const,
+        avatar: user.user_metadata?.avatar_url,
+        isActive: true,
+        lastLogin: new Date(),
+        permissions: {
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
+          canViewReports: true,
+          canManageUsers: true,
+          canBulkOperations: true,
+          canQuickStock: true,
+          canViewAuditLogs: true
+        },
+        accessibleLocations: ['1', '2', '3'],
+        defaultLocation: '1',
+        preferences: {
+          language: 'es' as const,
+          theme: 'light' as const,
+          dateFormat: 'DD/MM/YYYY',
+          currency: 'USD',
+          notifications: {
+            email: true,
+            push: true,
+            lowStock: true,
+            bulkOperations: true
+          }
+        },
+        createdAt: new Date(user.created_at),
+        updatedAt: new Date(),
+        createdBy: 'system',
+        updatedBy: 'system'
+      } : {
+        id: 'guest',
+        name: 'Guest User',
+        email: 'guest@example.com',
+        role: 'admin' as const,
+        avatar: undefined,
+        isActive: true,
+        lastLogin: new Date(),
+        permissions: {
+          canCreate: true,
+          canEdit: true,
+          canDelete: true,
+          canViewReports: true,
+          canManageUsers: true,
+          canBulkOperations: true,
+          canQuickStock: true,
+          canViewAuditLogs: true
+        },
+        accessibleLocations: ['1', '2', '3'],
+        defaultLocation: '1',
+        preferences: {
+          language: 'es' as const,
+          theme: 'light' as const,
+          dateFormat: 'DD/MM/YYYY',
+          currency: 'USD',
+          notifications: {
+            email: true,
+            push: true,
+            lowStock: true,
+            bulkOperations: true
+          }
+        },
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        createdBy: 'system',
+        updatedBy: 'system'
+      }}
+    >
+      <InventoryContent />
+    </CardProvider>
   )
 }

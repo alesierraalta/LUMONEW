@@ -146,12 +146,12 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     const status = getInventoryStockStatus(item.quantity, item.min_stock)
     
     if (status === 'out_of_stock') {
-      return <Badge variant="destructive">{t('stockStatus.outOfStock')}</Badge>
+      return <Badge variant="destructive">{t('table.stockStatus.outOfStock')}</Badge>
     }
     if (status === 'low_stock') {
-      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">{t('stockStatus.lowStock')}</Badge>
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">{t('table.stockStatus.lowStock')}</Badge>
     }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800">{t('stockStatus.inStock')}</Badge>
+    return <Badge variant="secondary" className="bg-green-100 text-green-800">{t('table.stockStatus.inStock')}</Badge>
   }
 
   const handleEdit = async (item: InventoryItem) => {
@@ -235,20 +235,20 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2 xs:space-y-3 sm:space-y-4">
       {/* Search and Bulk Operations */}
-      <div className="flex items-center justify-between space-x-2">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+      <div className="flex flex-col gap-2 xs:gap-3">
+        <div className="relative">
+          <Search className="absolute left-2 top-2 xs:top-2.5 h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground" />
           <Input
-            placeholder={t('searchPlaceholder')}
+            placeholder={t('table.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8"
+            className="pl-6 xs:pl-8 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm"
           />
         </div>
         {selectedItems.length > 0 && (
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button className="bg-blue-600 hover:bg-blue-700 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm">
             {t('bulkOperations', { count: selectedItems.length })}
           </Button>
         )}
@@ -257,7 +257,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       {/* Table */}
       <div className="rounded-md border">
         <div className="overflow-x-auto">
-          <table className="w-full">
+          <table className="w-full min-w-[600px] xs:min-w-[700px] sm:min-w-[800px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
@@ -372,42 +372,43 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   <td className="p-4 align-middle">
                     <div className="text-sm">{formatDate(new Date(item.updated_at))}</div>
                   </td>
-                  <td className="p-4 align-middle">
-                    <div className="flex items-center space-x-1">
+                  <td className="p-2 xs:p-3 sm:p-4 align-middle">
+                    <div className="flex items-center space-x-0.5 xs:space-x-1 min-w-[100px] xs:min-w-[120px] sm:min-w-[140px]">
                       <Button
                         variant="ghost"
                         size="sm"
-                        title={t('actions.addStock')}
+                        title={t('table.actions.addStock')}
                         onClick={() => handleQuickStock(item)}
-                        className="text-green-600 hover:text-green-700"
+                        className="text-green-600 hover:text-green-700 h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        title={t('actions.subtractStock')}
+                        title={t('table.actions.subtractStock')}
                         onClick={() => handleQuickStockSubtract(item)}
-                        className="text-orange-600 hover:text-orange-700"
+                        className="text-orange-600 hover:text-orange-700 h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0"
                       >
-                        <Minus className="h-4 w-4" />
+                        <Minus className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        title={t('actions.edit')}
+                        title={t('table.actions.edit')}
                         onClick={() => handleEdit(item)}
+                        className="h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0"
                       >
-                        <Edit className="h-4 w-4" />
+                        <Edit className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        title={t('actions.delete')}
+                        title={t('table.actions.delete')}
                         onClick={() => handleDelete(item)}
-                        className="text-red-600 hover:text-red-700"
+                        className="text-red-600 hover:text-red-700 h-6 w-6 xs:h-7 xs:w-7 sm:h-8 sm:w-8 p-0"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </td>

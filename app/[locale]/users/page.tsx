@@ -5,12 +5,9 @@ import { useState, useCallback, useEffect } from 'react'
 import { UserGrid } from '@/components/users/user-grid'
 import { UserForm, UserData } from '@/components/users/user-form'
 import { UserEditForm, UserEditData } from '@/components/users/user-edit-form'
-import { ToastProvider } from '@/components/ui/toast'
-import { ModalProvider } from '@/components/ui/modal'
 import { useModal } from '@/components/ui/modal'
 import { useToast } from '@/components/ui/toast'
 import { LoadingSpinner } from '@/components/ui/loading'
-import { Sidebar } from '@/components/layout/sidebar'
 import { userService } from '@/lib/database'
 import { useTranslations } from 'next-intl'
 
@@ -206,17 +203,15 @@ function UserManagementContent() {
   }
 
   return (
-    <div className="custom-scrollbar">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <UserGrid
-          users={users}
-          isLoading={isLoading}
-          onUserCreate={handleUserCreate}
-          onUserEdit={handleUserEdit}
-          onUserDelete={handleUserDelete}
-          onUserView={handleUserView}
-        />
-      </div>
+    <div className="space-y-6">
+      <UserGrid
+        users={users}
+        isLoading={isLoading}
+        onUserCreate={handleUserCreate}
+        onUserEdit={handleUserEdit}
+        onUserDelete={handleUserDelete}
+        onUserView={handleUserView}
+      />
     </div>
   )
 }
@@ -325,17 +320,6 @@ function UserDetailsModal({ user }: { user: UserData }) {
 
 export default function UsersPage() {
   return (
-    <ToastProvider>
-      <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <UserManagementContent />
-            </div>
-          </main>
-        </div>
-      </ModalProvider>
-    </ToastProvider>
+    <UserManagementContent />
   )
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
-import { Sidebar } from '@/components/layout/sidebar'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Plus, Package, Download, Upload } from 'lucide-react'
@@ -15,6 +14,8 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { categoryService, inventoryService } from '@/lib/database'
 import { PageLoading } from '@/components/ui/page-loading'
 import { useTranslations } from 'next-intl'
+import { useModal } from '@/components/ui/modal'
+import { CreateCategoryModal } from '@/components/categories/create-category-modal'
 
 // Dynamic imports for better performance
 const CategoriesTable = lazy(() => import('@/components/categories/categories-table').then(mod => ({ default: mod.CategoriesTable })))
@@ -53,6 +54,7 @@ function CategoriesContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [categoriesData, setCategoriesData] = useState<any>(null)
   const { addToast } = useToast()
+  const { openModal } = useModal()
 
   const loadCategories = useCallback(async () => {
     try {
@@ -119,6 +121,13 @@ function CategoriesContent() {
     }
   }, [addToast, t, tCommon])
 
+  const handleCreateCategory = useCallback(() => {
+    openModal(
+      <CreateCategoryModal onSuccess={loadCategories} />,
+      { size: 'md' }
+    )
+  }, [openModal, loadCategories])
+
   const handleMount = useCallback(() => {
     setIsClient(true)
     loadCategories()
@@ -171,7 +180,11 @@ function CategoriesContent() {
             <Download className="mr-2 h-4 w-4" />
             {tCommon('export')}
           </Button>
-          <Button size="sm" className="hover:scale-105 transition-transform">
+          <Button
+            size="sm"
+            className="hover:scale-105 transition-transform"
+            onClick={handleCreateCategory}
+          >
             <Plus className="mr-2 h-4 w-4" />
             {t('addCategory')}
           </Button>
@@ -222,91 +235,84 @@ export default function CategoriesPage() {
   return (
     <ToastProvider>
       <ModalProvider>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <main className="flex-1 overflow-hidden">
-            <div className="h-full overflow-y-auto custom-scrollbar">
-              <CardProvider
-                currentPage="categories"
-                currentUser={user ? {
-                  id: user.id,
-                  name: user.user_metadata?.full_name || user.email || 'Usuario',
-                  email: user.email || '',
-                  role: 'admin' as const,
-                  avatar: user.user_metadata?.avatar_url,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: true,
-                    canEdit: true,
-                    canDelete: true,
-                    canViewReports: true,
-                    canManageUsers: true,
-                    canBulkOperations: true,
-                    canQuickStock: true,
-                    canViewAuditLogs: true
-                  },
-                  accessibleLocations: ['1', '2', '3'],
-                  defaultLocation: '1',
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: true,
-                      push: true,
-                      lowStock: true,
-                      bulkOperations: true
-                    }
-                  },
-                  createdAt: new Date(user.created_at),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                } : {
-                  id: 'guest',
-                  name: 'Guest User',
-                  email: 'guest@example.com',
-                  role: 'viewer' as const,
-                  avatar: undefined,
-                  isActive: true,
-                  lastLogin: new Date(),
-                  permissions: {
-                    canCreate: false,
-                    canEdit: false,
-                    canDelete: false,
-                    canViewReports: false,
-                    canManageUsers: false,
-                    canBulkOperations: false,
-                    canQuickStock: false,
-                    canViewAuditLogs: false
-                  },
-                  accessibleLocations: [],
-                  defaultLocation: undefined,
-                  preferences: {
-                    language: 'es' as const,
-                    theme: 'light' as const,
-                    dateFormat: 'DD/MM/YYYY',
-                    currency: 'USD',
-                    notifications: {
-                      email: false,
-                      push: false,
-                      lowStock: false,
-                      bulkOperations: false
-                    }
-                  },
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                  createdBy: 'system',
-                  updatedBy: 'system'
-                }}
-              >
-                <CategoriesContent />
-              </CardProvider>
-            </div>
-          </main>
-        </div>
+        <CardProvider
+          currentPage="categories"
+          currentUser={user ? {
+            id: user.id,
+            name: user.user_metadata?.full_name || user.email || 'Usuario',
+            email: user.email || '',
+            role: 'admin' as const,
+            avatar: user.user_metadata?.avatar_url,
+            isActive: true,
+            lastLogin: new Date(),
+            permissions: {
+              canCreate: true,
+              canEdit: true,
+              canDelete: true,
+              canViewReports: true,
+              canManageUsers: true,
+              canBulkOperations: true,
+              canQuickStock: true,
+              canViewAuditLogs: true
+            },
+            accessibleLocations: ['1', '2', '3'],
+            defaultLocation: '1',
+            preferences: {
+              language: 'es' as const,
+              theme: 'light' as const,
+              dateFormat: 'DD/MM/YYYY',
+              currency: 'USD',
+              notifications: {
+                email: true,
+                push: true,
+                lowStock: true,
+                bulkOperations: true
+              }
+            },
+            createdAt: new Date(user.created_at),
+            updatedAt: new Date(),
+            createdBy: 'system',
+            updatedBy: 'system'
+          } : {
+            id: 'guest',
+            name: 'Guest User',
+            email: 'guest@example.com',
+            role: 'viewer' as const,
+            avatar: undefined,
+            isActive: true,
+            lastLogin: new Date(),
+            permissions: {
+              canCreate: false,
+              canEdit: false,
+              canDelete: false,
+              canViewReports: false,
+              canManageUsers: false,
+              canBulkOperations: false,
+              canQuickStock: false,
+              canViewAuditLogs: false
+            },
+            accessibleLocations: [],
+            defaultLocation: undefined,
+            preferences: {
+              language: 'es' as const,
+              theme: 'light' as const,
+              dateFormat: 'DD/MM/YYYY',
+              currency: 'USD',
+              notifications: {
+                email: false,
+                push: false,
+                lowStock: false,
+                bulkOperations: false
+              }
+            },
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            createdBy: 'system',
+            updatedBy: 'system'
+          }}
+        >
+          <CategoriesContent />
+        </CardProvider>
       </ModalProvider>
     </ToastProvider>
   )

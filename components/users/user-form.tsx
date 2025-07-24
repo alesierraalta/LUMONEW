@@ -144,18 +144,18 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
 
   return (
     <div className="max-h-[80vh] overflow-y-auto custom-scrollbar">
-      <div className="p-6">
+      <div className="p-2 xs:p-3 sm:p-4 md:p-6">
         {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <User className="h-6 w-6 text-blue-600" />
+        <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 xs:gap-3 mb-4 xs:mb-6">
+          <div className="p-1.5 xs:p-2 bg-blue-100 rounded-lg">
+            <User className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-base xs:text-lg sm:text-xl font-semibold text-gray-900">
               {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h2>
-            <p className="text-sm text-gray-500">
-              {isEditing ? 'Actualizar información del usuario' : 'Completa los datos básicos del usuario'}
+            <p className="text-xs xs:text-sm text-gray-500">
+              {isEditing ? 'Actualizar información' : 'Completa los datos básicos'}
             </p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
               Información del Usuario
             </h3>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 xs:gap-3 sm:gap-4">
               <FloatingInput
                 label="Nombre *"
                 type="text"
@@ -234,25 +234,26 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           </div>
 
           {/* Form Actions */}
-          <div className="flex gap-3 pt-6 border-t border-gray-200">
+          <div className="flex flex-col xs:flex-row gap-2 xs:gap-3 pt-4 xs:pt-6 border-t border-gray-200">
             <LoadingButton
               type="submit"
               isLoading={isLoading}
               loadingText={isEditing ? 'Actualizando...' : 'Creando...'}
               disabled={!isFormValid}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white h-9 xs:h-10 text-sm xs:text-base"
             >
-              <Save className="h-4 w-4 mr-2" />
-              {isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}
+              <Save className="h-3 w-3 xs:h-4 xs:w-4 mr-1 xs:mr-2" />
+              <span className="xs:hidden">{isEditing ? 'Actualizar' : 'Crear'}</span>
+              <span className="hidden xs:inline">{isEditing ? 'Actualizar Usuario' : 'Crear Usuario'}</span>
             </LoadingButton>
             
             <button
               type="button"
               onClick={handleCancel}
               disabled={isLoading}
-              className="px-6 py-2 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors disabled:opacity-50"
+              className="px-4 xs:px-6 py-2 border border-border text-muted-foreground rounded-lg hover:bg-muted transition-colors disabled:opacity-50 h-9 xs:h-10 text-sm xs:text-base"
             >
-              <X className="h-4 w-4 mr-2 inline" />
+              <X className="h-3 w-3 xs:h-4 xs:w-4 mr-1 xs:mr-2 inline" />
               Cancelar
             </button>
           </div>

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { userService } from '@/lib/database'
 import { auditedUserService } from '@/lib/database-with-audit'
+import { createClient } from '@/lib/supabase/server'
+import { getServiceRoleClient } from '@/lib/supabase/service-role'
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,13 +56,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     
     // Validate required fields
-    const requiredFields = ['name', 'email', 'role']
+    const requiredFields = ['name', 'email', 'password', 'role']
     const missingFields = requiredFields.filter(field => !body[field])
     
     if (missingFields.length > 0) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Missing required fields',
           message: `Required fields: ${missingFields.join(', ')}`
         },
@@ -72,15 +74,52 @@ export async function POST(request: NextRequest) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(body.email)) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Invalid email format'
         },
         { status: 400 }
       )
     }
 
-    // Use audited service for creation
+    // Validate password length
+    if (body.password.length < 6) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Password must be at least 6 characters long'
+        },
+        { status: 400 }
+      )
+    }
+
+    // Create Supabase service role client for admin operations
+    const supabaseAdmin = getServiceRoleClient()
+
+    // First, create the user in Supabase Auth
+    const { data: authUser, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: body.email,
+      password: body.password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        name: body.name,
+        role: body.role
+      }
+    })
+
+    if (authError) {
+      console.error('Error creating auth user:', authError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Failed to create user in authentication system',
+          message: authError.message
+        },
+        { status: 500 }
+      )
+    }
+
+    // Then create the user in our database table
     const newUser = await auditedUserService.create({
       name: body.name,
       email: body.email,
@@ -90,13 +129,16 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: newUser
+      data: {
+        ...newUser,
+        auth_id: authUser.user.id
+      }
     })
   } catch (error) {
     console.error('Error creating user:', error)
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to create user',
         message: error instanceof Error ? error.message : 'Unknown error'
       },

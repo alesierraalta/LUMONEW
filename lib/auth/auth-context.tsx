@@ -21,7 +21,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [mounted, setMounted] = useState(false)
-  const supabase = createClient()
+  const [error, setError] = useState<string | null>(null)
+  
+  // Initialize Supabase client with error handling
+  const [supabase] = useState(() => {
+    try {
+      const client = createClient()
+      console.log('✅ Supabase client created successfully')
+      return client
+    } catch (err) {
+      console.error('❌ Failed to create Supabase client:', err)
+      setError('Failed to initialize authentication')
+      throw err
+    }
+  })
 
   useEffect(() => {
     setMounted(true)
@@ -30,22 +43,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!mounted) return
 
-    // Get initial session
+    // Get initial session with error handling
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
+      try {
+        console.log('🔍 Getting initial session...')
+        const { data: { session }, error } = await supabase.auth.getSession()
+        
+        if (error) {
+          console.error('❌ Error getting session:', error)
+          setError(error.message)
+        } else {
+          console.log('✅ Session retrieved:', session ? 'authenticated' : 'not authenticated')
+          setSession(session)
+          setUser(session?.user ?? null)
+        }
+      } catch (err) {
+        console.error('❌ Unexpected error getting session:', err)
+        setError('Failed to get authentication session')
+      } finally {
+        setLoading(false)
+      }
     }
 
     getSession()
 
-    // Listen for auth changes
+    // Listen for auth changes with error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
+        try {
+          console.log('🔄 Auth state changed:', event, session ? 'authenticated' : 'not authenticated')
+          setSession(session)
+          setUser(session?.user ?? null)
+          setError(null) // Clear any previous errors
+        } catch (err) {
+          console.error('❌ Error in auth state change:', err)
+          setError('Authentication state error')
+        } finally {
+          setLoading(false)
+        }
       }
     )
 
@@ -53,11 +88,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [supabase.auth, mounted])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-    return { error }
+    try {
+      console.log('🔐 Attempting sign in for:', email)
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+      
+      if (error) {
+        console.error('❌ Sign in error:', error)
+      } else {
+        console.log('✅ Sign in successful')
+      }
+      
+      return { error }
+    } catch (err) {
+      console.error('❌ Unexpected sign in error:', err)
+      return { error: err as AuthError }
+    }
   }
 
   const signUp = async (email: string, password: string, userData?: any) => {
@@ -95,6 +143,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signOut,
     resetPassword,
+  }
+
+  // Show error state if there's an initialization error
+  if (error && mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold text-red-600 mb-4">Authentication Error</h2>
+          <p className="text-gray-700 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700"
+          >
+            Reload Page
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // Prevent hydration mismatch by not rendering until mounted

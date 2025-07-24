@@ -78,7 +78,7 @@ export function InventoryChart() {
   }
 
   return (
-    <ResponsiveContainer width="100%" height={350}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={300} className="h-[300px] sm:h-[350px]">
       <PieChart>
         <Pie
           data={data}
@@ -116,16 +116,16 @@ export function InventoryChart() {
             return null
           }}
         />
-        <Legend 
+        <Legend
           content={({ payload }) => (
-            <div className="flex flex-wrap justify-center gap-4 mt-4">
+            <div className="flex flex-wrap justify-center gap-2 sm:gap-4 mt-4 px-2">
               {payload?.map((entry, index) => (
                 <div key={index} className="flex items-center gap-2">
-                  <div 
-                    className="w-3 h-3 rounded-full" 
+                  <div
+                    className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-xs sm:text-sm text-muted-foreground">
                     {entry.value}
                   </span>
                 </div>
