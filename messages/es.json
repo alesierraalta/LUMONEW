@@ -183,6 +183,18 @@
       "inventoryItems": "Artículos de Inventario",
       "inventoryItemsDescription": "Una lista de todos los artículos de inventario con sus niveles de stock actuales y detalles."
     },
+    "searchPlaceholder": "Buscar artículos...",
+    "stockStatus": {
+      "inStock": "En Stock",
+      "lowStock": "Stock Bajo",
+      "outOfStock": "Sin Stock"
+    },
+    "actions": {
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "addStock": "Agregar stock",
+      "subtractStock": "Restar stock"
+    },
     "table": {
       "searchPlaceholder": "Buscar artículos...",
       "bulkOperations": "Operaciones en Lote",
@@ -308,11 +320,6 @@
       "addRow": "Agregar Fila",
       "create": "Crear",
       "createItems": "Crear {count} Items"
-    },
-    "actions": {
-      "addStock": "Agregar stock",
-      "subtractStock": "Restar stock",
-      "edit": "Editar"
     }
   },
   "users": {

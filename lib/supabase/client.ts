@@ -1,6 +1,14 @@
 import { createBrowserClient } from '@supabase/ssr'
 
+// Singleton instance to prevent multiple GoTrueClient instances
+let clientInstance: ReturnType<typeof createBrowserClient> | null = null
+
 export function createClient() {
+  // Return existing instance if available
+  if (clientInstance) {
+    return clientInstance
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -17,9 +25,9 @@ export function createClient() {
   console.log('🔧 Creating Supabase browser client with URL:', supabaseUrl.substring(0, 30) + '...')
 
   try {
-    const client = createBrowserClient(supabaseUrl, supabaseAnonKey)
+    clientInstance = createBrowserClient(supabaseUrl, supabaseAnonKey)
     console.log('✅ Supabase browser client created successfully')
-    return client
+    return clientInstance
   } catch (error) {
     console.error('❌ Failed to create Supabase browser client:', error)
     throw error
