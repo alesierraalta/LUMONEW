@@ -151,7 +151,7 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
     return products.filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.sku.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       product.barcode?.includes(searchTerm)
     )
   }, [searchTerm, products])
