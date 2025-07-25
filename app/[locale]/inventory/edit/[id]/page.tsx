@@ -21,7 +21,6 @@ interface FormData {
   quantity: string
   min_stock: string
   max_stock: string
-  unit_of_measure: string
 }
 
 interface FormErrors {
@@ -43,8 +42,7 @@ function EditInventoryItemContent() {
     unit_price: '',
     quantity: '',
     min_stock: '',
-    max_stock: '',
-    unit_of_measure: ''
+    max_stock: ''
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -85,7 +83,6 @@ function EditInventoryItemContent() {
         quantity: itemData.quantity?.toString() || '',
         min_stock: itemData.min_stock?.toString() || '',
         max_stock: itemData.max_stock?.toString() || '',
-        unit_of_measure: itemData.unit_of_measure || 'unidad',
       })
 
       setCategories(categoriesData)
@@ -195,7 +192,6 @@ function EditInventoryItemContent() {
         quantity: formData.quantity ? parseInt(formData.quantity) : 0,
         min_stock: formData.min_stock ? parseInt(formData.min_stock) : 0,
         max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
-        unit_of_measure: formData.unit_of_measure,
       }
 
       // Validate that we have required IDs
@@ -450,28 +446,7 @@ function EditInventoryItemContent() {
 
               {/* Removed status field as it's not necessary */}
 
-              {/* Unidad de Medida */}
-              <div className="space-y-2">
-                <label htmlFor="unit_of_measure" className="text-sm font-medium">
-                  Unidad de Medida
-                </label>
-                <select
-                  id="unit_of_measure"
-                  value={formData.unit_of_measure}
-                  onChange={(e) => handleInputChange('unit_of_measure', e.target.value)}
-                  className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-                >
-                  <option value="unidad">Unidad</option>
-                  <option value="kg">Kilogramo</option>
-                  <option value="g">Gramo</option>
-                  <option value="l">Litro</option>
-                  <option value="ml">Mililitro</option>
-                  <option value="m">Metro</option>
-                  <option value="cm">Centímetro</option>
-                  <option value="caja">Caja</option>
-                  <option value="paquete">Paquete</option>
-                </select>
-              </div>
+              
 
 
             </div>
