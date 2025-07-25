@@ -75,7 +75,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           variant={filters.stockStatus === 'good_stock' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'good_stock' ? undefined : 'good_stock')}
-          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200"
+          className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200 dark:bg-green-900/20 dark:hover:bg-green-900/30 dark:text-green-400 dark:border-green-800"
         >
           {t('goodStock')}
         </Button>
@@ -84,7 +84,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           variant={filters.stockStatus === 'low_stock' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'low_stock' ? undefined : 'low_stock')}
-          className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200"
+          className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:hover:bg-yellow-900/30 dark:text-yellow-400 dark:border-yellow-800"
         >
           {t('lowStock')}
         </Button>
@@ -93,7 +93,7 @@ export function InventoryFilters({ filters, onFiltersChange }: InventoryFiltersP
           variant={filters.stockStatus === 'out_of_stock' ? 'default' : 'outline'}
           size="sm"
           onClick={() => handleFilterChange('stockStatus', filters.stockStatus === 'out_of_stock' ? undefined : 'out_of_stock')}
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200"
+          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200 dark:bg-red-900/20 dark:hover:bg-red-900/30 dark:text-red-400 dark:border-red-800"
         >
           {t('outOfStock')}
         </Button>

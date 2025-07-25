@@ -143,7 +143,7 @@ function LocationsContent() {
       <div className="flex items-center justify-center h-full">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600">Cargando ubicaciones...</p>
+          <p className="text-gray-600 dark:text-gray-400">Cargando ubicaciones...</p>
         </div>
       </div>
     )

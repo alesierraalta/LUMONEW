@@ -103,9 +103,9 @@ export function UserGrid({
 
   const getStatusBadge = (status: UserData['status']) => {
     const variants = {
-      active: 'bg-green-100 text-green-800 border-green-200',
-      inactive: 'bg-gray-100 text-gray-800 border-gray-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      active: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800',
+      inactive: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800/50 dark:text-gray-300 dark:border-gray-700',
+      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800'
     }
 
     const labels = {
@@ -147,18 +147,18 @@ export function UserGrid({
                 </div>
               )}
               <div className={cn(
-                'absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white',
+                'absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background',
                 user.status === 'active' ? 'bg-green-500' :
                 user.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-400'
               )} />
             </div>
             
             <div className="min-w-0 flex-1">
-              <h3 className="font-semibold text-gray-900 truncate">
+              <h3 className="font-semibold text-foreground truncate">
                 {user.firstName} {user.lastName}
               </h3>
-              <p className="text-sm text-gray-600 truncate">{user.position}</p>
-              <p className="text-xs text-gray-500 truncate">{user.email}</p>
+              <p className="text-sm text-muted-foreground truncate">{user.position}</p>
+              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
           </div>
 
@@ -167,7 +167,7 @@ export function UserGrid({
               onClick={() => setShowActions(!showActions)}
               className="p-2 rounded-lg hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
             >
-              <MoreVertical className="h-4 w-4 text-gray-500" />
+              <MoreVertical className="h-4 w-4 text-muted-foreground" />
             </button>
 
             {showActions && (
@@ -197,7 +197,7 @@ export function UserGrid({
                     handleDeleteUser(user)
                     setShowActions(false)
                   }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-destructive hover:bg-destructive/10 flex items-center gap-2"
                 >
                   <Trash2 className="h-4 w-4" />
                   {t('delete')}
@@ -209,20 +209,20 @@ export function UserGrid({
 
         {/* Department and Location */}
         <div className="space-y-2 mb-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">{t('departmentLabel')}</span>
-            <span>{user.department}</span>
+            <span className="text-foreground">{user.department}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm text-gray-600">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <span className="font-medium">{t('locationLabel')}</span>
-            <span>{user.location}</span>
+            <span className="text-foreground">{user.location}</span>
           </div>
         </div>
 
         {/* Status and Start Date */}
         <div className="flex items-center justify-between">
           {getStatusBadge(user.status)}
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {t('since')} {new Date(user.startDate).toLocaleDateString()}
           </span>
         </div>
@@ -268,12 +268,12 @@ export function UserGrid({
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Users className="h-6 w-6 text-blue-600" />
+          <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+            <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{t('userManagement')}</h1>
-            <p className="text-sm text-gray-600">
+            <h1 className="text-2xl font-bold text-foreground">{t('userManagement')}</h1>
+            <p className="text-sm text-muted-foreground">
               {t('usersCount', { filtered: filteredUsers.length, total: users.length })}
             </p>
           </div>
@@ -282,14 +282,14 @@ export function UserGrid({
         <div className="flex gap-3">
           <button
             onClick={() => window.location.href = '/users/create'}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors"
           >
             <Plus className="h-4 w-4" />
             {t('newUser')}
           </button>
           <button
             onClick={() => window.location.href = '/roles'}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500 text-white rounded-lg transition-colors"
           >
             <Shield className="h-4 w-4" />
             {t('manageRoles')}
@@ -302,13 +302,13 @@ export function UserGrid({
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder={t('searchUsers')}
               value={filters.search}
               onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
+              className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring transition-colors bg-background text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
@@ -318,7 +318,7 @@ export function UserGrid({
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors',
               showFilters
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
+                ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
                 : 'border-border text-foreground hover:bg-accent'
             )}
           >
@@ -329,16 +329,16 @@ export function UserGrid({
 
         {/* Advanced Filters */}
         {showFilters && (
-          <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="mt-4 pt-4 border-t border-border">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   {t('status')}
                 </label>
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange('status', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                 >
                   <option value="all">{t('all')}</option>
                   <option value="active">{tUsers('active')}</option>
@@ -348,13 +348,13 @@ export function UserGrid({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   {t('department')}
                 </label>
                 <select
                   value={filters.department}
                   onChange={(e) => handleFilterChange('department', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                 >
                   <option value="">{t('all')}</option>
                   {departments.map(dept => (
@@ -364,13 +364,13 @@ export function UserGrid({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-foreground mb-1">
                   {t('location')}
                 </label>
                 <select
                   value={filters.location}
                   onChange={(e) => handleFilterChange('location', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring bg-background text-foreground"
                 >
                   <option value="">{t('allLocations')}</option>
                   {locations.map(loc => (
@@ -383,7 +383,7 @@ export function UserGrid({
             <div className="mt-4 flex justify-end">
               <button
                 onClick={handleClearFilters}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {t('clearFilters')}
               </button>
@@ -396,11 +396,11 @@ export function UserGrid({
       <LoadingOverlay isLoading={isLoading}>
         {filteredUsers.length === 0 ? (
           <div className="text-center py-12">
-            <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">
               {t('noUsersFound')}
             </h3>
-            <p className="text-gray-600 mb-4">
+            <p className="text-muted-foreground mb-4">
               {users.length === 0
                 ? t('createFirstUser')
                 : t('adjustFilters')
@@ -409,7 +409,7 @@ export function UserGrid({
             {users.length === 0 && (
               <button
                 onClick={onUserCreate}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors"
               >
                 <Plus className="h-4 w-4" />
                 {t('createUser')}

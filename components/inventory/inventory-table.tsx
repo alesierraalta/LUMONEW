@@ -149,9 +149,9 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       return <Badge variant="destructive">{t('table.stockStatus.outOfStock')}</Badge>
     }
     if (status === 'low_stock') {
-      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">{t('table.stockStatus.lowStock')}</Badge>
+      return <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">{t('table.stockStatus.lowStock')}</Badge>
     }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800">{t('table.stockStatus.inStock')}</Badge>
+    return <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">{t('table.stockStatus.inStock')}</Badge>
   }
 
   const handleEdit = async (item: InventoryItem) => {

@@ -107,12 +107,12 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
     <div className="p-6">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="p-2 bg-blue-100 rounded-lg">
-          <Package className="h-6 w-6 text-blue-600" />
+        <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
+          <Package className="h-6 w-6 text-blue-600 dark:text-blue-400" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">{t('createCategory')}</h2>
-          <p className="text-sm text-gray-600">{t('createCategoryDescription')}</p>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('createCategory')}</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{t('createCategoryDescription')}</p>
         </div>
       </div>
 
@@ -120,7 +120,7 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Category Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('categoryName')} *
           </label>
           <Input
@@ -133,13 +133,13 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
             className={errors.name ? 'border-red-500' : ''}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name}</p>
           )}
         </div>
 
         {/* Description */}
         <div>
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('description')}
           </label>
           <textarea
@@ -149,13 +149,13 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
             placeholder={t('descriptionPlaceholder')}
             disabled={isLoading}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:opacity-50 disabled:cursor-not-allowed resize-none"
           />
         </div>
 
         {/* Color Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('categoryColor')}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -167,8 +167,8 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
                 disabled={isLoading}
                 className={`w-8 h-8 rounded-full border-2 transition-all hover:scale-110 ${
                   formData.color === color.value 
-                    ? 'border-gray-800 ring-2 ring-gray-300' 
-                    : 'border-gray-300 hover:border-gray-400'
+                    ? 'border-gray-800 dark:border-gray-200 ring-2 ring-gray-300 dark:ring-gray-600' 
+                    : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500'
                 }`}
                 style={{ backgroundColor: color.value }}
                 title={color.label}
@@ -177,15 +177,15 @@ export function CreateCategoryModal({ onSuccess }: CreateCategoryModalProps) {
           </div>
           <div className="mt-2 flex items-center gap-2">
             <div
-              className="w-4 h-4 rounded-full border border-gray-300"
+              className="w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
               style={{ backgroundColor: formData.color }}
             />
-            <span className="text-sm text-gray-600">{t('selectedColor')}</span>
+            <span className="text-sm text-gray-600 dark:text-gray-400">{t('selectedColor')}</span>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t">
+        <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
           <Button
             type="button"
             variant="outline"

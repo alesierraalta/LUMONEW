@@ -196,7 +196,7 @@ function UserManagementContent() {
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600">{t('loadingUserManagement')}</p>
+          <p className="text-muted-foreground">{t('loadingUserManagement')}</p>
         </div>
       </div>
     )
@@ -223,10 +223,10 @@ function UserDetailsModal({ user }: { user: UserData }) {
   
   const getStatusColor = (status: UserData['status']) => {
     switch (status) {
-      case 'active': return 'text-green-600 bg-green-100'
-      case 'inactive': return 'text-gray-600 bg-gray-100'
-      case 'pending': return 'text-yellow-600 bg-yellow-100'
-      default: return 'text-gray-600 bg-gray-100'
+      case 'active': return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20'
+      case 'inactive': return 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-800/50'
+      case 'pending': return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20'
+      default: return 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-800/50'
     }
   }
 
@@ -246,20 +246,20 @@ function UserDetailsModal({ user }: { user: UserData }) {
           <img
             src={user.profileImage}
             alt={`${user.firstName} ${user.lastName}`}
-            className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-white shadow-lg"
+            className="w-24 h-24 rounded-full mx-auto mb-4 object-cover border-4 border-background shadow-lg"
           />
         ) : (
-          <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-white shadow-lg">
+          <div className="w-24 h-24 rounded-full mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-4 border-background shadow-lg">
             <span className="text-white font-bold text-2xl">
               {user.firstName[0]}{user.lastName[0]}
             </span>
           </div>
         )}
         
-        <h2 className="text-2xl font-bold text-gray-900 mb-1">
+        <h2 className="text-2xl font-bold text-foreground mb-1">
           {user.firstName} {user.lastName}
         </h2>
-        <p className="text-lg text-gray-600 mb-2">{user.position}</p>
+        <p className="text-lg text-muted-foreground mb-2">{user.position}</p>
         <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(user.status)}`}>
           {getStatusLabel(user.status)}
         </span>
@@ -267,35 +267,35 @@ function UserDetailsModal({ user }: { user: UserData }) {
 
       <div className="space-y-6">
         {/* Contact Information */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('contactInformation')}</h3>
+        <div className="bg-muted/50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-foreground mb-3">{t('contactInformation')}</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-gray-600">Email:</span>
-              <span className="font-medium text-gray-900">{user.email}</span>
+              <span className="text-muted-foreground">Email:</span>
+              <span className="font-medium text-foreground">{user.email}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">Teléfono:</span>
-              <span className="font-medium text-gray-900">{user.phone}</span>
+              <span className="text-muted-foreground">Teléfono:</span>
+              <span className="font-medium text-foreground">{user.phone}</span>
             </div>
           </div>
         </div>
 
         {/* Professional Information */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('professionalInformation')}</h3>
+        <div className="bg-muted/50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-foreground mb-3">{t('professionalInformation')}</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-gray-600">{t('department')}:</span>
-              <span className="font-medium text-gray-900">{user.department}</span>
+              <span className="text-muted-foreground">{t('department')}:</span>
+              <span className="font-medium text-foreground">{user.department}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">{t('location')}:</span>
-              <span className="font-medium text-gray-900">{user.location}</span>
+              <span className="text-muted-foreground">{t('location')}:</span>
+              <span className="font-medium text-foreground">{user.location}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">{t('startDate')}:</span>
-              <span className="font-medium text-gray-900">
+              <span className="text-muted-foreground">{t('startDate')}:</span>
+              <span className="font-medium text-foreground">
                 {new Date(user.startDate).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -308,9 +308,9 @@ function UserDetailsModal({ user }: { user: UserData }) {
 
         {/* Biography */}
         {user.bio && (
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('biography')}</h3>
-            <p className="text-gray-700 leading-relaxed">{user.bio}</p>
+          <div className="bg-muted/50 rounded-lg p-4">
+            <h3 className="text-lg font-semibold text-foreground mb-3">{t('biography')}</h3>
+            <p className="text-foreground leading-relaxed">{user.bio}</p>
           </div>
         )}
       </div>

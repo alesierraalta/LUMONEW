@@ -6,7 +6,7 @@ import { Edit, Trash2, MapPin } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatDate } from '@/lib/utils'
-import { locationService } from '@/lib/database'
+import { locationService, inventoryService } from '@/lib/database'
 import { useTranslations } from 'next-intl'
 
 interface Location {
@@ -28,6 +28,7 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [locationStocks, setLocationStocks] = useState<Record<string, number>>({})
   const t = useTranslations('locations')
   const tCommon = useTranslations('common')
 
@@ -36,8 +37,24 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
     async function fetchLocations() {
       try {
         setLoading(true)
+        
+        // Load locations from database
         const data = await locationService.getAll()
         setLocations(data || [])
+        
+        // Load inventory to calculate actual stock per location
+        const inventory = await inventoryService.getAll()
+        
+        // Calculate actual stock for each location
+        const stocksByLocation: Record<string, number> = {}
+        data.forEach((location: any) => {
+          const locationItems = inventory.filter((item: any) => item.location_id === location.id)
+          const totalStock = locationItems.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)
+          stocksByLocation[location.id] = totalStock
+        })
+        
+        setLocationStocks(stocksByLocation)
+        
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch locations')
       } finally {
@@ -128,35 +145,35 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-gray-200 dark:border-gray-700">
               <th className="text-left py-3 px-4">
-                <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Nombre</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Descripción</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">Cantidad de Items</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-900">Acciones</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Nombre</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Descripción</th>
+              <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Cantidad de Items</th>
+              <th className="text-right py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {[...Array(5)].map((_, index) => (
-              <tr key={index} className="border-b border-gray-100">
+              <tr key={index} className="border-b border-gray-100 dark:border-gray-800">
                 <td className="py-4 px-4">
-                  <div className="w-4 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-32 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-48 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="w-16 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  <div className="w-16 h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex justify-end space-x-2">
-                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+                    <div className="w-8 h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                   </div>
                 </td>
               </tr>
@@ -170,7 +187,7 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
   if (error) {
     return (
       <div className="text-center py-12">
-        <div className="text-red-600">Error loading locations: {error}</div>
+        <div className="text-red-600 dark:text-red-400">Error loading locations: {error}</div>
       </div>
     )
   }
@@ -179,24 +196,24 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200">
+          <tr className="border-b border-gray-200 dark:border-gray-700">
             <th className="text-left py-3 px-4">
               <input
                 type="checkbox"
                 checked={selectedLocations.length === filteredLocations.length && filteredLocations.length > 0}
                 onChange={toggleAllLocations}
-                className="rounded border-gray-300"
+                className="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800"
               />
             </th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Nombre</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Descripción</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">Cantidad de Items</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-900">Acciones</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Nombre</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Descripción</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Cantidad de Items</th>
+            <th className="text-right py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {filteredLocations.map((location) => {
-            const currentStock = location.current_stock || 0
+            const currentStock = locationStocks[location.id] || 0
             
             return (
               <tr key={location.id} className="border-b border-border hover:bg-muted/50">
@@ -205,26 +222,26 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
                     type="checkbox"
                     checked={selectedLocations.includes(location.id)}
                     onChange={() => toggleLocationSelection(location.id)}
-                    className="rounded border-gray-300"
+                    className="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800"
                   />
                 </td>
                 <td className="py-4 px-4">
                   <div className="flex items-center space-x-3">
-                    <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                    <div className="font-medium text-gray-900">{location.name}</div>
+                    <MapPin className="w-4 h-4 text-gray-400 dark:text-gray-500 flex-shrink-0" />
+                    <div className="font-medium text-gray-900 dark:text-gray-100">{location.name}</div>
                   </div>
                 </td>
                 <td className="py-4 px-4">
-                  <div className="text-sm text-gray-600 max-w-xs">
+                  <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs">
                     {location.address || 'Sin descripción'}
                   </div>
                 </td>
                 <td className="py-4 px-4">
                   <div className="text-sm">
-                    <div className="font-medium text-gray-900">
+                    <div className="font-medium text-gray-900 dark:text-gray-100">
                       {currentStock.toLocaleString()}
                     </div>
-                    <div className="text-xs text-gray-500">items</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">items</div>
                   </div>
                 </td>
                 <td className="py-4 px-4">
@@ -240,7 +257,7 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                       onClick={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
@@ -260,17 +277,17 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
 
       {filteredLocations.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-500">No locations found</div>
-          <div className="text-sm text-gray-400 mt-1">
+          <div className="text-gray-500 dark:text-gray-400">No locations found</div>
+          <div className="text-sm text-gray-400 dark:text-gray-500 mt-1">
             {searchTerm ? 'Try adjusting your search criteria' : 'Create your first location to get started'}
           </div>
         </div>
       )}
 
       {selectedLocations.length > 0 && (
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-blue-800">
+            <div className="text-sm text-blue-800 dark:text-blue-200">
               {selectedLocations.length} locations selected
             </div>
             <div className="flex space-x-2">
@@ -280,7 +297,7 @@ export function LocationsTable({ searchTerm = '' }: LocationsTableProps) {
               <Button
                 variant="outline"
                 size="sm"
-                className="text-red-600 hover:text-red-700"
+                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()

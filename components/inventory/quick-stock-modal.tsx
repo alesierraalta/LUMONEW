@@ -235,24 +235,24 @@ function QuickStockModalContent({
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-2">{t('title')}</h2>
+        <h2 className="text-xl font-semibold text-foreground mb-2">{t('title')}</h2>
       </div>
       
       <div className="space-y-6">
         {/* Item Info */}
         <div className="bg-muted p-4 rounded-lg">
-          <h3 className="font-medium">{item.name}</h3>
-          <p className="text-sm text-gray-600">{t('sku')}: {item.sku}</p>
-          <p className="text-sm text-gray-600">{t('currentStock')}: <span className="font-medium">{item.quantity}</span></p>
+          <h3 className="font-medium text-foreground">{item.name}</h3>
+          <p className="text-sm text-muted-foreground">{t('sku')}: {item.sku}</p>
+          <p className="text-sm text-muted-foreground">{t('currentStock')}: <span className="font-medium text-foreground">{item.quantity}</span></p>
           {item.quantity <= item.min_stock && (
-            <p className="text-sm text-yellow-600 font-medium">⚠️ {t('lowStock', { minimum: item.min_stock })}</p>
+            <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">⚠️ {t('lowStock', { minimum: item.min_stock })}</p>
           )}
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {/* Operation Type */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">{t('operation')}</label>
+            <label className="text-sm font-medium text-foreground">{t('operation')}</label>
             <div className="flex space-x-2">
               <Button
                 type="button"
@@ -279,7 +279,7 @@ function QuickStockModalContent({
 
           {/* Quantity */}
           <div className="space-y-2">
-            <label htmlFor="quantity" className="text-sm font-medium text-gray-700">
+            <label htmlFor="quantity" className="text-sm font-medium text-foreground">
               {t('quantity')} *
             </label>
             <Input
@@ -295,7 +295,7 @@ function QuickStockModalContent({
 
           {/* Reason */}
           <div className="space-y-2">
-            <label htmlFor="reason" className="text-sm font-medium text-gray-700">
+            <label htmlFor="reason" className="text-sm font-medium text-foreground">
               {t('reason')} *
             </label>
             <select

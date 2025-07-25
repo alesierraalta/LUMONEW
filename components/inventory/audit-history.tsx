@@ -158,7 +158,7 @@ const getActionDescription = (log: AuditLog) => {
       case 'location_deleted':
         return 'Eliminó ubicación del sistema'
       default:
-        return `Ejecutó ${operation.toLowerCase()} en ${getEntityName(table_name)}`
+        return `Ejecutó ${(operation as string).toLowerCase()} en ${getEntityName(table_name)}`
     }
   }
   
@@ -182,7 +182,7 @@ const getActionDescription = (log: AuditLog) => {
     case 'VIEW':
       return `Consultó información de ${getEntityName(table_name)}`
     default:
-      return `Realizó ${operation.toLowerCase()} en ${getEntityName(table_name)}`
+      return `Realizó ${(operation as string).toLowerCase()} en ${getEntityName(table_name)}`
   }
 }
 
