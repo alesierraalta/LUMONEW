@@ -125,3 +125,17 @@ public
 # Temporary folders
 tmp/
 temp/
+
+# Test results and reports
+test-results/
+playwright-report/
+junit.xml
+
+# Tool-specific directories
+.cursor/
+.clinerules/
+.kilocode/
+
+# Temporary test files
+test-*.js
+apply-migration-*.js
