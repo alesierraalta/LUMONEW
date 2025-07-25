@@ -15,7 +15,6 @@ import { LoadingSpinner } from '@/components/ui/loading'
 interface FormData {
   sku: string
   name: string
-  description: string
   category_id: string
   location_id: string
   unit_price: string
@@ -24,7 +23,6 @@ interface FormData {
   max_stock: string
   unit_of_measure: string
   supplier: string
-  status: 'active' | 'inactive' | 'discontinued'
 }
 
 interface FormErrors {
@@ -41,16 +39,14 @@ function EditInventoryItemContent() {
   const [formData, setFormData] = useState<FormData>({
     sku: '',
     name: '',
-    description: '',
     category_id: '',
     location_id: '',
     unit_price: '',
     quantity: '',
     min_stock: '',
     max_stock: '',
-    unit_of_measure: 'unidad',
-    supplier: '',
-    status: 'active'
+    unit_of_measure: '',
+    supplier: ''
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -85,7 +81,6 @@ function EditInventoryItemContent() {
       setFormData({
         sku: itemData.sku || '',
         name: itemData.name || '',
-        description: itemData.description || '',
         category_id: itemData.category_id || '',
         location_id: itemData.location_id || '',
         unit_price: itemData.unit_price?.toString() || '',
@@ -94,7 +89,6 @@ function EditInventoryItemContent() {
         max_stock: itemData.max_stock?.toString() || '',
         unit_of_measure: itemData.unit_of_measure || 'unidad',
         supplier: itemData.supplier || '',
-        status: itemData.status || 'active'
       })
 
       setCategories(categoriesData)
@@ -198,7 +192,6 @@ function EditInventoryItemContent() {
       const updatedItem = {
         sku: formData.sku.trim(),
         name: formData.name.trim(),
-        description: formData.description.trim(),
         category_id: formData.category_id || (defaultCategory?.id || ''),
         location_id: formData.location_id || (defaultLocation?.id || ''),
         unit_price: formData.unit_price ? parseFloat(formData.unit_price) : 0,
@@ -207,7 +200,6 @@ function EditInventoryItemContent() {
         max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
         unit_of_measure: formData.unit_of_measure,
         supplier: formData.supplier.trim(),
-        status: formData.status
       }
 
       // Validate that we have required IDs
@@ -460,22 +452,7 @@ function EditInventoryItemContent() {
                 )}
               </div>
 
-              {/* Estado */}
-              <div className="space-y-2">
-                <label htmlFor="status" className="text-sm font-medium">
-                  Estado
-                </label>
-                <select
-                  id="status"
-                  value={formData.status}
-                  onChange={(e) => handleInputChange('status', e.target.value as 'active' | 'inactive' | 'discontinued')}
-                  className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-                >
-                  <option value="active">Activo</option>
-                  <option value="inactive">Inactivo</option>
-                  <option value="discontinued">Descontinuado</option>
-                </select>
-              </div>
+              {/* Removed status field as it's not necessary */}
 
               {/* Unidad de Medida */}
               <div className="space-y-2">
@@ -515,20 +492,7 @@ function EditInventoryItemContent() {
               </div>
             </div>
 
-            {/* Descripción */}
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Descripción
-              </label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Descripción detallada del producto..."
-                rows={3}
-                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-              />
-            </div>
+            {/* Removed description field as it doesn't exist in the database schema */}
 
             {/* Botones */}
             <div className="flex justify-end space-x-4 pt-6">

@@ -26,7 +26,7 @@ export interface InventoryItem {
   id: string
   sku: string
   name: string // Producto
-  description: string // Descripción
+  description?: string // Descripción - Optional since it doesn't exist in database
   categoryId: string
   category?: Category // Categoría
   price: number // Precio
@@ -368,14 +368,12 @@ export interface ActivityLog {
 export interface InventoryFormData {
   sku: string
   name: string // Producto
-  description: string // Descripción
   categoryId: string // Categoría
   price: number // Precio
   cost: number // Costo
   currentStock: number // Stock Actual
   minimumLevel: number // Nivel Mínimo
   maximumLevel?: number
-  status: 'active' | 'inactive' | 'discontinued' // Estado
   locationId: string // Ubicación
   dimensions?: {
     length: number

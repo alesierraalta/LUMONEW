@@ -15,7 +15,6 @@ import { InventoryItem } from '@/lib/types'
 interface FormData {
   sku: string
   name: string
-  description: string
   category_id: string
   location_id: string
   unit_price: string
@@ -38,14 +37,13 @@ function CreateInventoryItemContent() {
   const [formData, setFormData] = useState<FormData>({
     sku: '',
     name: '',
-    description: '',
     category_id: '',
     location_id: '',
     unit_price: '',
     quantity: '',
     min_stock: '',
     max_stock: '',
-    unit_of_measure: 'unidad',
+    unit_of_measure: '',
     supplier: ''
   })
   
@@ -166,8 +164,7 @@ function CreateInventoryItemContent() {
         unit_price: formData.unit_price ? parseFloat(formData.unit_price) : 0,
         quantity: formData.quantity ? parseInt(formData.quantity) : 0,
         min_stock: formData.min_stock ? parseInt(formData.min_stock) : 0,
-        max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
-        status: 'active'
+        max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0)
       }
 
       // Validate that we have required IDs
@@ -447,20 +444,7 @@ function CreateInventoryItemContent() {
               </div>
             </div>
 
-            {/* Descripción */}
-            <div className="space-y-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Descripción
-              </label>
-              <textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => handleInputChange('description', e.target.value)}
-                placeholder="Descripción detallada del producto..."
-                rows={3}
-                className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-              />
-            </div>
+            {/* Removed description field as it doesn't exist in the database schema */}
 
             {/* Botones */}
             <div className="flex justify-end space-x-4 pt-6">
