@@ -101,7 +101,7 @@ jobs:
         run: npm run test:coverage || npx vitest run --coverage
 
       - name: 📈 Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
