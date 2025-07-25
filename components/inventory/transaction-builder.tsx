@@ -233,16 +233,16 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
     setLineItems(items => items.filter(item => item.id !== itemId))
   }, [])
 
-  // Handle barcode scan/input
-  const handleBarcodeInput = useCallback((barcode: string) => {
-    const product = products.find(p => p.barcode === barcode || p.sku === barcode)
+  // Handle SKU scan/input
+  const handleSkuInput = useCallback((sku: string) => {
+    const product = products.find(p => p.sku === sku)
     if (product) {
       addProduct(product)
       setBarcodeInput('')
     } else {
       // Show error or not found message
-      console.log('Product not found for barcode:', barcode)
-      setError(`Product not found for barcode: ${barcode}`)
+      console.log('Product not found for SKU:', sku)
+      setError(`Product not found for SKU: ${sku}`)
     }
   }, [addProduct, products])
 
@@ -362,16 +362,16 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
                 </SelectContent>
               </Select>
 
-              {/* Barcode Scanner Input */}
+              {/* SKU Scanner Input */}
               <div className="flex items-center gap-2">
                 <Scan className="h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Scan or enter barcode"
+                  placeholder="Scan or enter SKU"
                   value={barcodeInput}
                   onChange={(e) => setBarcodeInput(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && barcodeInput) {
-                      handleBarcodeInput(barcodeInput)
+                      handleSkuInput(barcodeInput)
                     }
                   }}
                   className="w-48"

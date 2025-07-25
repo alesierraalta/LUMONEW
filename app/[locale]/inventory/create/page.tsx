@@ -24,7 +24,6 @@ interface FormData {
   max_stock: string
   unit_of_measure: string
   supplier: string
-  barcode: string
 }
 
 interface FormErrors {
@@ -47,8 +46,7 @@ function CreateInventoryItemContent() {
     min_stock: '',
     max_stock: '',
     unit_of_measure: 'unidad',
-    supplier: '',
-    barcode: ''
+    supplier: ''
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -461,20 +459,6 @@ function CreateInventoryItemContent() {
                 placeholder="Descripción detallada del producto..."
                 rows={3}
                 className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-              />
-            </div>
-
-            {/* Código de Barras */}
-            <div className="space-y-2">
-              <label htmlFor="barcode" className="text-sm font-medium">
-                Código de Barras
-              </label>
-              <Input
-                id="barcode"
-                type="text"
-                value={formData.barcode}
-                onChange={(e) => handleInputChange('barcode', e.target.value)}
-                placeholder="Ej: 1234567890123"
               />
             </div>
 

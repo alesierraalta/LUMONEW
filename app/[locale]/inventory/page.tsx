@@ -52,9 +52,13 @@ function InventoryContent() {
       // Get analytics data
       const analytics = await analyticsService.getDashboardMetrics()
       
-      // Calculate low stock items
-      const lowStockItems = inventory
-        .filter((item: any) => item.quantity <= item.min_stock)
+      // Calculate stock status counts
+      const outOfStockItems = inventory.filter((item: any) => item.quantity === 0)
+      const lowStockItems = inventory.filter((item: any) => item.quantity > 0 && item.quantity <= item.min_stock)
+      const goodStockItems = inventory.filter((item: any) => item.quantity > item.min_stock)
+      
+      // Get low stock items details for alerts
+      const lowStockDetails = lowStockItems
         .slice(0, 5)
         .map((item: any) => ({
           id: item.id,
@@ -69,12 +73,15 @@ function InventoryContent() {
       // Generate inventory data for cards
       const cardData = {
         totalItems: inventory.length,
-        lowStockItems,
+        outOfStockCount: outOfStockItems.length,
+        lowStockCount: lowStockItems.length,
+        goodStockCount: goodStockItems.length,
+        lowStockItems: lowStockDetails,
         categories: categories.map((cat: any) => cat.name),
         recentActivity: [
           { id: '1', action: 'Inventario cargado', product: 'Sistema', timestamp: new Date() }
         ],
-        criticalAlerts: lowStockItems.length,
+        criticalAlerts: outOfStockItems.length + lowStockItems.length,
         pendingOrders: 0, // This would come from orders table if implemented
         totalValue
       }

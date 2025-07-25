@@ -198,9 +198,26 @@ export function usePageCards(pageType: string, data?: any) {
             } as StatCard)
           }
 
-          if (data?.lowStockCount) {
+          if (data?.goodStockCount !== undefined) {
             cards.push({
-              id: 'low-stock-info',
+              id: 'good-stock',
+              type: 'stat',
+              title: 'Stock Normal',
+              subtitle: 'Productos con stock suficiente',
+              value: data.goodStockCount,
+              priority: 'low',
+              size: 'small',
+              variant: 'default',
+              color: 'green',
+              pageContext: ['inventory'],
+              userRoles: ['admin', 'manager', 'employee'],
+              createdAt: new Date()
+            } as StatCard)
+          }
+
+          if (data?.lowStockCount !== undefined) {
+            cards.push({
+              id: 'low-stock',
               type: 'stat',
               title: 'Stock Bajo',
               subtitle: 'Productos con stock bajo',
@@ -209,6 +226,23 @@ export function usePageCards(pageType: string, data?: any) {
               size: 'small',
               variant: 'default',
               color: 'yellow',
+              pageContext: ['inventory'],
+              userRoles: ['admin', 'manager', 'employee'],
+              createdAt: new Date()
+            } as StatCard)
+          }
+
+          if (data?.outOfStockCount !== undefined) {
+            cards.push({
+              id: 'out-of-stock',
+              type: 'stat',
+              title: 'Sin Stock',
+              subtitle: 'Productos agotados',
+              value: data.outOfStockCount,
+              priority: 'critical',
+              size: 'small',
+              variant: 'filled',
+              color: 'red',
               pageContext: ['inventory'],
               userRoles: ['admin', 'manager', 'employee'],
               createdAt: new Date()

@@ -24,7 +24,6 @@ interface FormData {
   max_stock: string
   unit_of_measure: string
   supplier: string
-  barcode: string
   status: 'active' | 'inactive' | 'discontinued'
 }
 
@@ -51,7 +50,6 @@ function EditInventoryItemContent() {
     max_stock: '',
     unit_of_measure: 'unidad',
     supplier: '',
-    barcode: '',
     status: 'active'
   })
   
@@ -96,7 +94,6 @@ function EditInventoryItemContent() {
         max_stock: itemData.max_stock?.toString() || '',
         unit_of_measure: itemData.unit_of_measure || 'unidad',
         supplier: itemData.supplier || '',
-        barcode: itemData.barcode || '',
         status: itemData.status || 'active'
       })
 
@@ -210,7 +207,6 @@ function EditInventoryItemContent() {
         max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
         unit_of_measure: formData.unit_of_measure,
         supplier: formData.supplier.trim(),
-        barcode: formData.barcode.trim(),
         status: formData.status
       }
 
@@ -531,20 +527,6 @@ function EditInventoryItemContent() {
                 placeholder="Descripción detallada del producto..."
                 rows={3}
                 className="w-full px-3 py-2 border border-input rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring bg-background"
-              />
-            </div>
-
-            {/* Código de Barras */}
-            <div className="space-y-2">
-              <label htmlFor="barcode" className="text-sm font-medium">
-                Código de Barras
-              </label>
-              <Input
-                id="barcode"
-                type="text"
-                value={formData.barcode}
-                onChange={(e) => handleInputChange('barcode', e.target.value)}
-                placeholder="Ej: 1234567890123"
               />
             </div>
 
