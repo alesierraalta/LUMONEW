@@ -1,0 +1,58 @@
+name: 📦 Dependency Updates
+
+on:
+  schedule:
+    # Run every Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: 🔄 Update Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🔍 Check for outdated packages
+        run: npm outdated || true
+
+      - name: 📊 Generate dependency report
+        run: |
+          echo "# Dependency Report" > dependency-report.md
+          echo "Generated on: $(date)" >> dependency-report.md
+          echo "" >> dependency-report.md
+          echo "## Outdated Packages" >> dependency-report.md
+          npm outdated --json > outdated.json || true
+          if [ -s outdated.json ]; then
+            echo "Found outdated packages" >> dependency-report.md
+          else
+            echo "All packages are up to date! ✅" >> dependency-report.md
+          fi
+
+      - name: 📝 Create issue for dependency updates
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('dependency-report.md', 'utf8');
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '📦 Weekly Dependency Update Report',
+              body: report,
+              labels: ['dependencies', 'maintenance']
+            }); 
