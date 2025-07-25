@@ -135,7 +135,7 @@ jobs:
         run: npm run test:e2e || npx playwright test
 
       - name: 📊 Upload E2E test results
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: playwright-report
@@ -165,7 +165,7 @@ jobs:
         run: npm run build
 
       - name: 📦 Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: build-files
           path: |
