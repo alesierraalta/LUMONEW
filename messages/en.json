@@ -291,6 +291,7 @@
     "quickStockOperations": "Quick Stock Operations",
     "bulkOperations": "Bulk Operations",
     "transactionHistory": "Transaction History",
+    "auditHistory": "Audit History",
     "bulkOperations": {
       "title": "Bulk Operations",
       "update": "Update",

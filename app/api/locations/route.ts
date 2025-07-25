@@ -11,8 +11,24 @@ export async function GET(request: NextRequest) {
     
     let data = await locationService.getAll()
     
+    // Get inventory data to calculate item counts per location
+    const inventory = await inventoryService.getAll()
+    
+    // Calculate item counts for each location
+    if (data) {
+      data = data.map((location: any) => {
+        const locationItems = inventory?.filter((item: any) => item.location_id === location.id) || []
+        const current_stock = locationItems.reduce((sum: number, item: any) => sum + (item.quantity || 0), 0)
+        
+        return {
+          ...location,
+          current_stock
+        }
+      })
+    }
+
     // Apply filters
-        if (data && search) {
+    if (data && search) {
       const searchLower = search.toLowerCase()
       data = data.filter((location: any) =>
         location.name.toLowerCase().includes(searchLower) ||

@@ -20,7 +20,7 @@ import { useModal } from '@/components/ui/modal'
 const InventoryTable = lazy(() => import('@/components/inventory/inventory-table').then(mod => ({ default: mod.InventoryTable })))
 const InventoryFilters = lazy(() => import('@/components/inventory/inventory-filters').then(mod => ({ default: mod.InventoryFilters })))
 const TransactionBuilder = lazy(() => import('@/components/inventory/transaction-builder').then(mod => ({ default: mod.TransactionBuilder })))
-const TransactionHistory = lazy(() => import('@/components/inventory/transaction-history').then(mod => ({ default: mod.TransactionHistory })))
+const AuditHistory = lazy(() => import('@/components/inventory/audit-history').then(mod => ({ default: mod.AuditHistory })))
 const BulkCreateModal = lazy(() => import('@/components/inventory/bulk-create-modal').then(mod => ({ default: mod.BulkCreateModal })))
 
 function InventoryContent() {
@@ -31,7 +31,7 @@ function InventoryContent() {
   const [isClient, setIsClient] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isTransactionBuilderOpen, setIsTransactionBuilderOpen] = useState(false)
-  const [isTransactionHistoryOpen, setIsTransactionHistoryOpen] = useState(false)
+  const [isAuditHistoryOpen, setIsAuditHistoryOpen] = useState(false)
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
   const [inventoryData, setInventoryData] = useState<any>(null)
@@ -222,84 +222,101 @@ function InventoryContent() {
         </div>
         
         {/* Ultra-compact button grid for smallest screens */}
-        <div className="grid grid-cols-4 xs:grid-cols-3 sm:flex sm:flex-wrap gap-0.5 xs:gap-1 sm:gap-2 px-1">
+        <div className="grid grid-cols-4 xs:grid-cols-6 sm:flex sm:flex-wrap gap-1 xs:gap-1.5 sm:gap-2 px-1">
           <Button
             variant="outline"
             size="sm"
-            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
-            onClick={() => setIsTransactionHistoryOpen(true)}
+            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+            onClick={() => setIsAuditHistoryOpen(true)}
           >
             <History className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">Hist</span>
-            <span className="hidden sm:inline ml-1 text-sm">History</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Audit</span>
+            <span className="hidden sm:inline ml-1 text-sm">Auditoría</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+            onClick={() => {
+              // TODO: Implement import functionality
+              addToast({
+                title: "Import",
+                description: "Import functionality coming soon",
+                type: "info"
+              })
+            }}
           >
             <Upload className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">Imp</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Imp</span>
             <span className="hidden sm:inline ml-1 text-sm">Import</span>
           </Button>
           
           <Button
             variant="outline"
             size="sm"
-            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+            onClick={() => {
+              // TODO: Implement export functionality
+              addToast({
+                title: "Export",
+                description: "Export functionality coming soon",
+                type: "info"
+              })
+            }}
           >
             <Download className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">Exp</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Exp</span>
             <span className="hidden sm:inline ml-1 text-sm">Export</span>
           </Button>
           
           <Button
+            variant="default"
             size="sm"
-            className="bg-green-600 hover:bg-green-700 text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+            className="bg-green-600 hover:bg-green-700 text-white text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
             onClick={() => {
               setTransactionMode('stock_addition')
               setIsTransactionBuilderOpen(true)
             }}
           >
             <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">+St</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">+St</span>
             <span className="hidden sm:inline ml-1 text-sm">Stock</span>
           </Button>
           
           <Button
+            variant="default"
             size="sm"
-            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
             onClick={() => {
               setTransactionMode('sale')
               setIsTransactionBuilderOpen(true)
             }}
           >
             <ShoppingCart className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">Sale</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Sale</span>
             <span className="hidden sm:inline ml-1 text-sm">Sale</span>
           </Button>
           
           <Button
-            size="sm"
             variant="outline"
-            className="bg-yellow-50 border-yellow-300 text-yellow-700 text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0"
+            size="sm"
+            className="bg-yellow-50 hover:bg-yellow-100 border-yellow-300 text-yellow-700 text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
             onClick={handleBulkCreate}
           >
             <Zap className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline ml-1 text-xs">Bulk</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Bulk</span>
             <span className="hidden sm:inline ml-1 text-sm">Bulk</span>
           </Button>
           
           <Button
-            size="sm"
             variant="outline"
-            className="text-xs p-0.5 xs:p-1 h-7 xs:h-8 sm:h-9 min-w-0 col-span-2 xs:col-span-1"
+            size="sm"
+            className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700 text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 col-span-4 xs:col-span-6 sm:col-span-1 flex-1 xs:flex-none"
             onClick={() => router.push('/inventory/create')}
           >
             <Plus className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="ml-1 text-xs xs:hidden">Add</span>
-            <span className="hidden xs:inline ml-1 text-xs">Add</span>
+            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Add</span>
             <span className="hidden sm:inline ml-1 text-sm">Add Item</span>
           </Button>
         </div>
@@ -347,14 +364,12 @@ function InventoryContent() {
         </Suspense>
       )}
 
-      {/* Transaction History Modal */}
-      {isTransactionHistoryOpen && (
+      {/* Audit History Modal */}
+      {isAuditHistoryOpen && (
         <Suspense fallback={<PageLoading message="Cargando historial..." />}>
-          <TransactionHistory
-            isOpen={isTransactionHistoryOpen}
-            onClose={() => setIsTransactionHistoryOpen(false)}
-            transactions={transactions}
-            onResetHistory={loadTransactions}
+          <AuditHistory
+            open={isAuditHistoryOpen}
+            onOpenChange={setIsAuditHistoryOpen}
           />
         </Suspense>
       )}

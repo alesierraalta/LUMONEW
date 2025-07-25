@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Search,
@@ -85,108 +85,9 @@ interface TransactionHistoryProps {
   onResetHistory?: () => void
 }
 
-// Mock transaction data
-const mockTransactions: Transaction[] = [
-  {
-    id: 'txn-1642781234567',
-    type: 'sale',
-    lineItems: [
-      {
-        id: 'item-1',
-        product: {
-          id: '1',
-          sku: 'WH-001',
-          name: 'Wireless Headphones',
-          description: 'Premium noise-cancelling wireless headphones',
-          price: 199.99,
-          cost: 120.00
-        },
-        quantity: 2,
-        unitPrice: 199.99,
-        totalPrice: 399.98
-      },
-      {
-        id: 'item-2',
-        product: {
-          id: '2',
-          sku: 'UC-002',
-          name: 'USB-C Cable',
-          description: 'High-speed USB-C charging cable 2m',
-          price: 24.99,
-          cost: 8.50
-        },
-        quantity: 1,
-        unitPrice: 24.99,
-        totalPrice: 24.99
-      }
-    ],
-    subtotal: 424.97,
-    tax: 67.99,
-    taxRate: 0.16,
-    total: 492.96,
-    notes: 'Customer requested express shipping',
-    createdAt: new Date('2024-01-21T10:30:00'),
-    createdBy: 'admin',
-    status: 'completed'
-  },
-  {
-    id: 'txn-1642781234568',
-    type: 'stock_addition',
-    lineItems: [
-      {
-        id: 'item-3',
-        product: {
-          id: '3',
-          sku: 'BS-003',
-          name: 'Bluetooth Speaker',
-          description: 'Portable waterproof Bluetooth speaker',
-          price: 89.99,
-          cost: 45.00
-        },
-        quantity: 50,
-        unitPrice: 45.00,
-        totalPrice: 2250.00
-      }
-    ],
-    subtotal: 2250.00,
-    tax: 360.00,
-    taxRate: 0.16,
-    total: 2610.00,
-    notes: 'Restocking from supplier ABC',
-    createdAt: new Date('2024-01-20T14:15:00'),
-    createdBy: 'manager1',
-    status: 'completed'
-  },
-  {
-    id: 'txn-1642781234569',
-    type: 'sale',
-    lineItems: [
-      {
-        id: 'item-4',
-        product: {
-          id: '1',
-          sku: 'WH-001',
-          name: 'Wireless Headphones',
-          description: 'Premium noise-cancelling wireless headphones',
-          price: 199.99,
-          cost: 120.00
-        },
-        quantity: 1,
-        unitPrice: 199.99,
-        totalPrice: 199.99
-      }
-    ],
-    subtotal: 199.99,
-    tax: 32.00,
-    taxRate: 0.16,
-    total: 231.99,
-    createdAt: new Date('2024-01-19T16:45:00'),
-    createdBy: 'employee1',
-    status: 'completed'
-  }
-]
+// No mock data - using real transactions from the database
 
-export function TransactionHistory({ isOpen, onClose, transactions = mockTransactions, onResetHistory }: TransactionHistoryProps) {
+export function TransactionHistory({ isOpen, onClose, transactions = [], onResetHistory }: TransactionHistoryProps) {
   const { addToast } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
@@ -218,6 +119,7 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
 
   // Get unique users for filter dropdown
   const uniqueUsers = useMemo(() => {
+    if (!transactions || transactions.length === 0) return []
     const userSet = new Set(transactions.map(t => t.createdBy))
     const users = Array.from(userSet)
     return users.sort()
@@ -225,6 +127,7 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
 
   // Filter and sort transactions
   const filteredAndSortedTransactions = useMemo(() => {
+    if (!transactions || transactions.length === 0) return []
     let filtered = transactions.filter(transaction => {
       const matchesSearch = !searchTerm ||
         transaction.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -443,6 +346,9 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
               <Calendar className="h-5 w-5" />
               Transaction History
             </DialogTitle>
+            <DialogDescription>
+              View and manage all inventory transactions including sales and stock additions.
+            </DialogDescription>
           </DialogHeader>
 
           <div className="flex-1 overflow-hidden flex flex-col gap-4">
@@ -740,10 +646,21 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
                 {filteredAndSortedTransactions.length === 0 && (
                   <div className="text-center py-8">
                     <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-muted-foreground">No transactions found</p>
-                    <p className="text-sm text-muted-foreground">
-                      Try adjusting your search or filter criteria
-                    </p>
+                    {transactions.length === 0 ? (
+                      <>
+                        <p className="text-muted-foreground">No transaction history yet</p>
+                        <p className="text-sm text-muted-foreground">
+                          Create your first sale or stock addition to see transaction history here
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="text-muted-foreground">No transactions found</p>
+                        <p className="text-sm text-muted-foreground">
+                          Try adjusting your search or filter criteria
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -817,6 +734,9 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
                 )}
                 Transaction Details - {selectedTransaction.id}
               </DialogTitle>
+              <DialogDescription>
+                Detailed view of transaction {selectedTransaction.id} including all line items and transaction information.
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto space-y-6">
@@ -913,6 +833,9 @@ export function TransactionHistory({ isOpen, onClose, transactions = mockTransac
                 <AlertTriangle className="h-5 w-5" />
                 Reset Transaction History
               </DialogTitle>
+              <DialogDescription>
+                This action will permanently delete all transaction history data. This cannot be undone.
+              </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
