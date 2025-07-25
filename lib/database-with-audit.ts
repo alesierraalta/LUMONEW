@@ -355,6 +355,7 @@ export const auditedInventoryService = {
     min_stock: number
     max_stock: number
     unit_price: number
+    unit_of_measure: string
     status: string
   }>) {
     try {

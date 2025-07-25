@@ -22,7 +22,6 @@ interface FormData {
   min_stock: string
   max_stock: string
   unit_of_measure: string
-  supplier: string
 }
 
 interface FormErrors {
@@ -43,8 +42,7 @@ function CreateInventoryItemContent() {
     quantity: '',
     min_stock: '',
     max_stock: '',
-    unit_of_measure: '',
-    supplier: ''
+    unit_of_measure: ''
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -429,19 +427,7 @@ function CreateInventoryItemContent() {
                 </select>
               </div>
 
-              {/* Proveedor */}
-              <div className="space-y-2">
-                <label htmlFor="supplier" className="text-sm font-medium">
-                  Proveedor
-                </label>
-                <Input
-                  id="supplier"
-                  type="text"
-                  value={formData.supplier}
-                  onChange={(e) => handleInputChange('supplier', e.target.value)}
-                  placeholder="Ej: Proveedor ABC"
-                />
-              </div>
+
             </div>
 
             {/* Removed description field as it doesn't exist in the database schema */}

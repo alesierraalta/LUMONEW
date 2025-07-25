@@ -22,7 +22,6 @@ interface FormData {
   min_stock: string
   max_stock: string
   unit_of_measure: string
-  supplier: string
 }
 
 interface FormErrors {
@@ -45,8 +44,7 @@ function EditInventoryItemContent() {
     quantity: '',
     min_stock: '',
     max_stock: '',
-    unit_of_measure: '',
-    supplier: ''
+    unit_of_measure: ''
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -88,7 +86,6 @@ function EditInventoryItemContent() {
         min_stock: itemData.min_stock?.toString() || '',
         max_stock: itemData.max_stock?.toString() || '',
         unit_of_measure: itemData.unit_of_measure || 'unidad',
-        supplier: itemData.supplier || '',
       })
 
       setCategories(categoriesData)
@@ -199,7 +196,6 @@ function EditInventoryItemContent() {
         min_stock: formData.min_stock ? parseInt(formData.min_stock) : 0,
         max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
         unit_of_measure: formData.unit_of_measure,
-        supplier: formData.supplier.trim(),
       }
 
       // Validate that we have required IDs
@@ -477,19 +473,7 @@ function EditInventoryItemContent() {
                 </select>
               </div>
 
-              {/* Proveedor */}
-              <div className="space-y-2">
-                <label htmlFor="supplier" className="text-sm font-medium">
-                  Proveedor
-                </label>
-                <Input
-                  id="supplier"
-                  type="text"
-                  value={formData.supplier}
-                  onChange={(e) => handleInputChange('supplier', e.target.value)}
-                  placeholder="Ej: Proveedor ABC"
-                />
-              </div>
+
             </div>
 
             {/* Removed description field as it doesn't exist in the database schema */}
