@@ -79,7 +79,7 @@
     "jsdom": "^26.1.0",
     "msw": "^2.10.4",
     "node-mocks-http": "^1.17.2",
-    "supertest": "^7.1.3",
+    "supertest": "^7.1.4",
     "test-data-bot": "^0.8.0",
     "vitest": "^3.2.4"
   }
