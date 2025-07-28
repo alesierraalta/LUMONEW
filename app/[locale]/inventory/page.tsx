@@ -333,8 +333,7 @@ function InventoryContent() {
       <CardContainer
         layout="grid"
         columns={1}
-        maxCards={2}
-        className="mb-1 xs:mb-2 sm:mb-4 grid-cols-1 xs:grid-cols-2 gap-1 xs:gap-2 sm:gap-4"
+        className="mb-1 xs:mb-2 sm:mb-4 grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-1 xs:gap-2 sm:gap-3"
       />
 
       <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">

@@ -29,6 +29,7 @@
   },
   "navigation": {
     "dashboard": "Dashboard",
+    "projects": "Projects",
     "inventory": "Inventory",
     "stock": "Stock",
     "products": "Products",

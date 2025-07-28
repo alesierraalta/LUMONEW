@@ -18,7 +18,8 @@ export const getNavigationIcons = async () => {
     MapPin,
     Users,
     Settings,
-    Box
+    Box,
+    Briefcase
   } = await import('lucide-react')
 
   return {
@@ -28,7 +29,8 @@ export const getNavigationIcons = async () => {
     MapPin,
     Users,
     Settings,
-    Box
+    Box,
+    Briefcase
   }
 }
 
@@ -39,6 +41,12 @@ export const createNavigationConfig = (icons: Awaited<ReturnType<typeof getNavig
     translationKey: 'navigation.dashboard',
     href: `/${locale}`,
     icon: icons.LayoutDashboard,
+  },
+  {
+    name: 'Proyectos',
+    translationKey: 'navigation.projects',
+    href: `/${locale}/projects`,
+    icon: icons.Briefcase,
   },
   {
     name: 'Inventario',

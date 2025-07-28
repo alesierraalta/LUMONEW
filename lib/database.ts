@@ -1,7 +1,7 @@
-import { createClient as createBrowserClient } from './supabase/client'
+import { createClient } from './supabase/client'
 
 // Use browser client for database operations (compatible with both server and client)
-const supabase = createBrowserClient()
+const supabase = createClient()
 
 // User operations
 export const userService = {
@@ -1048,5 +1048,570 @@ export const transactionService = {
       .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
     
     if (error) throw error
+  }
+}
+
+// ============================================================================
+// PROJECT MANAGEMENT SERVICES
+// ============================================================================
+
+// Project operations
+export const projectService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        project_items (
+          id,
+          product_type,
+          product_name,
+          current_status,
+          is_completed
+        )
+      `)
+      .order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('projects')
+      .select(`
+        *,
+        project_items (
+          *,
+          project_status_history (
+            *
+          ),
+          project_attachments (
+            *
+          )
+        )
+      `)
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async create(project: {
+    name: string
+    description?: string
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    start_date: Date
+    expected_end_date?: Date
+    created_by: string
+  }) {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert([{
+        ...project,
+        status: 'active',
+        progress: 0,
+        total_items: 0,
+        completed_items: 0
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async update(id: string, updates: Partial<{
+    name: string
+    description: string
+    status: 'active' | 'completed' | 'cancelled' | 'on_hold'
+    priority: 'low' | 'medium' | 'high' | 'urgent'
+    expected_end_date: Date
+    actual_end_date: Date
+    progress: number
+    total_items: number
+    completed_items: number
+  }>) {
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
+  },
+
+  async updateProgress(id: string) {
+    // Get project items count
+    const { data: items, error: itemsError } = await supabase
+      .from('project_items')
+      .select('id, is_completed')
+      .eq('project_id', id)
+    
+    if (itemsError) throw itemsError
+    
+    const totalItems = items?.length || 0
+    const completedItems = items?.filter((item: any) => item.is_completed).length || 0
+    const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
+    
+    // Update project progress
+    const { data, error } = await supabase
+      .from('projects')
+      .update({
+        total_items: totalItems,
+        completed_items: completedItems,
+        progress: progress
+      })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  }
+}
+
+// Project item operations
+export const projectItemService = {
+  async getAll(projectId?: string) {
+    let query = supabase
+      .from('project_items')
+      .select(`
+        *,
+        status_history (
+          *
+        ),
+        attachments (
+          *
+        )
+      `)
+    
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('project_items')
+      .select(`
+        *,
+        status_history (
+          *
+        ),
+        attachments (
+          *
+        )
+      `)
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async create(item: {
+    project_id: string
+    product_type: 'LU' | 'CL' | 'MP'
+    product_name: string
+    product_description?: string
+    quantity: number
+    unit_price?: number
+    total_price?: number
+    inventory_item_id?: string
+    supplier_name?: string
+    supplier_contact_info?: string
+    supplier_email?: string
+    supplier_phone?: string
+    expected_delivery?: Date
+    notes?: string
+    created_by: string
+  }) {
+    // Determine initial status based on product type
+    let initialStatus: string
+    switch (item.product_type) {
+      case 'LU':
+        initialStatus = 'inventario_vln'
+        break
+      case 'CL':
+        initialStatus = 'solicitar_cotizacion'
+        break
+      case 'MP':
+        initialStatus = 'pagar_pi_proveedor'
+        break
+      default:
+        initialStatus = 'solicitar_cotizacion'
+    }
+    
+    const { data, error } = await supabase
+      .from('project_items')
+      .insert([{
+        ...item,
+        current_status: initialStatus,
+        is_completed: item.product_type === 'LU' // LU items are immediately completed
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    
+    // Create initial status history
+    await this.createStatusHistory({
+      project_item_id: data.id,
+      to_status: initialStatus,
+      changed_by: item.created_by,
+      changed_by_name: 'System', // This should be the actual user name
+      notes: 'Item created'
+    })
+    
+    // Update project progress
+    await projectService.updateProgress(item.project_id)
+    
+    return data
+  },
+
+  async update(id: string, updates: Partial<{
+    product_name: string
+    product_description: string
+    quantity: number
+    unit_price: number
+    total_price: number
+    quotation_amount: number
+    quotation_paid: Date
+    shipping_cost: number
+    supplier_pi_amount: number
+    supplier_pi_paid: Date
+    customs_duty_amount: number
+    customs_duty_paid: Date
+    is_air_shipping: boolean
+    expected_delivery: Date
+    actual_delivery: Date
+    notes: string
+  }>) {
+    const { data, error } = await supabase
+      .from('project_items')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async updateStatus(id: string, newStatus: string, userId: string, userName: string, notes?: string, costIncurred?: number) {
+    // Get current item
+    const { data: item, error: itemError } = await supabase
+      .from('project_items')
+      .select('current_status, project_id, product_type')
+      .eq('id', id)
+      .single()
+    
+    if (itemError) throw itemError
+    
+    const oldStatus = item.current_status
+    const isCompleted = newStatus === 'recibido'
+    
+    // Update item status
+    const { data, error } = await supabase
+      .from('project_items')
+      .update({
+        current_status: newStatus,
+        is_completed: isCompleted,
+        completed_at: isCompleted ? new Date().toISOString() : null
+      })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    
+    // Create status history record
+    await this.createStatusHistory({
+      project_item_id: id,
+      from_status: oldStatus,
+      to_status: newStatus,
+      changed_by: userId,
+      changed_by_name: userName,
+      notes,
+      cost_incurred: costIncurred
+    })
+    
+    // Update project progress
+    await projectService.updateProgress(item.project_id)
+    
+    return data
+  },
+
+  async createStatusHistory(history: {
+    project_item_id: string
+    from_status?: string
+    to_status: string
+    changed_by: string
+    changed_by_name: string
+    notes?: string
+    cost_incurred?: number
+    estimated_cost?: number
+    actual_cost?: number
+  }) {
+    const { data, error } = await supabase
+      .from('project_status_history')
+      .insert([{
+        ...history,
+        change_date: new Date().toISOString()
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    // Get project ID before deletion
+    const { data: item } = await supabase
+      .from('project_items')
+      .select('project_id')
+      .eq('id', id)
+      .single()
+    
+    const { error } = await supabase
+      .from('project_items')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
+    
+    // Update project progress if item existed
+    if (item) {
+      await projectService.updateProgress(item.project_id)
+    }
+  }
+}
+
+// Project attachment operations
+export const projectAttachmentService = {
+  async getAll(projectId?: string, projectItemId?: string) {
+    let query = supabase
+      .from('project_attachments')
+      .select('*')
+    
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+    if (projectItemId) {
+      query = query.eq('project_item_id', projectItemId)
+    }
+    
+    const { data, error } = await query.order('uploaded_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  },
+
+  async create(attachment: {
+    project_id?: string
+    project_item_id?: string
+    file_name: string
+    file_url: string
+    file_type: string
+    file_size: number
+    category: 'quotation' | 'invoice' | 'receipt' | 'shipping_label' | 'customs_document' | 'photo' | 'other'
+    description?: string
+    uploaded_by: string
+    uploaded_by_name: string
+  }) {
+    const { data, error } = await supabase
+      .from('project_attachments')
+      .insert([{
+        ...attachment,
+        uploaded_at: new Date().toISOString()
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    const { error } = await supabase
+      .from('project_attachments')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
+  }
+}
+
+// Project analytics and metrics
+export const projectAnalyticsService = {
+  async getProjectMetrics() {
+    // Get project counts by status
+    const { data: projects } = await supabase
+      .from('projects')
+      .select('status')
+    
+    const projectCounts = projects?.reduce((acc: any, project: any) => {
+      acc[project.status] = (acc[project.status] || 0) + 1
+      return acc
+    }, {}) || {}
+    
+    // Get item counts by type and status
+    const { data: items } = await supabase
+      .from('project_items')
+      .select('product_type, current_status, is_completed')
+    
+    const itemMetrics = items?.reduce((acc: any, item: any) => {
+      const type = item.product_type.toLowerCase()
+      if (!acc[type]) {
+        acc[type] = { total: 0, completed: 0, pending: 0 }
+      }
+      acc[type].total++
+      if (item.is_completed) {
+        acc[type].completed++
+      } else {
+        acc[type].pending++
+      }
+      return acc
+    }, {}) || {}
+    
+    // Financial data removed - no longer tracking budget/costs
+    
+    return {
+      totalProjects: projects?.length || 0,
+      activeProjects: projectCounts.active || 0,
+      completedProjects: projectCounts.completed || 0,
+      onHoldProjects: projectCounts.on_hold || 0,
+      cancelledProjects: projectCounts.cancelled || 0,
+      luItems: itemMetrics.lu || { total: 0, completed: 0, pending: 0 },
+      clItems: itemMetrics.cl || { total: 0, completed: 0, pending: 0 },
+      mpItems: itemMetrics.mp || { total: 0, completed: 0, pending: 0 }
+    }
+  },
+
+  async getRecentActivity(limit = 10) {
+    const { data, error } = await supabase
+      .from('project_status_history')
+      .select(`
+        *,
+        project_items!inner (
+          product_name,
+          projects!inner (
+            name
+          )
+        )
+      `)
+      .order('change_date', { ascending: false })
+      .limit(limit)
+    
+    if (error) throw error
+    return data
+  }
+}
+
+// Workflow item operations
+export const workflowItemService = {
+  async getAll(projectId?: string) {
+    let query = supabase
+      .from('workflow_items')
+      .select('*')
+    
+    if (projectId) {
+      query = query.eq('project_id', projectId)
+    }
+    
+    const { data, error } = await query.order('created_at', { ascending: false })
+    
+    if (error) throw error
+    return data
+  },
+
+  async getById(id: string) {
+    const { data, error } = await supabase
+      .from('workflow_items')
+      .select('*')
+      .eq('id', id)
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async create(item: {
+    project_id: string
+    product_type: 'CL' | 'IMP'
+    product_name: string
+    current_step: string
+    step_data: Record<string, any>
+    created_by: string
+  }) {
+    // Generate a unique ID for the workflow item
+    const workflowId = `${item.product_type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    
+    const { data, error } = await supabase
+      .from('workflow_items')
+      .insert([{
+        id: workflowId,
+        project_id: item.project_id,
+        product_type: item.product_type,
+        product_name: item.product_name,
+        current_step: item.current_step,
+        step_data: item.step_data,
+        created_by: item.created_by,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      }])
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async update(id: string, updates: Partial<{
+    current_step: string
+    step_data: Record<string, any>
+    product_name: string
+  }>) {
+    const { data, error } = await supabase
+      .from('workflow_items')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select()
+      .single()
+    
+    if (error) throw error
+    return data
+  },
+
+  async delete(id: string) {
+    const { data, error } = await supabase
+      .from('workflow_items')
+      .delete()
+      .eq('id', id)
+    
+    if (error) throw error
+    return data
   }
 }

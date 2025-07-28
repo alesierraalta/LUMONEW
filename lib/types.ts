@@ -869,3 +869,375 @@ export interface PageCardConfig {
   refreshInterval?: number
   autoRefresh?: boolean
 }
+
+// ============================================================================
+// PROJECT MANAGEMENT SYSTEM
+// ============================================================================
+
+// Product types with their specific workflows
+export type ProductType = 'LU' | 'CL' | 'MP'
+
+// Workflow status for each product type
+export type LUStatus = 'seleccionar_inventario' | 'inventario_seleccionado'
+export type CLStatus = 'solicitar_cotizacion' | 'pagar_cotizacion' | 'coordinar_envio_pagar_flete' | 'recibido'
+export type MPStatus = 'pagar_pi_proveedor' | 'enviar_etiqueta_envio' | 'pagar_arancel_aduanas' | 'coordinar_envio' | 'recibido'
+
+export type ProjectStatus = LUStatus | CLStatus | MPStatus
+
+// Base project interface
+export interface Project {
+  id: string
+  name: string
+  description?: string
+  type: 'project'
+  status: 'active' | 'completed' | 'cancelled' | 'on_hold'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  startDate: Date
+  expectedEndDate?: Date
+  actualEndDate?: Date
+  // Progress tracking
+  progress: number // 0-100
+  totalItems: number
+  completedItems: number
+  // Audit
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
+  updatedBy: string
+}
+
+// Project items - products within a project
+export interface ProjectItem {
+  id: string
+  projectId: string
+  // Product details
+  productType: ProductType
+  productName: string
+  productDescription?: string
+  quantity: number
+  unitPrice?: number
+  totalPrice?: number
+  // Workflow status
+  currentStatus: ProjectStatus
+  statusHistory: ProjectStatusHistory[]
+  // LU specific (links to existing inventory)
+  inventoryItemId?: string
+  inventoryItem?: InventoryItem
+  // CL specific fields
+  quotationRequested?: Date
+  quotationReceived?: Date
+  quotationAmount?: number
+  quotationPaid?: Date
+  shippingCoordinated?: Date
+  shippingCost?: number
+  // MP specific fields
+  supplierPIAmount?: number
+  supplierPIPaid?: Date
+  shippingLabelSent?: Date
+  isAirShipping?: boolean
+  customsDutyAmount?: number
+  customsDutyPaid?: Date
+  // Common fields
+  supplier?: {
+    id: string
+    name: string
+    contactInfo: string
+    email?: string
+    phone?: string
+  }
+  notes?: string
+  attachments: ProjectAttachment[]
+  // Dates
+  expectedDelivery?: Date
+  actualDelivery?: Date
+  // Status
+  isCompleted: boolean
+  completedAt?: Date
+  // Audit
+  createdAt: Date
+  updatedAt: Date
+  createdBy: string
+  updatedBy: string
+}
+
+// Status history tracking
+export interface ProjectStatusHistory {
+  id: string
+  projectItemId: string
+  fromStatus?: ProjectStatus
+  toStatus: ProjectStatus
+  changedBy: string
+  changedByName: string
+  changeDate: Date
+  notes?: string
+  attachments?: ProjectAttachment[]
+  // Cost tracking for each status change
+  costIncurred?: number
+  estimatedCost?: number
+  actualCost?: number
+}
+
+// File attachments for projects
+export interface ProjectAttachment {
+  id: string
+  projectId?: string
+  projectItemId?: string
+  fileName: string
+  fileUrl: string
+  fileType: string
+  fileSize: number
+  uploadedBy: string
+  uploadedByName: string
+  uploadedAt: Date
+  category: 'quotation' | 'invoice' | 'receipt' | 'shipping_label' | 'customs_document' | 'photo' | 'other'
+  description?: string
+}
+
+// Project dashboard metrics
+export interface ProjectMetrics {
+  // Overall metrics
+  totalProjects: number
+  activeProjects: number
+  completedProjects: number
+  onHoldProjects: number
+  cancelledProjects: number
+  // Item metrics by type
+  luItems: {
+    total: number
+    completed: number
+    pending: number
+  }
+  clItems: {
+    total: number
+    quotationPending: number
+    paymentPending: number
+    shippingPending: number
+    completed: number
+  }
+  mpItems: {
+    total: number
+    piPaymentPending: number
+    shippingPending: number
+    customsPending: number
+    coordinationPending: number
+    completed: number
+  }
+  // Financial metrics removed
+  // totalBudget: number
+  // totalActualCost: number
+  // totalSavings: number
+  // averageProjectCost: number
+  // Timeline metrics
+  onTimeProjects: number
+  delayedProjects: number
+  averageProjectDuration: number
+  // Recent activity
+  recentActivities: ProjectActivity[]
+}
+
+// Project activity log
+export interface ProjectActivity {
+  id: string
+  projectId: string
+  projectName: string
+  projectItemId?: string
+  productName?: string
+  activityType: 'status_change' | 'cost_update' | 'note_added' | 'attachment_added' | 'project_created' | 'project_updated' | 'item_added' | 'item_updated'
+  description: string
+  userId: string
+  userName: string
+  timestamp: Date
+  metadata?: Record<string, any>
+}
+
+// Form data interfaces
+export interface ProjectFormData {
+  name: string
+  description?: string
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  startDate: Date
+  expectedEndDate?: Date
+}
+
+export interface ProjectItemFormData {
+  productType: ProductType
+  productName: string
+  productDescription?: string
+  quantity: number
+  unitPrice?: number
+  // LU specific
+  inventoryItemId?: string
+  // Supplier info
+  supplierName?: string
+  supplierContactInfo?: string
+  supplierEmail?: string
+  supplierPhone?: string
+  // Initial estimates
+  estimatedCost?: number
+  expectedDelivery?: Date
+  notes?: string
+}
+
+// Workflow configuration
+export interface WorkflowConfig {
+  productType: ProductType
+  statuses: {
+    key: ProjectStatus
+    label: string
+    description: string
+    color: string
+    icon: string
+    isCompleted: boolean
+    requiredFields?: string[]
+    allowedNextStatuses: ProjectStatus[]
+  }[]
+}
+
+// Filter options for projects
+export interface ProjectFilterOptions extends FilterOptions {
+  projectStatus?: 'active' | 'completed' | 'cancelled' | 'on_hold'
+  productType?: ProductType
+  currentStatus?: ProjectStatus
+  progressRange?: {
+    min: number
+    max: number
+  }
+  dueDateRange?: {
+    start: Date
+    end: Date
+  }
+}
+
+// Project reports
+export interface ProjectReport {
+  id: string
+  name: string
+  type: 'status_summary' | 'cost_analysis' | 'timeline_analysis' | 'team_performance' | 'supplier_performance'
+  filters: ProjectFilterOptions
+  data: any
+  generatedBy: string
+  generatedAt: Date
+  format: 'json' | 'csv' | 'pdf'
+}
+
+// Workflow definitions for each product type
+export const WORKFLOW_CONFIGS: Record<ProductType, WorkflowConfig> = {
+  LU: {
+    productType: 'LU',
+    statuses: [
+      {
+        key: 'seleccionar_inventario',
+        label: 'Seleccionar del Inventario',
+        description: 'Seleccionar producto del inventario VLN existente',
+        color: '#22c55e',
+        icon: 'Package',
+        isCompleted: false,
+        allowedNextStatuses: ['inventario_seleccionado']
+      },
+      {
+        key: 'inventario_seleccionado',
+        label: 'Inventario Seleccionado',
+        description: 'Producto seleccionado del inventario VLN',
+        color: '#16a34a',
+        icon: 'CheckCircle',
+        isCompleted: true,
+        allowedNextStatuses: []
+      }
+    ]
+  },
+  CL: {
+    productType: 'CL',
+    statuses: [
+      {
+        key: 'solicitar_cotizacion',
+        label: 'Solicitar Cotización',
+        description: 'Solicitar cotización al proveedor',
+        color: '#f59e0b',
+        icon: 'FileText',
+        isCompleted: false,
+        allowedNextStatuses: ['pagar_cotizacion']
+      },
+      {
+        key: 'pagar_cotizacion',
+        label: 'Pagar Cotización',
+        description: 'Realizar pago de la cotización',
+        color: '#3b82f6',
+        icon: 'CreditCard',
+        isCompleted: false,
+        requiredFields: ['quotationAmount'],
+        allowedNextStatuses: ['coordinar_envio_pagar_flete']
+      },
+      {
+        key: 'coordinar_envio_pagar_flete',
+        label: 'Coordinar Envío y Pagar Flete',
+        description: 'Coordinar el envío y pagar el flete',
+        color: '#8b5cf6',
+        icon: 'Truck',
+        isCompleted: false,
+        requiredFields: ['shippingCost'],
+        allowedNextStatuses: ['recibido']
+      },
+      {
+        key: 'recibido',
+        label: 'Recibido',
+        description: 'Producto recibido exitosamente',
+        color: '#22c55e',
+        icon: 'CheckCircle',
+        isCompleted: true,
+        allowedNextStatuses: []
+      }
+    ]
+  },
+  MP: {
+    productType: 'MP',
+    statuses: [
+      {
+        key: 'pagar_pi_proveedor',
+        label: 'Pagar PI a Proveedor',
+        description: 'Realizar pago de PI (Proforma Invoice) al proveedor',
+        color: '#f59e0b',
+        icon: 'Receipt',
+        isCompleted: false,
+        requiredFields: ['supplierPIAmount'],
+        allowedNextStatuses: ['enviar_etiqueta_envio']
+      },
+      {
+        key: 'enviar_etiqueta_envio',
+        label: 'Enviar Etiqueta Envío',
+        description: 'Enviar etiqueta de envío (si es aéreo, pagar flete)',
+        color: '#3b82f6',
+        icon: 'Mail',
+        isCompleted: false,
+        allowedNextStatuses: ['pagar_arancel_aduanas']
+      },
+      {
+        key: 'pagar_arancel_aduanas',
+        label: 'Pagar Arancel Aduanas',
+        description: 'Pagar aranceles aduaneros',
+        color: '#8b5cf6',
+        icon: 'Building',
+        isCompleted: false,
+        requiredFields: ['customsDutyAmount'],
+        allowedNextStatuses: ['coordinar_envio']
+      },
+      {
+        key: 'coordinar_envio',
+        label: 'Coordinar Envío',
+        description: 'Coordinar la entrega final',
+        color: '#06b6d4',
+        icon: 'MapPin',
+        isCompleted: false,
+        allowedNextStatuses: ['recibido']
+      },
+      {
+        key: 'recibido',
+        label: 'Recibido',
+        description: 'Producto recibido exitosamente',
+        color: '#22c55e',
+        icon: 'CheckCircle',
+        isCompleted: true,
+        allowedNextStatuses: []
+      }
+    ]
+  }
+}

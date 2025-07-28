@@ -40,20 +40,20 @@ const isNotificationCard = (card: InfoCardType): card is NotificationCard => {
 // Simple render functions for each card type
 const renderStatCard = (card: StatCard) => {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-baseline gap-2">
-        <span className="text-2xl font-bold">
+        <span className="text-lg font-bold">
           {card.format === 'currency' ? '$' : ''}
           {String(card.value)}
           {card.unit && (
-            <span className="text-sm font-normal ml-1">{card.unit}</span>
+            <span className="text-xs font-normal ml-1">{card.unit}</span>
           )}
         </span>
         {card.change && (
           <div className="flex items-center gap-1">
             {getTrendIcon(card.change.trend)}
             <span className={cn(
-              'text-sm font-medium',
+              'text-xs font-medium',
               card.change.trend === 'up' ? 'text-green-600' :
               card.change.trend === 'down' ? 'text-red-600' : 'text-gray-600'
             )}>
@@ -87,26 +87,26 @@ const renderNotificationCard = (card: NotificationCard) => {
 const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
   switch (trend) {
     case 'up':
-      return <TrendingUp className="w-4 h-4 text-green-500" />
+      return <TrendingUp className="w-3 h-3 text-green-500" />
     case 'down':
-      return <TrendingDown className="w-4 h-4 text-red-500" />
+      return <TrendingDown className="w-3 h-3 text-red-500" />
     case 'stable':
-      return <Minus className="w-4 h-4 text-gray-500" />
+      return <Minus className="w-3 h-3 text-gray-500" />
   }
 }
 
 const getSeverityIcon = (severity: 'info' | 'warning' | 'error' | 'success' | 'critical') => {
   switch (severity) {
     case 'info':
-      return <Info className="w-4 h-4 text-blue-500" />
+      return <Info className="w-3 h-3 text-blue-500" />
     case 'warning':
-      return <AlertCircle className="w-4 h-4 text-yellow-500" />
+      return <AlertCircle className="w-3 h-3 text-yellow-500" />
     case 'error':
-      return <AlertCircle className="w-4 h-4 text-red-500" />
+      return <AlertCircle className="w-3 h-3 text-red-500" />
     case 'success':
-      return <CheckCircle className="w-4 h-4 text-green-500" />
+      return <CheckCircle className="w-3 h-3 text-green-500" />
     case 'critical':
-      return <AlertCircle className="w-4 h-4 text-red-600" />
+      return <AlertCircle className="w-3 h-3 text-red-600" />
   }
 }
 
@@ -135,10 +135,10 @@ export function InfoCard({ card, className }: InfoCardProps) {
 
   const getSizeClasses = () => {
     const sizes = {
-      small: 'min-h-[120px]',
-      medium: 'min-h-[160px]',
-      large: 'min-h-[200px]',
-      full: 'min-h-[240px]'
+      small: 'min-h-[80px]',
+      medium: 'min-h-[100px]',
+      large: 'min-h-[120px]',
+      full: 'min-h-[140px]'
     }
     return sizes[card.size]
   }
@@ -153,14 +153,14 @@ export function InfoCard({ card, className }: InfoCardProps) {
         className
       )}
     >
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-2 px-3 pt-3">
         <div className="flex items-start justify-between">
           <div>
-            <CardTitle className="text-base font-semibold">
+            <CardTitle className="text-sm font-semibold">
               {card.title}
             </CardTitle>
             {card.subtitle && (
-              <CardDescription className="text-sm mt-1">
+              <CardDescription className="text-xs mt-1">
                 {card.subtitle}
               </CardDescription>
             )}
@@ -173,8 +173,8 @@ export function InfoCard({ card, className }: InfoCardProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="space-y-3">
+      <CardContent className="pt-0 px-3 pb-3">
+        <div className="space-y-2">
           {/* Render card content based on type */}
           {isStatCard(card) && renderStatCard(card)}
           {isNotificationCard(card) && renderNotificationCard(card)}

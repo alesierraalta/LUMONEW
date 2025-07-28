@@ -30,6 +30,7 @@
   },
   "navigation": {
     "dashboard": "Panel de Control",
+    "projects": "Proyectos",
     "inventory": "Inventario",
     "stock": "Stock",
     "products": "Productos",

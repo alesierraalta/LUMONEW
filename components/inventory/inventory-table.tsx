@@ -60,8 +60,8 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const router = useRouter()
   const t = useTranslations('inventory')
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortField, setSortField] = useState<keyof InventoryItem>('name')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
+  const [sortField, setSortField] = useState<keyof InventoryItem>('updated_at')
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
   const [items, setItems] = useState<InventoryItem[]>([])
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
@@ -321,7 +321,15 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                   {t('table.headers.status')}
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
-                  {t('table.headers.lastUpdated')}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 data-[state=open]:bg-accent"
+                    onClick={() => handleSort('updated_at')}
+                  >
+                    {t('table.headers.lastUpdated')}
+                    <ArrowUpDown className="ml-2 h-4 w-4" />
+                  </Button>
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   {t('table.headers.actions')}
