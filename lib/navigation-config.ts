@@ -48,6 +48,7 @@ export const createNavigationConfig = (icons: Awaited<ReturnType<typeof getNavig
     href: `/${locale}/projects`,
     icon: icons.Briefcase,
   },
+
   {
     name: 'Inventario',
     translationKey: 'navigation.inventory',

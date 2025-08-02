@@ -1,5 +1,6 @@
 'use client'
 
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, XCircle, CheckCircle } from 'lucide-react'
@@ -25,83 +26,104 @@ export function StockWarnings({ items }: StockWarningsProps) {
 
   return (
     <div className="space-y-4 mb-6">
-      {/* Out of Stock Warning */}
-      {outOfStockItems.length > 0 && (
-        <Alert className="border-red-200 bg-red-50">
-          <XCircle className="h-4 w-4 text-red-600" />
-          <AlertDescription className="text-red-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <strong>Productos Agotados:</strong> {outOfStockItems.length} productos sin stock
+      {/* Stock Status Cards - Horizontal Layout */}
+      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+        {/* Out of Stock Card */}
+        {outOfStockItems.length > 0 && (
+          <Card className="border-error-soft bg-error-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <XCircle className="h-4 w-4 text-error-soft" />
+                  <span>Sin Stock</span>
+                </div>
+                <Badge variant="destructive">
+                  {outOfStockItems.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-1">
+                {outOfStockItems.slice(0, 2).map(item => (
+                  <div key={item.id} className="flex justify-between text-xs">
+                    <span className="truncate pr-2">{item.name}</span>
+                    <span className="font-medium text-error-soft">0</span>
+                  </div>
+                ))}
+                {outOfStockItems.length > 2 && (
+                  <div className="text-xs text-error-soft">
+                    +{outOfStockItems.length - 2} más
+                  </div>
+                )}
               </div>
-              <Badge variant="destructive" className="ml-2">
-                {outOfStockItems.length}
-              </Badge>
-            </div>
-            <div className="mt-2 text-sm">
-              {outOfStockItems.slice(0, 3).map(item => (
-                <div key={item.id} className="flex justify-between">
-                  <span>{item.name}</span>
-                  <span className="font-medium">Stock: {item.currentStock}</span>
-                </div>
-              ))}
-              {outOfStockItems.length > 3 && (
-                <div className="text-xs text-red-600 mt-1">
-                  +{outOfStockItems.length - 3} productos más
-                </div>
-              )}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Low Stock Warning */}
-      {lowStockItems.length > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertDescription className="text-yellow-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <strong>Stock Bajo:</strong> {lowStockItems.length} productos con poco stock
+        {/* Low Stock Card */}
+        {lowStockItems.length > 0 && (
+          <Card className="border-warning-soft bg-warning-soft">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-warning-soft" />
+                  <span>Stock Bajo</span>
+                </div>
+                <Badge variant="secondary" className="bg-amber-100 text-amber-800 dark:bg-amber-900/20 dark:text-amber-400">
+                  {lowStockItems.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-1">
+                {lowStockItems.slice(0, 2).map(item => (
+                  <div key={item.id} className="flex justify-between text-xs">
+                    <span className="truncate pr-2">{item.name}</span>
+                    <span className="font-medium text-warning-soft">
+                      {item.currentStock}/{item.minimumLevel}
+                    </span>
+                  </div>
+                ))}
+                {lowStockItems.length > 2 && (
+                  <div className="text-xs text-warning-soft">
+                    +{lowStockItems.length - 2} más
+                  </div>
+                )}
               </div>
-              <Badge variant="secondary" className="ml-2 bg-yellow-100 text-yellow-800">
-                {lowStockItems.length}
-              </Badge>
-            </div>
-            <div className="mt-2 text-sm">
-              {lowStockItems.slice(0, 3).map(item => (
-                <div key={item.id} className="flex justify-between">
-                  <span>{item.name}</span>
-                  <span className="font-medium">
-                    Stock: {item.currentStock} / Min: {item.minimumLevel}
-                  </span>
-                </div>
-              ))}
-              {lowStockItems.length > 3 && (
-                <div className="text-xs text-yellow-600 mt-1">
-                  +{lowStockItems.length - 3} productos más
-                </div>
-              )}
-            </div>
-          </AlertDescription>
-        </Alert>
-      )}
+            </CardContent>
+          </Card>
+        )}
 
-      {/* Stock Summary */}
-      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-        <div className="flex items-center space-x-1">
-          <CheckCircle className="h-4 w-4 text-green-600" />
-          <span>Buen Stock: {goodStockItems.length}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <span>Stock Bajo: {lowStockItems.length}</span>
-        </div>
-        <div className="flex items-center space-x-1">
-          <XCircle className="h-4 w-4 text-red-600" />
-          <span>Agotado: {outOfStockItems.length}</span>
-        </div>
+        {/* Good Stock Card */}
+        <Card className="border-success-soft bg-success-soft">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-4 w-4 text-success-soft" />
+                <span>Stock Normal</span>
+              </div>
+              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                {goodStockItems.length}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <div className="text-xs text-success-soft">
+              Productos con stock suficiente
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Detailed alerts for critical items */}
+      {outOfStockItems.length > 0 && (
+        <Alert className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20">
+          <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+          <AlertDescription className="text-red-800 dark:text-red-200">
+            <strong>Atención:</strong> {outOfStockItems.length} productos necesitan reposición inmediata
+          </AlertDescription>
+        </Alert>
+      )}
     </div>
   )
 }

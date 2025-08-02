@@ -252,8 +252,8 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
               </td>
               <td className="py-4 px-4">
                 <div className="flex items-center space-x-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <span className="text-sm text-gray-900">{user.email}</span>
+                  <Mail className="w-4 h-4 text-muted-foreground" />
+                  <span className="sr-only">Email</span>
                 </div>
               </td>
               <td className="py-4 px-4">
@@ -268,21 +268,21 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                 </Badge>
               </td>
               <td className="py-4 px-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-secondary">
                   {user.last_login ? (
                     <div>
                       <div>{formatDate(new Date(user.last_login))}</div>
-                      <div className="text-xs text-gray-400">
+                      <div className="text-xs text-muted-soft">
                         {formatDateTime(new Date(user.last_login)).split(' ')[1]}
                       </div>
                     </div>
                   ) : (
-                    <span className="text-gray-400">{t('never')}</span>
+                    <span className="text-subtle">{t('never')}</span>
                   )}
                 </div>
               </td>
               <td className="py-4 px-4">
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-secondary">
                   {formatDate(new Date(user.created_at))}
                 </div>
               </td>
@@ -319,17 +319,17 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
 
       {filteredUsers.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-500">{t('noUsersFound')}</div>
-          <div className="text-sm text-gray-400 mt-1">
+          <div className="text-secondary">{t('noUsersFound')}</div>
+          <div className="text-sm text-muted-soft mt-1">
             {searchTerm ? t('adjustSearchCriteria') : t('createFirstUser')}
           </div>
         </div>
       )}
 
       {selectedUsers.length > 0 && (
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div className="text-sm text-blue-800">
+            <div className="text-sm text-blue-800 dark:text-blue-200">
               {t('usersSelected', { count: selectedUsers.length })}
             </div>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">

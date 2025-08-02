@@ -73,7 +73,7 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
                   <div className="w-7 xs:w-8 sm:w-9" /> {/* Spacer for centering */}
                 </div>
 
-                <div className="h-full overflow-y-auto custom-scrollbar">
+                <div className="h-[calc(100vh-44px)] lg:h-full overflow-y-auto custom-scrollbar">
                   <div className="p-1 xs:p-2 sm:p-3 lg:p-4">
                     {children}
                   </div>

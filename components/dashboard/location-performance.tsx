@@ -103,7 +103,7 @@ export function LocationPerformance() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4 mb-4">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
+            <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">
                 ${(totalRevenue / 1000).toFixed(0)}K
               </div>

@@ -265,41 +265,43 @@ export function UserGrid({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-4 md:flex-row md:justify-between md:items-center">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-            <Users className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+            <Users className="h-5 w-5 md:h-6 md:w-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">{t('userManagement')}</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl md:text-2xl font-bold text-foreground">{t('userManagement')}</h1>
+            <p className="text-xs md:text-sm text-muted-foreground">
               {t('usersCount', { filtered: filteredUsers.length, total: users.length })}
             </p>
           </div>
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={() => window.location.href = '/users/create'}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors text-sm"
           >
             <Plus className="h-4 w-4" />
-            {t('newUser')}
+            <span className="hidden sm:inline">{t('newUser')}</span>
+            <span className="sm:hidden">Nuevo</span>
           </button>
           <button
             onClick={() => window.location.href = '/roles'}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500 text-white rounded-lg transition-colors"
+            className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-600 dark:hover:bg-purple-500 text-white rounded-lg transition-colors text-sm"
           >
             <Shield className="h-4 w-4" />
-            {t('manageRoles')}
+            <span className="hidden sm:inline">{t('manageRoles')}</span>
+            <span className="sm:hidden">Roles</span>
           </button>
         </div>
       </div>
 
-      {/* Search and Filters */}
+      {/* Search and Filters - Mobile Responsive */}
       <div className="bg-card rounded-xl border border-border p-4">
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-4 md:flex-row">
           {/* Search */}
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -316,14 +318,15 @@ export function UserGrid({
           <button
             onClick={() => setShowFilters(!showFilters)}
             className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 border rounded-lg transition-colors',
+              'inline-flex items-center gap-2 px-3 md:px-4 py-2 border rounded-lg transition-colors text-sm',
               showFilters
                 ? 'bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-400'
                 : 'border-border text-foreground hover:bg-accent'
             )}
           >
             <Filter className="h-4 w-4" />
-            {t('filters')}
+            <span className="hidden sm:inline">{t('filters')}</span>
+            <span className="sm:hidden">Filtros</span>
           </button>
         </div>
 

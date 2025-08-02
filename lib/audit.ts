@@ -306,6 +306,7 @@ export class AuditService {
     limit?: number
     offset?: number
     user_id?: string
+    user_email?: string
     table_name?: string
     operation?: string
     date_from?: string
@@ -323,6 +324,10 @@ export class AuditService {
     // Apply filters
     if (filters.user_id) {
       query = query.eq('user_id', filters.user_id)
+    }
+    
+    if (filters.user_email) {
+      query = query.ilike('user_email', `%${filters.user_email}%`)
     }
     
     if (filters.table_name) {

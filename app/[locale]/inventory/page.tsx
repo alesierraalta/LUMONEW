@@ -8,13 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Plus, Download, Upload, ShoppingCart, Package, History, Zap } from 'lucide-react'
 import { FilterOptions } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
-import { CardContainer } from '@/components/cards/card-container'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth/auth-context'
 import { auditedInventoryService, auditedCategoryService } from '@/lib/database-with-audit'
 import { analyticsService } from '@/lib/database'
 import { PageLoading } from '@/components/ui/page-loading'
 import { useModal } from '@/components/ui/modal'
+import { Badge } from '@/components/ui/badge'
 
 // Dynamic imports for better performance
 const InventoryTable = lazy(() => import('@/components/inventory/inventory-table').then(mod => ({ default: mod.InventoryTable })))
@@ -207,7 +207,7 @@ function InventoryContent() {
           onClose={() => {}} // Modal handles its own closing
         />
       </Suspense>,
-      { size: 'xl' }
+      { size: 'xl', closable: false }
     )
   }, [openModal, loadInventoryData])
 
@@ -219,139 +219,266 @@ function InventoryContent() {
   }
 
   return (
-    <div className="space-y-1 xs:space-y-2 sm:space-y-3 animate-fade-in">
-      <div className="flex flex-col gap-1 xs:gap-2 sm:gap-3">
-        <div className="px-1">
-          <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Inventory</h2>
-          <p className="text-muted-foreground text-xs leading-tight">
-            Manage inventory items
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground text-sm">
+            {t('description')}
           </p>
         </div>
+      </div>
         
-        {/* Ultra-compact button grid for smallest screens */}
-        <div className="grid grid-cols-4 xs:grid-cols-6 sm:flex sm:flex-wrap gap-1 xs:gap-1.5 sm:gap-2 px-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+      {/* Inventory Tools - Elegant & Minimalist Design */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Primary Actions */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold tracking-tight text-foreground">Herramientas Rápidas</h3>
+              <p className="text-sm text-muted-foreground mt-1">Acciones principales para gestión de inventario</p>
+            </div>
+          </div>
+          
+          {/* Action Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              onClick={() => router.push('/inventory/create')}
+              title="Crear un nuevo producto en el inventario"
+            >
+              <div className="flex flex-col items-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
+                  <Plus className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm text-foreground">Nuevo Producto</p>
+                  <p className="text-xs text-muted-foreground mt-1">Crear artículo</p>
+                </div>
+              </div>
+            </button>
+            
+            <button
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-green-500/10 hover:border-green-200 dark:hover:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+              onClick={() => {
+                setTransactionMode('stock_addition')
+                setIsTransactionBuilderOpen(true)
+              }}
+              title="Agregar stock a productos existentes"
+            >
+              <div className="flex flex-col items-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950/50 group-hover:bg-green-100 dark:group-hover:bg-green-900/50 transition-colors">
+                  <Package className="h-5 w-5 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm text-foreground">Agregar Stock</p>
+                  <p className="text-xs text-muted-foreground mt-1">Aumentar inventario</p>
+                </div>
+              </div>
+            </button>
+            
+            <button
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-200 dark:hover:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
+              onClick={() => {
+                setTransactionMode('sale')
+                setIsTransactionBuilderOpen(true)
+              }}
+              title="Registrar una nueva venta"
+            >
+              <div className="flex flex-col items-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/50 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors">
+                  <ShoppingCart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm text-foreground">Nueva Venta</p>
+                  <p className="text-xs text-muted-foreground mt-1">Registrar transacción</p>
+                </div>
+              </div>
+            </button>
+            
+            <button
+              className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-200 dark:hover:border-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
+              onClick={handleBulkCreate}
+              title="Crear múltiples productos de una vez"
+            >
+              <div className="flex flex-col items-center space-y-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-50 dark:bg-orange-950/50 group-hover:bg-orange-100 dark:group-hover:bg-orange-900/50 transition-colors">
+                  <Zap className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="text-center">
+                  <p className="font-medium text-sm text-foreground">Crear Múltiples</p>
+                  <p className="text-xs text-muted-foreground mt-1">Carga masiva</p>
+                </div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <Card className="border-border/50 shadow-sm">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Package className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Estado del Inventario</h3>
+                <p className="text-sm text-muted-foreground">Resumen en tiempo real</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <span className="text-sm text-muted-foreground">Total de productos</span>
+                <span className="font-semibold text-foreground">{inventoryData?.totalItems || 0}</span>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                    <span className="text-sm text-muted-foreground">Sin stock</span>
+                  </div>
+                  <span className="font-medium text-red-600 dark:text-red-400">{inventoryData?.outOfStockCount || 0}</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+                    <span className="text-sm text-muted-foreground">Stock bajo</span>
+                  </div>
+                  <span className="font-medium text-yellow-600 dark:text-yellow-400">{inventoryData?.lowStockCount || 0}</span>
+                </div>
+                
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <span className="text-sm text-muted-foreground">Stock óptimo</span>
+                  </div>
+                  <span className="font-medium text-green-600 dark:text-green-400">{inventoryData?.goodStockCount || 0}</span>
+                </div>
+              </div>
+              
+              {(inventoryData?.outOfStockCount || 0) + (inventoryData?.lowStockCount || 0) > 0 && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="flex items-center space-x-2 text-amber-600 dark:text-amber-400">
+                    <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+                    <span className="text-xs font-medium">Requiere atención</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Advanced Tools - Refined Design */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="text-lg font-semibold tracking-tight text-foreground">Herramientas Avanzadas</h3>
+            <p className="text-sm text-muted-foreground mt-1">Gestión de datos y análisis detallado</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button
+            className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-blue-500/5 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             onClick={() => setIsAuditHistoryOpen(true)}
+            title="Ver historial completo de cambios y movimientos del inventario"
           >
-            <History className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Audit</span>
-            <span className="hidden sm:inline ml-1 text-sm">Auditoría</span>
-          </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
+              <History className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">Historial de Auditoría</p>
+              <p className="text-xs text-muted-foreground truncate">Seguimiento de cambios</p>
+            </div>
+          </button>
           
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+          <button
+            className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-green-500/5 hover:border-green-200 dark:hover:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-500/20"
             onClick={() => {
-              // TODO: Implement import functionality
               addToast({
-                title: "Import",
-                description: "Import functionality coming soon",
+                title: t('import'),
+                description: t('importComingSoon'),
                 type: "info"
               })
             }}
+            title="Importar productos desde archivo CSV o Excel"
           >
-            <Upload className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Imp</span>
-            <span className="hidden sm:inline ml-1 text-sm">Import</span>
-          </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950/50 group-hover:bg-green-100 dark:group-hover:bg-green-900/50 transition-colors">
+              <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">Importar Datos</p>
+              <p className="text-xs text-muted-foreground truncate">CSV/Excel</p>
+            </div>
+          </button>
           
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+          <button
+            className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-purple-500/5 hover:border-purple-200 dark:hover:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
             onClick={() => {
-              // TODO: Implement export functionality
               addToast({
-                title: "Export",
-                description: "Export functionality coming soon",
+                title: t('export'),
+                description: t('exportComingSoon'),
                 type: "info"
               })
             }}
+            title="Exportar inventario completo a archivo CSV o Excel"
           >
-            <Download className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Exp</span>
-            <span className="hidden sm:inline ml-1 text-sm">Export</span>
-          </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/50 group-hover:bg-purple-100 dark:group-hover:bg-purple-900/50 transition-colors">
+              <Download className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">Exportar Datos</p>
+              <p className="text-xs text-muted-foreground truncate">Descargar inventario</p>
+            </div>
+          </button>
           
-          <Button
-            variant="default"
-            size="sm"
-            className="bg-green-600 hover:bg-green-700 text-white text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
+          <button
+            className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-indigo-500/5 hover:border-indigo-200 dark:hover:border-indigo-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
             onClick={() => {
-              setTransactionMode('stock_addition')
-              setIsTransactionBuilderOpen(true)
+              addToast({
+                title: "Reportes Avanzados",
+                description: "Funcionalidad en desarrollo",
+                type: "info"
+              })
             }}
+            title="Generar reportes detallados de inventario y movimientos"
           >
-            <Package className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">+St</span>
-            <span className="hidden sm:inline ml-1 text-sm">Stock</span>
-          </Button>
-          
-          <Button
-            variant="default"
-            size="sm"
-            className="bg-blue-600 hover:bg-blue-700 text-white text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
-            onClick={() => {
-              setTransactionMode('sale')
-              setIsTransactionBuilderOpen(true)
-            }}
-          >
-            <ShoppingCart className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Sale</span>
-            <span className="hidden sm:inline ml-1 text-sm">Sale</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-yellow-50 hover:bg-yellow-100 border-yellow-300 text-yellow-700 text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 flex-1 xs:flex-none"
-            onClick={handleBulkCreate}
-          >
-            <Zap className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Bulk</span>
-            <span className="hidden sm:inline ml-1 text-sm">Bulk</span>
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            className="bg-green-50 hover:bg-green-100 border-green-300 text-green-700 text-xs p-1 xs:p-1.5 h-8 xs:h-9 sm:h-10 min-w-0 col-span-4 xs:col-span-6 sm:col-span-1 flex-1 xs:flex-none"
-            onClick={() => router.push('/inventory/create')}
-          >
-            <Plus className="h-3 w-3 xs:h-3.5 xs:w-3.5 sm:h-4 sm:w-4" />
-            <span className="hidden xs:inline sm:hidden ml-1 text-xs">Add</span>
-            <span className="hidden sm:inline ml-1 text-sm">Add Item</span>
-          </Button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-50 dark:bg-indigo-950/50 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/50 transition-colors">
+              <Package className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm text-foreground">Reportes Avanzados</p>
+              <p className="text-xs text-muted-foreground truncate">Análisis detallado</p>
+            </div>
+          </button>
         </div>
       </div>
 
-      {/* Information Cards */}
-      <CardContainer
-        layout="grid"
-        columns={1}
-        className="mb-1 xs:mb-2 sm:mb-4 grid-cols-2 xs:grid-cols-3 sm:grid-cols-4 gap-1 xs:gap-2 sm:gap-3"
-      />
 
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>Inventory Items</CardTitle>
-          <CardDescription>
-            A list of all inventory items with their current stock levels and details.
+
+      {/* Main Inventory Table - Mobile Responsive */}
+      <Card className="shadow-sm md:shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">{t('inventoryItems.title')}</CardTitle>
+          <CardDescription className="text-sm">
+            {t('inventoryItems.description')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <Suspense fallback={<PageLoading message="Cargando filtros..." size="sm" />}>
+            <Suspense fallback={<PageLoading message={t('loading.filters')} size="sm" />}>
               <InventoryFilters
                 filters={filters}
                 onFiltersChange={setFilters}
               />
             </Suspense>
-            <Suspense fallback={<PageLoading message="Cargando tabla..." />}>
+            <Suspense fallback={<PageLoading message={t('loading.table')} />}>
               <InventoryTable filters={filters} />
             </Suspense>
           </div>
@@ -360,7 +487,7 @@ function InventoryContent() {
 
       {/* Transaction Builder Modal */}
       {isTransactionBuilderOpen && (
-        <Suspense fallback={<PageLoading message="Cargando constructor..." />}>
+        <Suspense fallback={<PageLoading message={t('loading.transactionBuilder')} />}>
           <TransactionBuilder
             isOpen={isTransactionBuilderOpen}
             onClose={() => setIsTransactionBuilderOpen(false)}
@@ -372,7 +499,7 @@ function InventoryContent() {
 
       {/* Audit History Modal */}
       {isAuditHistoryOpen && (
-        <Suspense fallback={<PageLoading message="Cargando historial..." />}>
+        <Suspense fallback={<PageLoading message={t('loading.auditHistory')} />}>
           <AuditHistory
             open={isAuditHistoryOpen}
             onOpenChange={setIsAuditHistoryOpen}

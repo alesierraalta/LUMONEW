@@ -323,7 +323,7 @@ export function BulkOperations({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getOperationIcon(operationType)}
@@ -794,12 +794,12 @@ export function BulkOperations({
           {operationType === 'archive' && operationStatus === 'idle' && (
             <Form {...archiveForm}>
               <form onSubmit={archiveForm.handleSubmit(onArchiveSubmit)} className="space-y-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="flex items-center gap-2 text-blue-800 mb-2">
+                <div className="bg-blue-50 dark:bg-blue-950/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center gap-2 text-blue-800 dark:text-blue-200 mb-2">
                     <Archive className="h-4 w-4" />
                     <span className="font-medium">{t('archiveElements')}</span>
                   </div>
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
                     {t('archiveMessage')}
                   </p>
                 </div>
@@ -845,12 +845,7 @@ export function BulkOperations({
         </div>
 
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onClose}
-            disabled={isProcessing}
-          >
+          <Button variant="outline" onClick={onClose} disabled={isProcessing}>
             {tCommon('cancel')}
           </Button>
           {operationType === 'update' && operationStatus === 'idle' && (

@@ -99,29 +99,33 @@ export function Dashboard() {
       </div>
       
       {/* Information Cards */}
-      <DashboardCards />
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+        <DashboardCards />
+      </div>
       
-      {/* Metrics Cards */}
-      <MetricsCards />
+      {/* Metrics Cards - Mobile Responsive */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+        <MetricsCards />
+      </div>
       
-      {/* Tabbed Analytics Interface */}
+      {/* Tabbed Analytics Interface - Mobile Responsive */}
       <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">{t('tabs.overview')}</TabsTrigger>
-          <TabsTrigger value="inventory">{t('tabs.inventory')}</TabsTrigger>
-          <TabsTrigger value="sales">{t('tabs.sales')}</TabsTrigger>
-          <TabsTrigger value="locations">{t('tabs.locations')}</TabsTrigger>
-          <TabsTrigger value="financial">{t('tabs.financial')}</TabsTrigger>
-          <TabsTrigger value="alerts">{t('tabs.alerts')}</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6">
+          <TabsTrigger value="overview" className="text-xs md:text-sm">{t('tabs.overview')}</TabsTrigger>
+          <TabsTrigger value="inventory" className="text-xs md:text-sm">{t('tabs.inventory')}</TabsTrigger>
+          <TabsTrigger value="sales" className="text-xs md:text-sm">{t('tabs.sales')}</TabsTrigger>
+          <TabsTrigger value="locations" className="hidden md:block text-xs md:text-sm">{t('tabs.locations')}</TabsTrigger>
+          <TabsTrigger value="financial" className="hidden md:block text-xs md:text-sm">{t('tabs.financial')}</TabsTrigger>
+          <TabsTrigger value="alerts" className="hidden md:block text-xs md:text-sm">{t('tabs.alerts')}</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">
-          {/* Overview Charts */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <Card className="col-span-4">
+          {/* Overview Charts - Mobile Responsive */}
+          <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
+            <Card className="lg:col-span-4">
               <CardHeader>
-                <CardTitle>{t('cards.inventoryOverview')}</CardTitle>
-                <CardDescription>
+                <CardTitle className="text-lg md:text-xl">{t('cards.inventoryOverview')}</CardTitle>
+                <CardDescription className="text-sm">
                   {t('cards.inventoryOverviewDescription')}
                 </CardDescription>
               </CardHeader>
@@ -130,7 +134,7 @@ export function Dashboard() {
               </CardContent>
             </Card>
             
-            <div className="col-span-3">
+            <div className="lg:col-span-3">
               <RecentActivities />
             </div>
           </div>

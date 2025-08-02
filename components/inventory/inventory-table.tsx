@@ -429,7 +429,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
 
       {sortedItems.length === 0 && !loading && (
         <div className="text-center py-6">
-          <p className="text-muted-foreground">{t('noItemsFound')}</p>
+          <p className="text-visible-dark">{t('noItemsFound')}</p>
         </div>
       )}
 

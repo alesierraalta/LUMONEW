@@ -98,25 +98,25 @@ const getTrendIcon = (trend: 'up' | 'down' | 'stable') => {
 const getSeverityIcon = (severity: 'info' | 'warning' | 'error' | 'success' | 'critical') => {
   switch (severity) {
     case 'info':
-      return <Info className="w-3 h-3 text-blue-500" />
+      return <Info className="w-3 h-3 text-info-soft" />
     case 'warning':
-      return <AlertCircle className="w-3 h-3 text-yellow-500" />
+      return <AlertCircle className="w-3 h-3 text-warning-soft" />
     case 'error':
-      return <AlertCircle className="w-3 h-3 text-red-500" />
+      return <AlertCircle className="w-3 h-3 text-error-soft" />
     case 'success':
-      return <CheckCircle className="w-3 h-3 text-green-500" />
+      return <CheckCircle className="w-3 h-3 text-success-soft" />
     case 'critical':
-      return <AlertCircle className="w-3 h-3 text-red-600" />
+      return <AlertCircle className="w-3 h-3 text-error-soft" />
   }
 }
 
 export function InfoCard({ card, className }: InfoCardProps) {
   const getCardColor = () => {
     const baseColors = {
-      blue: 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20',
-      green: 'border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-950/20',
-      yellow: 'border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950/20',
-      red: 'border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/20',
+      blue: 'border-info-soft bg-info-soft',
+      green: 'border-success-soft bg-success-soft',
+      yellow: 'border-warning-soft bg-warning-soft',
+      red: 'border-error-soft bg-error-soft',
       purple: 'border-purple-200 bg-purple-50 dark:border-purple-800 dark:bg-purple-950/20',
       gray: 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/20'
     }

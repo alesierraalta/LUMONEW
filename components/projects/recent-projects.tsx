@@ -78,53 +78,35 @@ export function RecentProjects({ onSelectProject }: RecentProjectsProps) {
       <div className="space-y-4">
         {projects.map(project => (
           <div key={project.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 hover:dark:bg-gray-800 transition-colors">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h4 className="font-medium text-base">{project.name}</h4>
-                <Badge className={`text-xs ${getPriorityColor(project.priority)}`}>
+            <div className="flex-1 min-w-0">
+              <h4 className="font-medium text-foreground truncate">{project.name}</h4>
+              <p className="text-sm text-secondary mb-2 line-clamp-1">{project.description}</p>
+              <div className="flex items-center gap-4 text-xs text-muted-soft">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(project.priority)}`}>
                   {project.priority}
-                </Badge>
-                <Badge className={`text-xs ${getStatusColor(project.status)}`}>
+                </span>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(project.status)}`}>
                   {project.status}
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-600 mb-2 line-clamp-1">{project.description}</p>
-              <div className="flex items-center gap-4 text-xs text-gray-500">
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <span>Creado: {project.createdAt ? formatDate(new Date(project.createdAt)) : 'N/A'}</span>
-                </div>
-                {project.updatedAt && (
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>Actualizado: {formatDate(new Date(project.updatedAt))}</span>
-                  </div>
-                )}
-                <span>Items: {project.totalItems || 0}</span>
+                </span>
               </div>
             </div>
-            <div className="flex items-center gap-4 ml-4">
-              <div className="flex flex-col items-center gap-1">
-                <div className="w-16">
-                  <Progress value={project.progress || 0} className="h-2" />
+            <div className="ml-4 text-right">
+              <div className="flex items-center gap-2">
+                <div className="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300" 
+                    style={{ width: `${project.progress || 0}%` }}
+                  />
                 </div>
-                <span className="text-xs text-gray-500">{project.progress || 0}%</span>
+                <span className="text-xs text-muted-soft">{project.progress || 0}%</span>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onSelectProject(project)}
-                className="h-8 w-8 p-0"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
             </div>
           </div>
         ))}
         {projects.length === 0 && (
           <div className="text-center py-8">
-            <p className="text-gray-500">No hay proyectos recientes.</p>
-            <p className="text-sm text-gray-400 mt-1">Los proyectos aparecerán aquí cuando los crees.</p>
+            <p className="text-secondary">No hay proyectos recientes.</p>
+            <p className="text-sm text-muted-soft mt-1">Los proyectos aparecerán aquí cuando los crees.</p>
           </div>
         )}
       </div>

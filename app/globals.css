@@ -32,6 +32,48 @@
   background: #f1f5f9;
 }
 
+/* Dark theme scrollbars */
+.dark .custom-scrollbar {
+  scrollbar-color: #4b5563 #1f2937;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-corner {
+  background: #1f2937;
+}
+
+/* Black theme scrollbars */
+.black .custom-scrollbar {
+  scrollbar-color: #333333 #000000;
+}
+
+.black .custom-scrollbar::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+.black .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #333333;
+}
+
+.black .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555555;
+}
+
+.black .custom-scrollbar::-webkit-scrollbar-corner {
+  background: #000000;
+}
+
 /* Hide scrollbars but keep functionality */
 .hide-scrollbar {
   -ms-overflow-style: none;
@@ -126,24 +168,24 @@
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
@@ -153,25 +195,52 @@
   }
 
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 85%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
+
+  .black {
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 0 0% 3%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
     --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 0 0% 8%;
+    --muted-foreground: 0 0% 85%;
+    --accent: 0 0% 8%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 0 0% 8%;
+    --input: 0 0% 8%;
+    --ring: 0 0% 83.9%;
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
@@ -265,4 +334,288 @@
   .low-stock {
     @apply bg-yellow-100 text-yellow-800 border-yellow-200;
   }
+}
+
+/* Mobile Dashboard Utilities */
+@layer utilities {
+  /* Hide scrollbars for mobile swipeable content */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding for mobile devices */
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-area-pt {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-area-pl {
+    padding-left: env(safe-area-inset-left);
+  }
+  .safe-area-pr {
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Mobile touch interactions */
+  .touch-action-pan-x {
+    touch-action: pan-x;
+  }
+  .touch-action-pan-y {
+    touch-action: pan-y;
+  }
+  .touch-action-manipulation {
+    touch-action: manipulation;
+  }
+
+  /* Mobile card shadows */
+  .mobile-card-shadow {
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  }
+  .mobile-card-shadow-lg {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Mobile text truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+
+  /* Mobile gradient backgrounds */
+  .mobile-gradient-blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  .mobile-gradient-green {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  }
+  .mobile-gradient-purple {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  }
+
+  /* Mobile animations */
+  .mobile-bounce {
+    animation: mobile-bounce 0.3s ease-in-out;
+  }
+  @keyframes mobile-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+
+  /* Mobile pull-to-refresh */
+  .pull-to-refresh {
+    transform: translateY(-100%);
+    transition: transform 0.3s ease-out;
+  }
+  .pull-to-refresh.active {
+    transform: translateY(0);
+  }
+
+  /* Mobile swipe indicators */
+  .swipe-indicator {
+    position: relative;
+  }
+  .swipe-indicator::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+  }
+
+  /* Mobile bottom navigation safe area */
+  .bottom-nav-safe {
+    padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+  }
+
+  /* Mobile haptic feedback simulation */
+  .haptic-light {
+    transition: transform 0.1s ease-out;
+  }
+  .haptic-light:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Mobile-specific responsive utilities */
+@media (max-width: 640px) {
+  .mobile-container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: white;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  
+  .mobile-content {
+    padding-bottom: 5rem; /* Space for bottom navigation */
+  }
+}
+
+/* PWA-like mobile experience */
+@media (display-mode: standalone) {
+  .pwa-header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Mobile dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .mobile-card-dark {
+    background: #1f2937;
+    border-color: #374151;
+  }
+}
+
+/* Custom text utilities for better contrast - simplified */
+.text-secondary {
+  @apply text-gray-600 dark:text-gray-200;
+}
+
+.text-muted-soft {
+  @apply text-gray-500 dark:text-gray-300;
+}
+
+.text-subtle {
+  @apply text-gray-400 dark:text-gray-400;
+}
+
+/* Enhanced text visibility for dark themes */
+.text-visible-dark {
+  @apply text-gray-700 dark:text-gray-200;
+}
+
+.text-description-dark {
+  @apply text-gray-600 dark:text-gray-300;
+}
+
+.text-label-dark {
+  @apply text-gray-800 dark:text-gray-100;
+}
+
+/* Soft information colors */
+.text-info-soft {
+  @apply text-blue-600 dark:text-blue-400;
+}
+
+.text-warning-soft {
+  @apply text-amber-600 dark:text-amber-400;
+}
+
+.text-success-soft {
+  @apply text-green-600 dark:text-green-400;
+}
+
+.text-error-soft {
+  @apply text-red-600 dark:text-red-400;
+}
+
+/* Soft background colors for information */
+.bg-info-soft {
+  @apply bg-blue-50 dark:bg-blue-950/20;
+}
+
+.bg-warning-soft {
+  @apply bg-amber-50 dark:bg-amber-950/20;
+}
+
+.bg-success-soft {
+  @apply bg-green-50 dark:bg-green-950/20;
+}
+
+.bg-error-soft {
+  @apply bg-red-50 dark:bg-red-950/20;
+}
+
+/* Soft border colors */
+.border-info-soft {
+  @apply border-blue-200 dark:border-blue-800;
+}
+
+.border-warning-soft {
+  @apply border-amber-200 dark:border-amber-800;
+}
+
+.border-success-soft {
+  @apply border-green-200 dark:border-green-800;
+}
+
+.border-error-soft {
+  @apply border-red-200 dark:border-red-800;
+}
+
+/* Black theme specific overrides */
+.black .text-info-soft {
+  @apply text-blue-300;
+}
+
+.black .text-warning-soft {
+  @apply text-amber-300;
+}
+
+.black .text-success-soft {
+  @apply text-green-300;
+}
+
+.black .text-error-soft {
+  @apply text-red-300;
+}
+
+.black .bg-info-soft {
+  @apply bg-blue-950/10;
+}
+
+.black .bg-warning-soft {
+  @apply bg-amber-950/10;
+}
+
+.black .bg-success-soft {
+  @apply bg-green-950/10;
+}
+
+.black .bg-error-soft {
+  @apply bg-red-950/10;
+}
+
+.black .border-info-soft {
+  @apply border-blue-700;
+}
+
+.black .border-warning-soft {
+  @apply border-amber-700;
+}
+
+.black .border-success-soft {
+  @apply border-green-700;
+}
+
+.black .border-error-soft {
+  @apply border-red-700;
 }

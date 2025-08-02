@@ -242,10 +242,10 @@ function QuickStockModalContent({
         {/* Item Info */}
         <div className="bg-muted p-4 rounded-lg">
           <h3 className="font-medium text-foreground">{item.name}</h3>
-          <p className="text-sm text-muted-foreground">{t('sku')}: {item.sku}</p>
-          <p className="text-sm text-muted-foreground">{t('currentStock')}: <span className="font-medium text-foreground">{item.quantity}</span></p>
+          <p className="text-sm text-visible-dark">{t('sku')}: {item.sku}</p>
+          <p className="text-sm text-visible-dark">{t('currentStock')}: <span className="font-medium text-foreground">{item.quantity}</span></p>
           {item.quantity <= item.min_stock && (
-            <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">⚠️ {t('lowStock', { minimum: item.min_stock })}</p>
+            <p className="text-sm text-yellow-600 dark:text-yellow-300 font-medium">⚠️ {t('lowStock', { minimum: item.min_stock })}</p>
           )}
         </div>
 
@@ -316,8 +316,8 @@ function QuickStockModalContent({
 
           {/* Preview */}
           {quantity && (
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>{t('preview')}:</strong> {item.quantity} → {
                   operation === 'add'
                     ? item.quantity + parseInt(quantity || '0')

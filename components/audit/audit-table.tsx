@@ -100,11 +100,38 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
     }
 
     return (
-      <Badge variant={variants[operation] || 'outline'}>
+      <Badge variant={variants[operation] || 'outline'} className="text-xs">
         {getOperationIcon(operation)}
         <span className="ml-1">{labels[operation] || operation}</span>
       </Badge>
     )
+  }
+
+  const getHumanReadableDescription = (log: AuditLog) => {
+    const user = log.user_email || 'Sistema'
+    const table = formatTableName(log.table_name)
+    const time = format(new Date(log.created_at), 'HH:mm', { locale: es })
+    
+    switch (log.operation) {
+      case 'INSERT':
+        return `${user} creó un nuevo registro en ${table} a las ${time}`
+      case 'UPDATE':
+        return `${user} actualizó un registro en ${table} a las ${time}`
+      case 'DELETE':
+        return `${user} eliminó un registro de ${table} a las ${time}`
+      case 'LOGIN':
+        return `${user} inició sesión a las ${time}`
+      case 'LOGOUT':
+        return `${user} cerró sesión a las ${time}`
+      case 'EXPORT':
+        return `${user} exportó datos de ${table} a las ${time}`
+      case 'IMPORT':
+        return `${user} importó datos a ${table} a las ${time}`
+      case 'BULK_OPERATION':
+        return `${user} realizó una operación masiva en ${table} a las ${time}`
+      default:
+        return `${user} realizó una operación en ${table} a las ${time}`
+    }
   }
 
   const formatTableName = (tableName: string) => {
@@ -116,6 +143,39 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
       'audit_logs': 'Auditoría'
     }
     return tableLabels[tableName] || tableName
+  }
+
+  const formatFieldName = (field: string) => {
+    const fieldLabels: Record<string, string> = {
+      'name': 'Nombre',
+      'email': 'Correo electrónico',
+      'quantity': 'Cantidad',
+      'price': 'Precio',
+      'unit_price': 'Precio unitario',
+      'description': 'Descripción',
+      'status': 'Estado',
+      'created_at': 'Fecha de creación',
+      'updated_at': 'Fecha de actualización',
+      'category_id': 'Categoría',
+      'location_id': 'Ubicación',
+      'user_id': 'Usuario',
+      'is_active': 'Activo',
+      'role': 'Rol'
+    }
+    return fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1)
+  }
+
+  const formatFieldValue = (value: any) => {
+    if (value === null || value === undefined) return 'Sin valor'
+    if (typeof value === 'boolean') return value ? 'Sí' : 'No'
+    if (typeof value === 'string' && value.includes('@')) return value // Email
+    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+      // Date format
+      return format(new Date(value), 'dd/MM/yyyy HH:mm', { locale: es })
+    }
+    if (typeof value === 'number') return value.toLocaleString()
+    if (typeof value === 'object') return JSON.stringify(value, null, 2)
+    return String(value)
   }
 
   const renderValueChanges = (oldValues: any, newValues: any) => {
@@ -133,22 +193,28 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
     }
 
     return (
-      <div className="space-y-2">
+      <div className="space-y-3">
         {changes.length > 0 && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Campos Modificados:</h4>
-            <div className="space-y-1">
+            <div className="space-y-2">
               {changes.map((change: any, index: number) => (
-                <div key={index} className="text-xs bg-muted p-2 rounded">
-                  <div className="font-medium">{change.field}:</div>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-red-600 line-through">
-                      {JSON.stringify(change.old)}
-                    </span>
-                    <span>→</span>
-                    <span className="text-green-600">
-                      {JSON.stringify(change.new)}
-                    </span>
+                <div key={index} className="bg-white dark:bg-gray-800 border rounded-lg p-3">
+                  <div className="font-medium text-sm mb-2 text-foreground">
+                    📝 {formatFieldName(change.field)}
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-red-600 font-medium">Antes:</span>
+                      <span className="bg-red-50 dark:bg-red-900/20 px-2 py-1 rounded text-red-700 dark:text-red-300">
+                        {formatFieldValue(change.old)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-green-600 font-medium">Ahora:</span>
+                      <span className="bg-green-50 dark:bg-green-900/20 px-2 py-1 rounded text-green-700 dark:text-green-300">
+                        {formatFieldValue(change.new)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -158,19 +224,41 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
 
         {oldValues && !newValues && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Datos Eliminados:</h4>
-            <pre className="text-xs bg-red-50 p-2 rounded overflow-auto">
-              {JSON.stringify(oldValues, null, 2)}
-            </pre>
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3">
+              <h5 className="font-medium text-sm mb-2 text-red-800 dark:text-red-200">
+                🗑️ Información eliminada:
+              </h5>
+              <div className="space-y-1">
+                {Object.entries(oldValues).map(([key, value]) => (
+                  <div key={key} className="text-xs">
+                    <span className="font-medium">{formatFieldName(key)}:</span>
+                    <span className="ml-2 text-red-700 dark:text-red-300">
+                      {formatFieldValue(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
 
         {newValues && !oldValues && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Datos Creados:</h4>
-            <pre className="text-xs bg-green-50 p-2 rounded overflow-auto">
-              {JSON.stringify(newValues, null, 2)}
-            </pre>
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+              <h5 className="font-medium text-sm mb-2 text-green-800 dark:text-green-200">
+                ✅ Nueva información creada:
+              </h5>
+              <div className="space-y-1">
+                {Object.entries(newValues).map(([key, value]) => (
+                  <div key={key} className="text-xs">
+                    <span className="font-medium">{formatFieldName(key)}:</span>
+                    <span className="ml-2 text-green-700 dark:text-green-300">
+                      {formatFieldValue(value)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -206,50 +294,193 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      {/* Header with refresh button - Mobile Responsive */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="text-sm text-muted-foreground">
-          Mostrando {auditLogs.length} registros
+          Mostrando {auditLogs.length} registros de actividad
         </div>
         <Button onClick={onRefresh} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
-          Actualizar
+          <span className="hidden sm:inline">Actualizar</span>
+          <span className="sm:hidden">Refresh</span>
         </Button>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
-              <TableHead>Fecha/Hora</TableHead>
-              <TableHead>Usuario</TableHead>
-              <TableHead>Operación</TableHead>
-              <TableHead>Tabla</TableHead>
-              <TableHead>Registro ID</TableHead>
-              <TableHead>IP</TableHead>
-              <TableHead className="w-[100px]">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {auditLogs.map((log) => (
-              <React.Fragment key={log.id}>
-                <TableRow className="hover:bg-muted/50">
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleRowExpansion(log.id)}
-                    >
-                      {expandedRows.has(log.id) ? (
-                        <ChevronDown className="h-4 w-4" />
-                      ) : (
-                        <ChevronRight className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-gray-400" />
+      {/* Mobile-First Card Layout */}
+      <div className="space-y-3">
+        {auditLogs.map((log) => (
+          <Card key={log.id} className="overflow-hidden hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              {/* Main Activity Description */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex-shrink-0 mt-1">
+                  {getOperationIcon(log.operation)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-foreground leading-relaxed">
+                    {getHumanReadableDescription(log)}
+                  </p>
+                  <div className="flex flex-wrap items-center gap-2 mt-2">
+                    {getOperationBadge(log.operation)}
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(log.created_at), 'dd/MM/yyyy', { locale: es })}
+                    </span>
+                    {log.ip_address && (
+                      <span className="text-xs text-muted-foreground">
+                        IP: {log.ip_address}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => toggleRowExpansion(log.id)}
+                  className="flex-shrink-0"
+                >
+                  {expandedRows.has(log.id) ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+
+              {/* Quick Info Row */}
+              <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <User className="h-3 w-3" />
+                  <span>{log.user_email || 'Sistema'}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Database className="h-3 w-3" />
+                  <span>{formatTableName(log.table_name)}</span>
+                </div>
+                {log.record_id && (
+                  <div className="flex items-center gap-1">
+                    <span>ID:</span>
+                    <code className="bg-muted px-1 rounded text-xs">
+                      {log.record_id.length > 8 
+                        ? `${log.record_id.slice(0, 8)}...` 
+                        : log.record_id
+                      }
+                    </code>
+                  </div>
+                )}
+              </div>
+
+              {/* Expanded Details */}
+              {expandedRows.has(log.id) && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <div className="space-y-4">
+                    {/* Session Information */}
+                    <div>
+                      <h4 className="font-medium text-sm mb-2 text-foreground">📋 Información de Sesión</h4>
+                      <div className="bg-muted/50 rounded-lg p-3 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                          <div>
+                            <span className="font-medium">Fecha completa:</span>
+                            <div className="text-visible-dark">
+                              {format(new Date(log.created_at), 'dd/MM/yyyy HH:mm:ss', { locale: es })}
+                            </div>
+                          </div>
+                          <div>
+                            <span className="font-medium">Dirección IP:</span>
+                            <div className="text-visible-dark">{log.ip_address || 'No disponible'}</div>
+                          </div>
+                          {log.session_id && (
+                            <div className="sm:col-span-2">
+                              <span className="font-medium">ID de Sesión:</span>
+                              <div className="text-muted-foreground font-mono text-xs break-all">
+                                {log.session_id}
+                              </div>
+                            </div>
+                          )}
+                          {log.user_agent && (
+                            <div className="sm:col-span-2">
+                              <span className="font-medium">Navegador:</span>
+                              <div className="text-muted-foreground text-xs break-words">
+                                {log.user_agent}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Data Changes */}
+                    {(log.old_values || log.new_values) && (
+                      <div>
+                        <h4 className="font-medium text-sm mb-2 text-foreground">🔄 Cambios Realizados</h4>
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          {renderValueChanges(log.old_values, log.new_values)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Metadata */}
+                    {log.metadata && (
+                      <div>
+                        <h4 className="font-medium text-sm mb-2 text-foreground">📊 Información Adicional</h4>
+                        <div className="bg-muted/50 rounded-lg p-3">
+                          <pre className="text-xs text-muted-foreground overflow-auto whitespace-pre-wrap">
+                            {JSON.stringify(log.metadata, null, 2)}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Desktop Table for larger screens */}
+      <div className="hidden lg:block">
+        <div className="border rounded-lg">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[50px]"></TableHead>
+                <TableHead>Descripción</TableHead>
+                <TableHead>Usuario</TableHead>
+                <TableHead>Fecha/Hora</TableHead>
+                <TableHead>Tabla</TableHead>
+                <TableHead>IP</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {auditLogs.map((log) => (
+                <React.Fragment key={`table-${log.id}`}>
+                  <TableRow className="hover:bg-muted/50">
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleRowExpansion(log.id)}
+                      >
+                        {expandedRows.has(log.id) ? (
+                          <ChevronDown className="h-4 w-4" />
+                        ) : (
+                          <ChevronRight className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {getOperationIcon(log.operation)}
+                        <span className="font-medium">{getHumanReadableDescription(log)}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <User className="h-4 w-4 text-gray-400" />
+                        <span className="font-medium">{log.user_email || 'Sistema'}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div>
                         <div className="font-medium">
                           {format(new Date(log.created_at), 'dd/MM/yyyy', { locale: es })}
@@ -258,96 +489,24 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
                           {format(new Date(log.created_at), 'HH:mm:ss', { locale: es })}
                         </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-400" />
-                      <div>
-                        <div className="font-medium">
-                          {log.user_email || 'Sistema'}
-                        </div>
-                        {log.user_id && (
-                          <div className="text-xs text-gray-500">
-                            ID: {log.user_id.slice(0, 8)}...
-                          </div>
-                        )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <Database className="h-4 w-4 text-gray-400" />
+                        <span>{formatTableName(log.table_name)}</span>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getOperationBadge(log.operation)}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <Database className="h-4 w-4 text-gray-400" />
-                      <span>{formatTableName(log.table_name)}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                      {log.record_id.length > 20 
-                        ? `${log.record_id.slice(0, 20)}...` 
-                        : log.record_id
-                      }
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-xs text-gray-500">
-                      {log.ip_address || 'N/A'}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleRowExpansion(log.id)}
-                    >
-                      <Eye className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-
-                {expandedRows.has(log.id) && (
-                  <TableRow>
-                    <TableCell colSpan={8}>
-                      <Card className="m-2">
-                        <CardContent className="p-4">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <h4 className="font-medium mb-2">Información de Sesión</h4>
-                              <div className="space-y-1 text-sm">
-                                <div><strong>Session ID:</strong> {log.session_id || 'N/A'}</div>
-                                <div><strong>User Agent:</strong> {log.user_agent || 'N/A'}</div>
-                                <div><strong>IP Address:</strong> {log.ip_address || 'N/A'}</div>
-                              </div>
-                            </div>
-                            
-                            {log.metadata && (
-                              <div>
-                                <h4 className="font-medium mb-2">Metadatos</h4>
-                                <pre className="text-xs bg-muted p-2 rounded overflow-auto">
-                                  {JSON.stringify(log.metadata, null, 2)}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-
-                          {(log.old_values || log.new_values) && (
-                            <div className="mt-4">
-                              <h4 className="font-medium mb-2">Cambios en los Datos</h4>
-                              {renderValueChanges(log.old_values, log.new_values)}
-                            </div>
-                          )}
-                        </CardContent>
-                      </Card>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs text-gray-500">
+                        {log.ip_address || 'N/A'}
+                      </span>
                     </TableCell>
                   </TableRow>
-                )}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
+                </React.Fragment>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   )

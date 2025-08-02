@@ -83,7 +83,7 @@ export function InventoryTurnoverChart() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Average Turnover Rate</span>
               <span className="text-lg font-bold text-blue-600">{avgTurnover.toFixed(1)}x</span>

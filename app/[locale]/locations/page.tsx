@@ -140,56 +140,76 @@ function LocationsContent() {
 
   if (!isClient || isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center gap-4">
-          <LoadingSpinner size="lg" />
-          <p className="text-gray-600 dark:text-gray-400">Cargando ubicaciones...</p>
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Ubicaciones</h2>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="h-96 bg-gray-200 rounded-lg"></div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-fade-in">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Ubicaciones</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Ubicaciones</h2>
+          <p className="text-muted-foreground text-sm">
             Gestiona tus estantes y contenedores de almacenamiento.
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Upload className="mr-2 h-4 w-4" />
-            Importar
+        
+        {/* Action Buttons - Mobile Responsive */}
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
+          >
+            <Upload className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Importar</span>
+            <span className="sm:hidden">Import</span>
           </Button>
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Download className="mr-2 h-4 w-4" />
-            Exportar
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
+          >
+            <Download className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Exportar</span>
+            <span className="sm:hidden">Export</span>
           </Button>
           <Button
             size="sm"
-            className="hover:scale-105 transition-transform"
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
             onClick={() => window.location.href = '/locations/create'}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            Agregar Ubicación
+            <Plus className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Agregar Ubicación</span>
+            <span className="sm:hidden">Agregar</span>
           </Button>
         </div>
       </div>
 
-      {/* Information Cards */}
+      {/* Information Cards - Mobile Responsive Grid */}
       <CardContainer
         layout="grid"
-        columns={4}
-        maxCards={8}
-        className="mb-6"
+        columns={1}
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       />
 
-      {/* Search and Filters */}
-      <div className="mb-6">
-        <div className="flex items-center space-x-4">
-          <div className="relative flex-1 max-w-sm">
+      {/* Search and Filters - Mobile Responsive */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="relative flex-1">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar ubicaciones..."
@@ -198,11 +218,11 @@ function LocationsContent() {
               className="pl-8 focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex gap-2">
             <Button
               variant={sortBy === 'name' ? 'default' : 'outline'}
               size="sm"
-              className="hover:scale-105 transition-transform"
+              className="text-xs md:text-sm hover:scale-105 transition-transform"
               onClick={() => {
                 if (sortBy === 'name') {
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
@@ -212,12 +232,14 @@ function LocationsContent() {
                 }
               }}
             >
-              Nombre {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              <span className="hidden sm:inline">Nombre</span>
+              <span className="sm:hidden">Nom</span>
+              {sortBy === 'name' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
             </Button>
             <Button
               variant={sortBy === 'itemQuantity' ? 'default' : 'outline'}
               size="sm"
-              className="hover:scale-105 transition-transform"
+              className="text-xs md:text-sm hover:scale-105 transition-transform"
               onClick={() => {
                 if (sortBy === 'itemQuantity') {
                   setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')
@@ -227,17 +249,19 @@ function LocationsContent() {
                 }
               }}
             >
-              Cantidad {sortBy === 'itemQuantity' && (sortOrder === 'asc' ? '↑' : '↓')}
+              <span className="hidden sm:inline">Cantidad</span>
+              <span className="sm:hidden">Cant</span>
+              {sortBy === 'itemQuantity' && (sortOrder === 'asc' ? ' ↑' : ' ↓')}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Locations Table */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>Ubicaciones de Almacenamiento</CardTitle>
-          <CardDescription>
+      {/* Locations Table - Mobile Responsive */}
+      <Card className="shadow-sm md:shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">Ubicaciones de Almacenamiento</CardTitle>
+          <CardDescription className="text-sm">
             Lista de todos los estantes y contenedores de almacenamiento.
           </CardDescription>
         </CardHeader>

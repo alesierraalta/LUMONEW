@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import { AuditFilters } from '@/components/audit/audit-filters'
 import { AuditTable } from '@/components/audit/audit-table'
 import { AuditStats } from '@/components/audit/audit-stats'
 import { FilterOptions } from '@/lib/types'
 import { auditService, AuditLog } from '@/lib/audit'
-import { Shield, Activity, Clock, Users } from 'lucide-react'
+import { Shield, Activity, Clock, Users, Download, RefreshCw, FileText, Filter, Zap } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export default function AuditPage() {
@@ -21,15 +23,62 @@ export default function AuditPage() {
   const loadAuditLogs = async () => {
     setLoading(true)
     try {
-      const { data } = await auditService.getAuditLogs({
-        limit: 100,
-        user_id: filters.category === 'user' ? filters.search : undefined,
-        table_name: filters.location,
-        operation: filters.status,
-        search: filters.search,
-        date_from: filters.dateRange?.start?.toISOString(),
-        date_to: filters.dateRange?.end?.toISOString()
-      })
+      // Map frontend filters to API parameters correctly
+      const apiParams: any = {
+        limit: 100
+      }
+
+      // Search filter
+      if (filters.search) {
+        apiParams.search = filters.search
+      }
+
+      // Operation/Action filter - map frontend values to API values
+      if (filters.status) {
+        const operationMap: Record<string, string> = {
+          'created': 'INSERT',
+          'updated': 'UPDATE', 
+          'deleted': 'DELETE',
+          'stock_adjusted': 'UPDATE',
+          'bulk_operation': 'BULK_OPERATION',
+          'quick_stock': 'UPDATE',
+          'transferred': 'UPDATE',
+          'archived': 'UPDATE',
+          'restored': 'UPDATE',
+          'imported': 'IMPORT',
+          'exported': 'EXPORT'
+        }
+        apiParams.operation = operationMap[filters.status] || filters.status
+      }
+
+      // Table name filter - map category to table names
+      if (filters.category) {
+        const tableMap: Record<string, string> = {
+          'item': 'inventory',
+          'category': 'categories',
+          'location': 'locations',
+          'user': 'users',
+          'system': 'audit_logs'
+        }
+        apiParams.table_name = tableMap[filters.category] || filters.category
+      }
+
+      // User filter - only when searching for specific user
+      if (filters.category === 'user' && filters.search) {
+        apiParams.user_email = filters.search
+      }
+
+      // Date range filters
+      if (filters.dateRange?.start) {
+        apiParams.date_from = filters.dateRange.start.toISOString()
+      }
+      if (filters.dateRange?.end) {
+        apiParams.date_to = filters.dateRange.end.toISOString()
+      }
+
+      console.log('API Parameters:', apiParams) // Debug log
+
+      const { data } = await auditService.getAuditLogs(apiParams)
       
       setAuditLogs(data || [])
     } catch (error) {
@@ -63,33 +112,81 @@ export default function AuditPage() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('title')}</h1>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground text-sm">
             {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center space-x-2">
-          <Shield className="h-8 w-8 text-blue-600" />
+          <Shield className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
         </div>
       </div>
 
-      {/* Statistics Cards */}
-      {stats && <AuditStats stats={stats} />}
+      {/* Audit Tools - Prominent Section */}
+      <Card className="border-blue-200 dark:border-gray-700">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-gray-100 border-blue-300 dark:border-gray-600">
+                <Zap className="h-3 w-3 mr-1" />
+                Herramientas de Auditoría
+              </Badge>
+              <span className="text-sm text-muted-foreground">
+                Gestiona y exporta registros de actividad
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={loadAuditLogs}
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+                size="sm"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Actualizar Datos
+              </Button>
+              <Button
+                variant="outline"
+                className="border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
+                size="sm"
+                onClick={() => {
+                  // TODO: Implement export functionality
+                  console.log('Export audit logs')
+                }}
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar CSV
+              </Button>
+              <Button
+                variant="outline"
+                className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
+                size="sm"
+                onClick={() => {
+                  // TODO: Implement report generation
+                  console.log('Generate report')
+                }}
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Generar Reporte
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Quick Stats Overview */}
-      <div className="grid gap-4 md:grid-cols-4">
+      {/* Statistics Cards - Mobile Responsive Grid */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('totalOperations')}</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">{t('totalOperations')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_operations || 0}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-lg md:text-2xl font-bold">{stats?.total_operations || 0}</div>
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {t('allOperationsRecorded')}
             </p>
           </CardContent>
@@ -97,18 +194,18 @@ export default function AuditPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('operationsToday')}</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">{t('operationsToday')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg md:text-2xl font-bold">
               {auditLogs.filter(log => {
                 const today = new Date()
                 const logDate = new Date(log.created_at)
                 return logDate.toDateString() === today.toDateString()
               }).length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {t('todayActivity')}
             </p>
           </CardContent>
@@ -116,14 +213,14 @@ export default function AuditPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('activeUsers')}</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">{t('activeUsers')}</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-lg md:text-2xl font-bold">
               {new Set(auditLogs.map(log => log.user_id).filter(Boolean)).size}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {t('usersWithRecentActivity')}
             </p>
           </CardContent>
@@ -131,25 +228,25 @@ export default function AuditPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('deletions')}</CardTitle>
+            <CardTitle className="text-xs md:text-sm font-medium">{t('deletions')}</CardTitle>
             <Shield className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-lg md:text-2xl font-bold text-red-600">
               {auditLogs.filter(log => log.operation === 'DELETE').length}
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground line-clamp-2">
               {t('deletedRecords')}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('auditFilters')}</CardTitle>
-          <CardDescription>
+      {/* Filters - Mobile Responsive */}
+      <Card className="shadow-sm md:shadow-lg">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">{t('auditFilters')}</CardTitle>
+          <CardDescription className="text-sm">
             {t('filterDescription')}
           </CardDescription>
         </CardHeader>
@@ -158,11 +255,11 @@ export default function AuditPage() {
         </CardContent>
       </Card>
 
-      {/* Audit Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>{t('auditLog')}</CardTitle>
-          <CardDescription>
+      {/* Audit Table - Mobile Responsive */}
+      <Card className="shadow-sm md:shadow-lg">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">{t('auditLog')}</CardTitle>
+          <CardDescription className="text-sm">
             {t('completeHistory')}
           </CardDescription>
         </CardHeader>

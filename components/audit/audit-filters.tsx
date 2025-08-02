@@ -52,129 +52,178 @@ export function AuditFilters({ filters, onFiltersChange }: AuditFiltersProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search and Action Filters Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {/* Search */}
-        <div className="space-y-2">
-          <Label htmlFor="search">Buscar</Label>
-          <div className="relative">
-            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              id="search"
-              placeholder="Buscar en registros..."
-              value={localFilters.search || ''}
-              onChange={(e) => handleFilterChange('search', e.target.value)}
-              className="pl-8"
-            />
-          </div>
+      {/* Search Filter - Full Width on Mobile */}
+      <div className="space-y-2">
+        <Label htmlFor="search" className="text-sm font-medium">🔍 Buscar en registros</Label>
+        <div className="relative">
+          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            id="search"
+            placeholder="Buscar por usuario, acción, tabla..."
+            value={localFilters.search || ''}
+            onChange={(e) => handleFilterChange('search', e.target.value)}
+            className="pl-8"
+          />
         </div>
+      </div>
 
+      {/* Advanced Filters - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Action Filter */}
         <div className="space-y-2">
-          <Label>Acción</Label>
+          <Label className="text-sm font-medium text-foreground block mb-2">
+            ⚡ Tipo de Acción
+          </Label>
           <Select
-            value={localFilters.status || ''}
+            value={localFilters.status || 'all'}
             onValueChange={(value) => handleFilterChange('status', value === 'all' ? undefined : value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Todas las acciones" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar acción" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todas las acciones</SelectItem>
-              <SelectItem value="created">Creado</SelectItem>
-              <SelectItem value="updated">Actualizado</SelectItem>
-              <SelectItem value="deleted">Eliminado</SelectItem>
-              <SelectItem value="stock_adjusted">Ajuste de Stock</SelectItem>
-              <SelectItem value="bulk_operation">Operación Masiva</SelectItem>
-              <SelectItem value="quick_stock">Stock Rápido</SelectItem>
-              <SelectItem value="transferred">Transferido</SelectItem>
-              <SelectItem value="archived">Archivado</SelectItem>
-              <SelectItem value="restored">Restaurado</SelectItem>
-              <SelectItem value="imported">Importado</SelectItem>
-              <SelectItem value="exported">Exportado</SelectItem>
+              <SelectItem value="created">
+                <span className="flex items-center gap-2">
+                  <span>➕</span>
+                  <span>Creado</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="updated">
+                <span className="flex items-center gap-2">
+                  <span>✏️</span>
+                  <span>Actualizado</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="deleted">
+                <span className="flex items-center gap-2">
+                  <span>🗑️</span>
+                  <span>Eliminado</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="imported">
+                <span className="flex items-center gap-2">
+                  <span>📥</span>
+                  <span>Importado</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="exported">
+                <span className="flex items-center gap-2">
+                  <span>📤</span>
+                  <span>Exportado</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="bulk_operation">
+                <span className="flex items-center gap-2">
+                  <span>👥</span>
+                  <span>Operación Masiva</span>
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Entity Type Filter */}
         <div className="space-y-2">
-          <Label>Tipo de Entidad</Label>
+          <Label className="text-sm font-medium text-foreground block mb-2">
+            📊 Tipo de Entidad
+          </Label>
           <Select
-            value={localFilters.category || ''}
+            value={localFilters.category || 'all'}
             onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Todos los tipos" />
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Seleccionar entidad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Todos los tipos</SelectItem>
-              <SelectItem value="item">Producto</SelectItem>
-              <SelectItem value="category">Categoría</SelectItem>
-              <SelectItem value="location">Ubicación</SelectItem>
-              <SelectItem value="user">Usuario</SelectItem>
-              <SelectItem value="system">Sistema</SelectItem>
+              <SelectItem value="all">Todas las entidades</SelectItem>
+              <SelectItem value="item">
+                <span className="flex items-center gap-2">
+                  <span>📦</span>
+                  <span>Inventario</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="category">
+                <span className="flex items-center gap-2">
+                  <span>🏷️</span>
+                  <span>Categorías</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="location">
+                <span className="flex items-center gap-2">
+                  <span>📍</span>
+                  <span>Ubicaciones</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="user">
+                <span className="flex items-center gap-2">
+                  <span>👤</span>
+                  <span>Usuarios</span>
+                </span>
+              </SelectItem>
+              <SelectItem value="system">
+                <span className="flex items-center gap-2">
+                  <span>⚙️</span>
+                  <span>Sistema</span>
+                </span>
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
 
-        {/* Status Filter */}
+        {/* Clear Filters Button */}
         <div className="space-y-2">
-          <Label>Estado</Label>
-          <Select
-            value={localFilters.location || ''}
-            onValueChange={(value) => handleFilterChange('location', value === 'all' ? undefined : value)}
+          <Label className="text-sm font-medium text-transparent block mb-2">
+            Acciones
+          </Label>
+          <Button
+            variant="outline"
+            onClick={clearFilters}
+            disabled={!hasActiveFilters}
+            className="w-full"
           >
-            <SelectTrigger>
-              <SelectValue placeholder="Todos los estados" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los estados</SelectItem>
-              <SelectItem value="success">Exitoso</SelectItem>
-              <SelectItem value="failed">Fallido</SelectItem>
-              <SelectItem value="pending">Pendiente</SelectItem>
-            </SelectContent>
-          </Select>
+            <X className="h-4 w-4 mr-2" />
+            Limpiar Filtros
+          </Button>
         </div>
       </div>
 
-      {/* Date Range Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="start-date">Fecha de Inicio</Label>
-          <Input
-            id="start-date"
-            type="datetime-local"
-            value={localFilters.dateRange?.start ? 
-              new Date(localFilters.dateRange.start.getTime() - localFilters.dateRange.start.getTimezoneOffset() * 60000)
-                .toISOString().slice(0, 16) : ''}
-            onChange={(e) => handleDateRangeChange('start', e.target.value)}
-          />
-        </div>
+      {/* Date Range Filters - Mobile Responsive */}
+      <div className="space-y-4">
+        <div className="border-t border-border pt-4">
+          <h3 className="text-sm font-medium mb-4 text-foreground">
+            📅 Filtrar por Período de Tiempo
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start-date" className="text-sm font-medium text-foreground block">
+                Fecha de Inicio
+              </Label>
+              <Input
+                id="start-date"
+                type="datetime-local"
+                value={localFilters.dateRange?.start ? 
+                  new Date(localFilters.dateRange.start.getTime() - localFilters.dateRange.start.getTimezoneOffset() * 60000)
+                    .toISOString().slice(0, 16) : ''}
+                onChange={(e) => handleDateRangeChange('start', e.target.value)}
+                className="text-sm w-full"
+              />
+            </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="end-date">Fecha de Fin</Label>
-          <Input
-            id="end-date"
-            type="datetime-local"
-            value={localFilters.dateRange?.end ? 
-              new Date(localFilters.dateRange.end.getTime() - localFilters.dateRange.end.getTimezoneOffset() * 60000)
-                .toISOString().slice(0, 16) : ''}
-            onChange={(e) => handleDateRangeChange('end', e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>&nbsp;</Label>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={clearFilters}
-              disabled={!hasActiveFilters}
-              className="flex-1"
-            >
-              <X className="h-4 w-4 mr-2" />
-              Limpiar Filtros
-            </Button>
+            <div className="space-y-2">
+              <Label htmlFor="end-date" className="text-sm font-medium text-foreground block">
+                Fecha de Fin
+              </Label>
+              <Input
+                id="end-date"
+                type="datetime-local"
+                value={localFilters.dateRange?.end ? 
+                  new Date(localFilters.dateRange.end.getTime() - localFilters.dateRange.end.getTimezoneOffset() * 60000)
+                    .toISOString().slice(0, 16) : ''}
+                onChange={(e) => handleDateRangeChange('end', e.target.value)}
+                className="text-sm w-full"
+              />
+            </div>
           </div>
         </div>
       </div>

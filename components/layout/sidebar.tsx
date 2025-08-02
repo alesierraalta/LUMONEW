@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, memo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NavigationItem, createNavigationConfig, getNavigationIcons } from '@/lib/navigation-config'
@@ -196,7 +196,7 @@ export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
 
   // Memoize collapsed classes
   const collapsedClasses = useMemo(() => cn(
-    "flex flex-col bg-card border-r border-border transition-all duration-300",
+    "flex flex-col h-screen bg-card border-r border-border transition-all duration-300",
     collapsed ? "w-16" : "w-64"
   ), [collapsed])
 
@@ -216,21 +216,38 @@ export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
           </span>
         )}
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={handleCollapse}
-        className="h-8 w-8 transition-transform hover:scale-105"
-        aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
-      >
-        {collapsed ? (
-          <ChevronRight className="h-4 w-4" />
-        ) : (
-          <ChevronLeft className="h-4 w-4" />
+      
+      <div className="flex items-center space-x-2">
+        {/* Mobile Close Button - Only show when onMobileClose is provided */}
+        {onMobileClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMobileClose}
+            className="h-8 w-8 lg:hidden transition-transform hover:scale-105"
+            aria-label={t('sidebar.close')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
         )}
-      </Button>
+        
+        {/* Desktop Collapse Button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleCollapse}
+          className="h-8 w-8 hidden lg:flex transition-transform hover:scale-105"
+          aria-label={collapsed ? t('sidebar.expand') : t('sidebar.collapse')}
+        >
+          {collapsed ? (
+            <ChevronRight className="h-4 w-4" />
+          ) : (
+            <ChevronLeft className="h-4 w-4" />
+          )}
+        </Button>
+      </div>
     </div>
-  ), [collapsed, handleCollapse])
+  ), [collapsed, handleCollapse, onMobileClose, t])
 
   // Memoize user profile section
   const userProfile = useMemo(() => (

@@ -31,6 +31,8 @@
   "navigation": {
     "dashboard": "Panel de Control",
     "projects": "Proyectos",
+    "quotations": "Cotizaciones",
+    "imports": "Importaciones",
     "inventory": "Inventario",
     "stock": "Stock",
     "products": "Productos",
@@ -42,17 +44,155 @@
     "settings": "Configuración",
     "alerts": "Alertas"
   },
+  "projects": {
+    "title": "Gestión de Proyectos",
+    "subtitle": "Administra y supervisa todos tus proyectos",
+    "newProject": "Nuevo Proyecto",
+    "createProject": "Crear Nuevo Proyecto",
+    "projectManagement": "Gestión de Proyectos",
+    "overview": "Vista General",
+    "kanban": "Kanban",
+    "timeline": "Cronograma",
+    "analytics": "Analíticas",
+    "totalProjects": "Total Proyectos",
+    "activeProjects": "Proyectos Activos",
+    "completedProjects": "Completados",
+    "overdueProjects": "Atrasados",
+    "searchProjects": "Buscar proyectos...",
+    "allStatuses": "Todos los estados",
+    "allPriorities": "Todas las prioridades",
+    "active": "Activo",
+    "completed": "Completado",
+    "onHold": "En pausa",
+    "cancelled": "Cancelado",
+    "urgent": "Urgente",
+    "high": "Alta",
+    "medium": "Media",
+    "low": "Baja",
+    "viewDetails": "Ver Detalles",
+    "edit": "Editar",
+    "noProjectsFound": "No se encontraron proyectos",
+    "noProjectsYet": "No hay proyectos aún",
+    "createFirstProject": "Crear Primer Proyecto",
+    "adjustFilters": "Intenta ajustar los filtros de búsqueda",
+    "createToStart": "Crea tu primer proyecto para comenzar a gestionar tus tareas",
+    "projectDetails": {
+      "backToProjects": "Volver a Proyectos",
+      "share": "Compartir",
+      "configure": "Configurar",
+      "addItem": "Agregar Item",
+      "overview": "Resumen",
+      "tasks": "Tareas",
+      "timeline": "Cronograma",
+      "team": "Equipo",
+      "budget": "Presupuesto",
+      "files": "Archivos",
+      "progress": "Progreso",
+      "totalItems": "Items Totales",
+      "budget": "Presupuesto",
+      "daysRemaining": "Días Restantes",
+      "projectDescription": "Descripción del Proyecto",
+      "noDescription": "Sin descripción disponible",
+      "recentActivity": "Actividad Reciente",
+      "projectCreated": "Proyecto creado",
+      "projectItems": "Items del Proyecto",
+      "noItemsYet": "No hay items aún",
+      "addFirstItem": "Agrega el primer item a este proyecto",
+      "timelineView": "Vista de Cronograma",
+      "teamManagement": "Gestión de Equipo",
+      "budgetManagement": "Gestión de Presupuesto",
+      "fileManagement": "Gestión de Archivos",
+      "comingSoon": "Próximamente disponible",
+      "completed": "completado"
+    },
+    "views": {
+      "kanbanView": "Vista Kanban",
+      "timelineView": "Vista de Cronograma",
+      "comingSoon": "Próximamente disponible"
+    },
+    "analytics": {
+      "statusDistribution": "Distribución por Estado",
+      "averageProgress": "Progreso Promedio",
+      "totalProjectValue": "Valor Total de Proyectos",
+      "combinedValue": "Valor combinado de todos los proyectos",
+      "overallProgress": "Progreso general de todos los proyectos",
+      "active": "Activos",
+      "completed": "Completados",
+      "onHold": "En pausa"
+    },
+    "actions": {
+      "export": "Exportar",
+      "import": "Importar"
+    }
+  },
   "sidebar": {
     "toggleSection": "Alternar sección",
     "navigateTo": "Navegar a",
     "expand": "Expandir barra lateral",
-    "collapse": "Contraer barra lateral"
+    "collapse": "Contraer barra lateral",
+    "close": "Cerrar barra lateral"
   },
   "dashboard": {
     "title": "Panel de Control",
     "subtitle": "Resumen general de tu inventario y métricas clave",
     "businessIntelligenceDashboard": "Panel de Inteligencia de Negocios",
     "loadingMetrics": "Error al cargar métricas",
+    "mobile": {
+      "title": "Panel BI",
+      "subtitle": "Tiempo real",
+      "refreshing": "Actualizando datos...",
+      "swipeHint": "Desliza para ver más",
+      "pullToRefresh": "Desliza hacia abajo para actualizar",
+      "noDataAvailable": "No hay datos disponibles",
+      "viewAll": "Ver todos",
+      "quickStats": {
+        "dailySales": "Ventas Hoy",
+        "inventory": "Inventario", 
+        "alerts": "Alertas",
+        "orders": "Pedidos"
+      },
+      "sections": {
+        "keyMetrics": "Métricas Clave",
+        "salesTrends": "Tendencias de Ventas",
+        "topProducts": "Productos Top",
+        "quickActions": "Acciones Rápidas",
+        "recentActivity": "Actividad Reciente"
+      },
+      "trends": {
+        "up": "Subiendo",
+        "down": "Bajando",
+        "stable": "Estable"
+      },
+      "status": {
+        "warning": "Atención",
+        "success": "Bien",
+        "info": "Info",
+        "critical": "Crítico"
+      },
+      "timeframes": {
+        "thisWeek": "Esta semana",
+        "thisMonth": "Este mes",
+        "today": "Hoy",
+        "lastUpdated": "Actualizado hace",
+        "minutes": "minutos",
+        "hours": "horas"
+      },
+      "actions": {
+        "inventory": "Inventario",
+        "orders": "Pedidos", 
+        "reports": "Reportes",
+        "customers": "Clientes",
+        "config": "Config",
+        "alerts": "Alertas"
+      },
+      "bottomNav": {
+        "dashboard": "Dashboard",
+        "inventory": "Inventario",
+        "sales": "Ventas",
+        "alerts": "Alertas",
+        "more": "Más"
+      }
+    },
     "tabs": {
       "overview": "Resumen",
       "inventory": "Inventario",
@@ -151,15 +291,22 @@
   },
   "inventory": {
     "title": "Inventario",
+    "description": "Administra tu inventario de productos y stock",
     "subtitle": "Administra tu inventario de productos y stock",
     "pageTitle": "Inventario",
     "pageSubtitle": "Administra tus artículos de inventario, niveles de stock e información de productos.",
-    "loadingInventory": "Cargando inventario...",
-    "loadingFilters": "Cargando filtros...",
-    "loadingTable": "Cargando tabla...",
-    "loadingModal": "Cargando modal...",
-    "loadingConstructor": "Cargando constructor...",
-    "loadingHistory": "Cargando historial...",
+    "import": "Importar",
+    "export": "Exportar",
+    "importComingSoon": "Funcionalidad de importación próximamente",
+    "exportComingSoon": "Funcionalidad de exportación próximamente",
+    "loading": {
+      "inventory": "Cargando inventario...",
+      "filters": "Cargando filtros...",
+      "table": "Cargando tabla...",
+      "modal": "Cargando modal...",
+      "transactionBuilder": "Cargando constructor...",
+      "auditHistory": "Cargando historial..."
+    },
     "errorLoadingInventory": "Error al cargar inventario",
     "errorLoadingInventoryDescription": "No se pudieron cargar los datos del inventario desde la base de datos",
     "errorLoadingTransactions": "Error al cargar historial",
@@ -172,13 +319,17 @@
     "errorSavingDescription": "No se pudo guardar la transacción",
     "inventoryLoaded": "Inventario cargado",
     "buttons": {
-      "history": "Historial",
+      "auditHistory": "Historial de Auditoría",
       "import": "Importar",
       "export": "Exportar",
       "addStock": "Agregar Stock",
-      "newSale": "Nueva Venta",
-      "quickCreate": "Creación Rápida",
+      "sale": "Nueva Venta",
+      "bulkCreate": "Creación Masiva",
       "addItem": "Agregar Artículo"
+    },
+    "inventoryItems": {
+      "title": "Artículos de Inventario",
+      "description": "Lista de todos los artículos de inventario con sus niveles de stock actuales y detalles."
     },
     "cards": {
       "inventoryItems": "Artículos de Inventario",
@@ -360,6 +511,7 @@
   },
   "users": {
     "title": "Gestión de Usuarios",
+    "description": "Administra usuarios y permisos del sistema",
     "subtitle": "Administra usuarios y permisos del sistema",
     "addUser": "Agregar Usuario",
     "editUser": "Editar Usuario",

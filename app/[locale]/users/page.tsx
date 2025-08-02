@@ -193,17 +193,34 @@ function UserManagementContent() {
   // Prevent hydration mismatch by showing loading until client-side
   if (!isClient) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="flex flex-col items-center gap-4">
-          <LoadingSpinner size="lg" />
-          <p className="text-muted-foreground">{t('loadingUserManagement')}</p>
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground text-sm">
+            {t('description')}
+          </p>
+        </div>
+      </div>
+
+      {/* User Grid - Mobile Responsive */}
       <UserGrid
         users={users}
         isLoading={isLoading}

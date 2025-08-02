@@ -1089,6 +1089,9 @@ export const projectService = {
           project_attachments (
             *
           )
+        ),
+        workflow_items (
+          *
         )
       `)
       .eq('id', id)

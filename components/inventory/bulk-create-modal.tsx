@@ -7,6 +7,7 @@ import { useToast } from '@/components/ui/toast'
 import { Plus, Trash2, Zap, Save, X } from 'lucide-react'
 import { auditedInventoryService, auditedCategoryService, auditedLocationService } from '@/lib/database-with-audit'
 import { useTranslations } from 'next-intl'
+import { useModal } from '@/components/ui/modal'
 
 interface BulkItem {
   id: string
@@ -35,6 +36,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
   const [categories, setCategories] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
   const { addToast } = useToast()
+  const { closeModal } = useModal()
   const t = useTranslations('inventory.bulkCreate')
   const tCommon = useTranslations('common')
 
@@ -200,14 +202,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
   }
 
   const handleClose = () => {
-    if (!isSubmitting) {
-      setItems([
-        { id: '1', sku: '', name: '', category_id: '' },
-        { id: '2', sku: '', name: '', category_id: '' },
-        { id: '3', sku: '', name: '', category_id: '' }
-      ])
-      onClose()
-    }
+    closeModal()
   }
 
   return (
@@ -345,7 +340,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
           </div>
         </div>
         
-        <div className="text-xs text-gray-500 bg-blue-50 p-3 rounded-lg">
+        <div className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
           <p className="font-medium mb-1">ℹ️ Información importante:</p>
           <ul className="space-y-1">
             <li>• Los items se crearán con valores por defecto (stock: 0, precio: 0)</li>

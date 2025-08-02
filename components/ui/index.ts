@@ -21,4 +21,5 @@ export { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './table'
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs'
 export { Textarea } from './textarea'
+export { ThemeSelector } from './theme-selector'
 export { ToastProvider, useToast } from './toast'

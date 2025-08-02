@@ -476,17 +476,16 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex-1 overflow-hidden">
-                {lineItems.length === 0 ? (
-                  <div className="flex items-center justify-center h-full text-center">
-                    <div>
-                      <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">No items added yet</p>
-                      <p className="text-sm text-muted-foreground">
-                        Use the search above or scan a barcode to add products
-                      </p>
-                    </div>
+                {lineItems.length === 0 && (
+                  <div className="text-center py-8 text-visible-dark">
+                    <Package className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-visible-dark">No items added yet</p>
+                    <p className="text-sm text-description-dark mt-1">
+                      Search and add products to start building your transaction
+                    </p>
                   </div>
-                ) : (
+                )}
+                {lineItems.length > 0 && (
                   <div className="space-y-2 overflow-y-auto max-h-96">
                     {lineItems.map((item, index) => (
                       <div

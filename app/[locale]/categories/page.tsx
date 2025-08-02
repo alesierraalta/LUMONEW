@@ -159,47 +159,74 @@ function CategoriesContent() {
   const totalItems = categories.reduce((sum, category) => sum + category.itemCount, 0)
 
   if (!isClient || isLoading) {
-    return <PageLoading message={t('loading')} size="lg" />
+    return (
+      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+        <div className="flex items-center justify-between space-y-2">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+        </div>
+        <div className="animate-pulse space-y-4">
+          <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="h-96 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 animate-fade-in">
-      <div className="flex items-center justify-between space-y-2">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
+          <p className="text-muted-foreground text-sm">
             {t('description')}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Upload className="mr-2 h-4 w-4" />
-            {tCommon('import')}
+        
+        {/* Action Buttons - Mobile Responsive */}
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
+          >
+            <Upload className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">{tCommon('import')}</span>
+            <span className="sm:hidden">Import</span>
           </Button>
-          <Button variant="outline" size="sm" className="hover:scale-105 transition-transform">
-            <Download className="mr-2 h-4 w-4" />
-            {tCommon('export')}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
+          >
+            <Download className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">{tCommon('export')}</span>
+            <span className="sm:hidden">Export</span>
           </Button>
           <Button
             size="sm"
-            className="hover:scale-105 transition-transform"
+            className="text-xs md:text-sm hover:scale-105 transition-transform"
             onClick={handleCreateCategory}
           >
-            <Plus className="mr-2 h-4 w-4" />
-            {t('addCategory')}
+            <Plus className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">{t('addCategory')}</span>
+            <span className="sm:hidden">Agregar</span>
           </Button>
         </div>
       </div>
 
-      {/* Information Cards */}
+      {/* Information Cards - Mobile Responsive Grid */}
       <CardContainer
         layout="grid"
-        columns={3}
-        maxCards={6}
-        className="mb-6"
+        columns={1}
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       />
 
-      {/* Filters */}
+      {/* Filters - Mobile Responsive */}
       <Suspense fallback={<PageLoading message={t('loadingFilters')} size="sm" />}>
         <CategoriesFilters
           searchTerm={searchTerm}
@@ -211,11 +238,11 @@ function CategoriesContent() {
         />
       </Suspense>
 
-      {/* Categories Table */}
-      <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <CardHeader>
-          <CardTitle>{t('categoriesTable')}</CardTitle>
-          <CardDescription>
+      {/* Categories Table - Mobile Responsive */}
+      <Card className="shadow-sm md:shadow-lg hover:shadow-xl transition-shadow duration-300">
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">{t('categoriesTable')}</CardTitle>
+          <CardDescription className="text-sm">
             {t('tableDescription')}
           </CardDescription>
         </CardHeader>

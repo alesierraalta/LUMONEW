@@ -26,14 +26,20 @@ export function CardContainer({
   const getLayoutClasses = () => {
     switch (layout) {
       case 'grid':
-        return cn(
-          'grid gap-4',
-          `grid-cols-1 md:grid-cols-2 lg:grid-cols-${columns}`
-        )
+        // Use explicit classes instead of dynamic ones
+        if (columns === 4) {
+          return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3'
+        } else if (columns === 3) {
+          return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3'
+        } else if (columns === 2) {
+          return 'grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-3'
+        } else {
+          return 'grid grid-cols-1 gap-3'
+        }
       case 'list':
         return cn('flex flex-col gap-4')
       default:
-        return cn('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4')
+        return 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-3'
     }
   }
 
@@ -53,10 +59,10 @@ export function CardContainer({
 
   return (
     <div className={cn("w-full", className)}>
-      {/* Cards container */}
-      <div className={getLayoutClasses()}>
+      {/* Cards container - simplified for external grid usage */}
+      <div className="contents">
         {displayCards.map((card) => (
-          <div key={card.id}>
+          <div key={card.id} className="w-full">
             <InfoCardComponent card={card} />
           </div>
         ))}
@@ -64,7 +70,7 @@ export function CardContainer({
 
       {/* Show count if maxCards is applied */}
       {maxCards && visibleCards.length > maxCards && (
-        <div className="mt-4 text-center">
+        <div className="col-span-full mt-4 text-center">
           <p className="text-sm text-muted-foreground">
             Mostrando {maxCards} de {visibleCards.length} tarjetas
           </p>
@@ -80,8 +86,8 @@ export function DashboardCards({ className }: { className?: string }) {
     <CardContainer
       className={className}
       layout="grid"
-      columns={3}
-      maxCards={6}
+      columns={4}
+      maxCards={8}
     />
   )
 }

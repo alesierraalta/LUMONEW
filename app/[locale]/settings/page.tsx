@@ -7,11 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { ThemeSelector } from '@/components/ui/theme-selector'
 import { CardProvider } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
 import { Settings, User, Bell, Palette, Database, Shield } from 'lucide-react'
 import { setLocale } from '@/lib/actions/locale'
-import { useTheme } from '@/lib/contexts/theme-context'
 
 // Mock user data
 const mockUser = {
@@ -57,7 +57,6 @@ function SettingsContent() {
   const t = useTranslations('settings')
   const tCommon = useTranslations('common')
   const locale = useLocale()
-  const { theme, setTheme } = useTheme()
 
   const handleMount = useCallback(() => {
     setIsClient(true)
@@ -69,10 +68,6 @@ function SettingsContent() {
 
   const handleLanguageChange = async (newLocale: string) => {
     await setLocale(newLocale)
-  }
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme as 'light' | 'dark' | 'system')
   }
 
   if (!isClient) {
@@ -161,19 +156,7 @@ function SettingsContent() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="theme">Theme</Label>
-              <Select value={theme} onValueChange={handleThemeChange}>
-                <SelectTrigger className="focus:ring-2 focus:ring-primary/20 transition-all">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                  <SelectItem value="system">System</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <ThemeSelector />
             <div className="space-y-2">
               <Label htmlFor="currency">Currency</Label>
               <Select defaultValue="USD">
