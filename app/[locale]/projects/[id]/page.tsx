@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { WorkflowTracker } from '@/components/projects/workflow-tracker'
+import { CLTaskManager } from '@/components/projects/cl-task-manager'
+import { IMPTaskManager } from '@/components/projects/imp-task-manager'
 import { AddItemModal } from '@/components/projects/add-item-modal'
 
 import { Button } from '@/components/ui/button'
@@ -271,10 +273,11 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       {/* Project Details Content - Mobile Responsive */}
       <div className="space-y-6">
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
             <TabsTrigger value="overview" className="text-xs md:text-sm">Resumen</TabsTrigger>
             <TabsTrigger value="products" className="text-xs md:text-sm">Productos</TabsTrigger>
-            <TabsTrigger value="workflows" className="text-xs md:text-sm">Workflows</TabsTrigger>
+            <TabsTrigger value="cl-workflows" className="text-xs md:text-sm">CL</TabsTrigger>
+            <TabsTrigger value="imp-workflows" className="text-xs md:text-sm">IMP</TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs md:text-sm">Analíticas</TabsTrigger>
           </TabsList>
 
@@ -410,41 +413,120 @@ export default function ProjectPage({ params }: ProjectPageProps) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="workflows" className="space-y-6">
+          <TabsContent value="cl-workflows" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
               <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-lg md:text-xl">Workflows (CL/IMP)</CardTitle>
+                <div className="flex items-center gap-3">
+                  <FileText className="w-6 h-6 text-blue-600" />
+                  <CardTitle className="text-lg md:text-xl">Workflows de Cotización (CL)</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Productos que requieren proceso de cotización con proveedores
+                </p>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(project as any).workflow_items?.length > 0 ? (
-                    (project as any).workflow_items.map((item: any) => (
-                      <WorkflowTracker
-                        key={item.id}
-                        item={{
-                          id: item.id,
-                          projectId: item.project_id,
-                          productType: item.product_type,
-                          productName: item.product_name,
-                          currentStatus: item.current_step,
-                          quantity: 1,
-                          statusHistory: [],
-                          attachments: [],
-                          isCompleted: false,
-                          createdAt: item.created_at,
-                          updatedAt: item.updated_at,
-                          createdBy: 'system',
-                          updatedBy: 'system'
-                        }}
-                        onStatusUpdate={async (itemId: string, newStatus: string, notes?: string, cost?: number) => {
-                          await fetchProjectDetails()
-                        }}
-                      />
-                    ))
+                  {(project as any).project_items?.filter((item: any) => item.product_type === 'CL').length > 0 ? (
+                    (project as any).project_items
+                      .filter((item: any) => item.product_type === 'CL')
+                      .map((item: any) => (
+                        <CLTaskManager
+                          key={item.id}
+                          item={{
+                            id: item.id,
+                            projectId: item.project_id,
+                            productType: item.product_type,
+                            productName: item.product_name,
+                            currentStatus: item.current_status,
+                            quantity: 1,
+                            statusHistory: [],
+                            attachments: [],
+                            isCompleted: false,
+                            createdAt: item.created_at,
+                            updatedAt: item.updated_at,
+                            createdBy: 'system',
+                            updatedBy: 'system'
+                          }}
+                          onStatusUpdate={async (itemId: string, newStatus: string, notes?: string, cost?: number) => {
+                            await fetchProjectDetails()
+                          }}
+                        />
+                      ))
                   ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      No hay workflows en este proyecto
-                    </p>
+                    <div className="text-center py-12">
+                      <FileText className="w-16 h-16 text-blue-200 mx-auto mb-4" />
+                      <p className="text-muted-foreground text-lg mb-2">No hay workflows de cotización</p>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Los productos CL requieren cotización con proveedores antes de proceder
+                      </p>
+                      <Button 
+                        onClick={() => setShowAddItemModal(true)}
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar Producto CL
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="imp-workflows" className="space-y-6">
+            <Card className="shadow-sm md:shadow-lg">
+              <CardHeader className="pb-3 md:pb-6">
+                <div className="flex items-center gap-3">
+                  <Plane className="w-6 h-6 text-purple-600" />
+                  <CardTitle className="text-lg md:text-xl">Workflows de Importación (IMP)</CardTitle>
+                </div>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Productos que requieren proceso completo de importación
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {(project as any).project_items?.filter((item: any) => item.product_type === 'IMP').length > 0 ? (
+                    (project as any).project_items
+                      .filter((item: any) => item.product_type === 'IMP')
+                      .map((item: any) => (
+                        <IMPTaskManager
+                          key={item.id}
+                          item={{
+                            id: item.id,
+                            projectId: item.project_id,
+                            productType: item.product_type,
+                            productName: item.product_name,
+                            currentStatus: item.current_status,
+                            quantity: 1,
+                            statusHistory: [],
+                            attachments: [],
+                            isCompleted: false,
+                            createdAt: item.created_at,
+                            updatedAt: item.updated_at,
+                            createdBy: 'system',
+                            updatedBy: 'system'
+                          }}
+                          onStatusUpdate={async (itemId: string, newStatus: string, notes?: string, cost?: number) => {
+                            await fetchProjectDetails()
+                          }}
+                        />
+                      ))
+                  ) : (
+                    <div className="text-center py-12">
+                      <Plane className="w-16 h-16 text-purple-200 mx-auto mb-4" />
+                      <p className="text-muted-foreground text-lg mb-2">No hay workflows de importación</p>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Los productos IMP requieren proceso completo de importación desde el extranjero
+                      </p>
+                      <Button 
+                        onClick={() => setShowAddItemModal(true)}
+                        className="bg-purple-600 hover:bg-purple-700"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar Producto IMP
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -457,7 +539,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 <CardTitle className="text-lg md:text-xl">Estadísticas del Proyecto</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <h4 className="font-medium mb-3">Productos por Tipo</h4>
                     <div className="space-y-2">
@@ -466,25 +548,90 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                         <span className="font-medium">{(project as any).project_items?.length || 0}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Workflows (CL/IMP)</span>
-                        <span className="font-medium">{(project as any).workflow_items?.length || 0}</span>
+                        <span className="text-sm text-muted-foreground">Cotización (CL)</span>
+                        <span className="font-medium text-blue-600">
+                          {(project as any).workflow_items?.filter((item: any) => item.product_type === 'CL').length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Importación (IMP)</span>
+                        <span className="font-medium text-purple-600">
+                          {(project as any).workflow_items?.filter((item: any) => item.product_type === 'IMP').length || 0}
+                        </span>
                       </div>
                     </div>
                   </div>
                   
                   <div>
-                    <h4 className="font-medium mb-3">Estado General</h4>
+                    <h4 className="font-medium mb-3">Workflows CL</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Progreso</span>
-                        <span className="font-medium">{project.progress}%</span>
+                        <span className="text-sm text-muted-foreground">Total</span>
+                        <span className="font-medium">
+                          {(project as any).project_items?.filter((item: any) => item.product_type === 'CL').length || 0}
+                        </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Estado</span>
-                        <Badge className={`${getStatusColor(project.status)} text-white text-xs`}>
-                          {project.status}
-                        </Badge>
+                        <span className="text-sm text-muted-foreground">En Proceso</span>
+                        <span className="font-medium text-blue-600">
+                          {(project as any).project_items?.filter((item: any) => 
+                            item.product_type === 'CL' && item.current_status !== 'recibido'
+                          ).length || 0}
+                        </span>
                       </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Completados</span>
+                        <span className="font-medium text-green-600">
+                          {(project as any).project_items?.filter((item: any) => 
+                            item.product_type === 'CL' && item.current_status === 'recibido'
+                          ).length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="font-medium mb-3">Workflows IMP</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Total</span>
+                        <span className="font-medium">
+                          {(project as any).project_items?.filter((item: any) => item.product_type === 'IMP').length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">En Proceso</span>
+                        <span className="font-medium text-purple-600">
+                          {(project as any).project_items?.filter((item: any) => 
+                            item.product_type === 'IMP' && item.current_status !== 'recibido'
+                          ).length || 0}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-muted-foreground">Completados</span>
+                        <span className="font-medium text-green-600">
+                          {(project as any).project_items?.filter((item: any) => 
+                            item.product_type === 'IMP' && item.current_status === 'recibido'
+                          ).length || 0}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Overall Project Status */}
+                <div className="mt-6 pt-6 border-t">
+                  <h4 className="font-medium mb-3">Estado General del Proyecto</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Progreso General</span>
+                      <span className="font-medium">{project.progress}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Estado del Proyecto</span>
+                      <Badge className={`${getStatusColor(project.status)} text-white text-xs`}>
+                        {project.status}
+                      </Badge>
                     </div>
                   </div>
                 </div>

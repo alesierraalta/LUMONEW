@@ -8,6 +8,7 @@ import { ProjectForm } from '@/components/projects/project-form'
 import { WorkflowTracker } from '@/components/projects/workflow-tracker'
 import { LUImportModal } from '@/components/projects/lu-import-modal'
 import { AddItemModal } from '@/components/projects/add-item-modal'
+import { InventoryDashboard } from '@/components/projects/inventory-dashboard'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,7 +60,7 @@ import { Project, ProjectFormData, ProjectItem } from '@/lib/types'
 export default function ProjectsPage() {
   const t = useTranslations()
   const router = useRouter()
-  const [activeView, setActiveView] = useState<'overview' | 'kanban' | 'timeline' | 'analytics'>('overview')
+  const [activeView, setActiveView] = useState<'overview' | 'inventory' | 'kanban' | 'timeline' | 'analytics'>('overview')
   const [projects, setProjects] = useState<Project[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
@@ -755,6 +756,20 @@ export default function ProjectsPage() {
             </div>
           </button>
           <button
+            onClick={() => setActiveView('inventory')}
+            className={`flex-shrink-0 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
+              activeView === 'inventory'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              <span className="hidden sm:inline">Inventario</span>
+              <span className="sm:hidden">Stock</span>
+            </div>
+          </button>
+          <button
             onClick={() => setActiveView('kanban')}
             className={`flex-shrink-0 py-3 px-4 border-b-2 font-medium text-sm whitespace-nowrap ${
               activeView === 'kanban'
@@ -998,6 +1013,17 @@ export default function ProjectsPage() {
                 </Card>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Inventory Tab */}
+        {activeView === 'inventory' && (
+          <div className="space-y-6">
+            <InventoryDashboard
+              onAddLU={() => setShowAddItemModal(true)}
+              onAddCL={() => setShowAddItemModal(true)}
+              onAddIMP={() => setShowAddItemModal(true)}
+            />
           </div>
         )}
 

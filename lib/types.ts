@@ -875,14 +875,14 @@ export interface PageCardConfig {
 // ============================================================================
 
 // Product types with their specific workflows
-export type ProductType = 'LU' | 'CL' | 'MP'
+export type ProductType = 'LU' | 'CL' | 'IMP'
 
 // Workflow status for each product type
 export type LUStatus = 'seleccionar_inventario' | 'inventario_seleccionado'
 export type CLStatus = 'solicitar_cotizacion' | 'pagar_cotizacion' | 'coordinar_envio_pagar_flete' | 'recibido'
-export type MPStatus = 'pagar_pi_proveedor' | 'enviar_etiqueta_envio' | 'pagar_arancel_aduanas' | 'coordinar_envio' | 'recibido'
+export type IMPStatus = 'pagar_pi_proveedor' | 'enviar_etiqueta_envio' | 'pagar_arancel_aduanas' | 'coordinar_envio' | 'recibido'
 
-export type ProjectStatus = LUStatus | CLStatus | MPStatus
+export type ProjectStatus = LUStatus | CLStatus | IMPStatus
 
 // Base project interface
 export interface Project {
@@ -930,7 +930,7 @@ export interface ProjectItem {
   quotationPaid?: Date
   shippingCoordinated?: Date
   shippingCost?: number
-  // MP specific fields
+  // IMP specific fields
   supplierPIAmount?: number
   supplierPIPaid?: Date
   shippingLabelSent?: Date
@@ -1014,7 +1014,7 @@ export interface ProjectMetrics {
     shippingPending: number
     completed: number
   }
-  mpItems: {
+  impItems: {
     total: number
     piPaymentPending: number
     shippingPending: number
@@ -1188,8 +1188,8 @@ export const WORKFLOW_CONFIGS: Record<ProductType, WorkflowConfig> = {
       }
     ]
   },
-  MP: {
-    productType: 'MP',
+  IMP: {
+    productType: 'IMP',
     statuses: [
       {
         key: 'pagar_pi_proveedor',

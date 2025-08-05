@@ -181,19 +181,19 @@ export function ProjectDashboard({ onCreateProject }: ProjectDashboardProps) {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Total:</span>
-              <span className="font-medium">{metrics?.mpItems.total || 0}</span>
+              <span className="font-medium">{metrics?.impItems.total || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">Completados:</span>
-              <span className="font-medium text-green-600">{metrics?.mpItems.completed || 0}</span>
+              <span className="font-medium text-green-600">{metrics?.impItems.completed || 0}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-sm text-gray-600">En Proceso:</span>
               <span className="font-medium text-purple-600">
-                {(metrics?.mpItems.piPaymentPending || 0) + 
-                 (metrics?.mpItems.shippingPending || 0) + 
-                 (metrics?.mpItems.customsPending || 0) + 
-                 (metrics?.mpItems.coordinationPending || 0)}
+                {(metrics?.impItems.piPaymentPending || 0) + 
+                 (metrics?.impItems.shippingPending || 0) + 
+                 (metrics?.impItems.customsPending || 0) + 
+                 (metrics?.impItems.coordinationPending || 0)}
               </span>
             </div>
           </div>
