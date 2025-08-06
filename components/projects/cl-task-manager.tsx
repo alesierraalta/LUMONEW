@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +44,7 @@ import {
   X
 } from 'lucide-react'
 import { ProjectItem, WORKFLOW_CONFIGS } from '@/lib/types'
+import { calculateWorkflowProgress, getStepStatus, getStepColor, getConnectionColor, generateIndividualTaskProgressBar, updateWorkflowProgressIncremental } from '@/lib/workflow-progress'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -84,6 +85,8 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
   
   // Drag & Drop states
   const [activeTask, setActiveTask] = useState<CLTask | null>(null)
+  const [pendingUpdates, setPendingUpdates] = useState<Set<string>>(new Set())
+  const [updateQueue, setUpdateQueue] = useState<Array<{taskId: string, newStatus: string, oldStatus: string, timestamp: number}>>([])
   
   // Drag & Drop sensors
   const sensors = useSensors(
@@ -104,6 +107,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
     notes: ''
   })
 
+  const [workflowProgress, setWorkflowProgress] = useState<any>(null)
   const workflowConfig = WORKFLOW_CONFIGS.CL
   
   // Tareas específicas del workflow CL
@@ -176,6 +180,64 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
   useEffect(() => {
     loadTasks()
   }, [item.id])
+
+  // Process update queue with debouncing for multiple rapid changes
+  useEffect(() => {
+    if (updateQueue.length === 0) return
+
+    const timer = setTimeout(async () => {
+      const currentQueue = [...updateQueue]
+      setUpdateQueue([]) // Clear queue immediately
+
+      // Process all updates in batch
+      const updatePromises = currentQueue.map(async ({ taskId, newStatus }) => {
+        try {
+          await handleTaskStatusChange(taskId, newStatus, true)
+          return { taskId, success: true }
+        } catch (error) {
+          console.error(`Failed to update task ${taskId}:`, error)
+          return { taskId, success: false, error }
+        }
+      })
+
+      const results = await Promise.allSettled(updatePromises)
+      
+      // Check if any updates failed
+      const failedUpdates = results
+        .map((result, index) => ({ result, update: currentQueue[index] }))
+        .filter(({ result }) => result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success))
+
+      if (failedUpdates.length > 0) {
+        console.error(`${failedUpdates.length} task updates failed, reloading from server`)
+        await loadTasks()
+        const progress = await calculateWorkflowProgress(item)
+        setWorkflowProgress(progress)
+      }
+
+      // Clear pending updates for processed tasks
+      setPendingUpdates(prev => {
+        const newSet = new Set(prev)
+        currentQueue.forEach(({ taskId }) => newSet.delete(taskId))
+        return newSet
+      })
+
+    }, 300) // 300ms debounce for batch processing
+
+    return () => clearTimeout(timer)
+  }, [updateQueue])
+
+  // Load workflow progress (only when item changes, not tasks)
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const progress = await calculateWorkflowProgress(item)
+        setWorkflowProgress(progress)
+      } catch (error) {
+        console.error('Error calculating workflow progress:', error)
+      }
+    }
+    loadProgress()
+  }, [item.id]) // Only depend on item.id to avoid conflicts with optimistic updates
 
   // Función para crear tareas automáticas del workflow
   const createWorkflowTasks = async () => {
@@ -359,7 +421,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
     setSelectedTask(null)
   }
 
-  const handleTaskStatusChange = async (taskId: string, newStatus: string) => {
+  const handleTaskStatusChange = async (taskId: string, newStatus: string, skipReload = false) => {
     try {
       const response = await fetch(`/api/cl-tasks/${taskId}`, {
         method: 'PUT',
@@ -367,20 +429,28 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          status: newStatus
+          status: newStatus,
+          updatedBy: availableUsers[0]?.id || '3d665a99-7636-4ef9-9316-f8065d010b26'
         }),
       })
 
       const data = await response.json()
       
       if (data.success) {
-        // Reload tasks to get updated data
-        await loadTasks()
+        // Only reload tasks if not skipping (for optimistic updates)
+        if (!skipReload) {
+          await loadTasks()
+          // Only recalculate progress when reloading tasks (non-optimistic updates)
+          const progress = await calculateWorkflowProgress(item)
+          setWorkflowProgress(progress)
+        }
       } else {
         console.error('Error updating task status:', data.error)
+        throw new Error(data.error)
       }
     } catch (error) {
       console.error('Error updating task status:', error)
+      throw error
     }
   }
 
@@ -418,6 +488,19 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       return
     }
     
+    // Check if there's already a pending update for this task
+    if (pendingUpdates.has(taskId)) {
+      console.log(`⚠️ Skipping update for task ${taskId} - already pending`)
+      setActiveTask(null)
+      return
+    }
+    
+    // Get old status for incremental progress update
+    const oldStatus = task.status
+    
+    // Mark this task as having a pending update
+    setPendingUpdates(prev => new Set(prev).add(taskId))
+    
     // Optimistic update - update local state immediately for smooth UX
     setTasks(prevTasks => 
       prevTasks.map(t => 
@@ -425,16 +508,30 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       )
     )
     
+    // Update workflow progress incrementally for better performance
+    if (workflowProgress) {
+      const updatedProgress = updateWorkflowProgressIncremental(
+        workflowProgress,
+        taskId,
+        oldStatus,
+        newStatus
+      )
+      setWorkflowProgress(updatedProgress)
+    }
+    
     setActiveTask(null)
     
-    // Update task status via API in background
-    try {
-      await handleTaskStatusChange(taskId, newStatus)
-    } catch (error) {
-      // If API call fails, revert the optimistic update
-      console.error('Failed to update task status:', error)
-      await loadTasks() // Reload from server to get correct state
-    }
+    // Add to update queue for batch processing
+    setUpdateQueue(prev => {
+      // Remove any existing update for this task (keep only the latest)
+      const filtered = prev.filter(update => update.taskId !== taskId)
+      return [...filtered, {
+        taskId,
+        newStatus,
+        oldStatus,
+        timestamp: Date.now()
+      }]
+    })
   }
 
   // Draggable Task Card Component
@@ -1156,37 +1253,68 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
             <div className="flex items-center gap-2 mb-2">
               <span className="text-sm font-medium">Progreso del Workflow:</span>
               <Badge variant="secondary">
-                {workflowConfig.statuses.findIndex(s => s.key === item.currentStatus) + 1} de {workflowConfig.statuses.length}
+                {workflowProgress ? `${workflowProgress.completedTaskCount} de ${workflowProgress.totalTasks} tareas` : `${workflowConfig.statuses.findIndex(s => s.key === item.currentStatus) + 1} de ${workflowConfig.statuses.length}`}
               </Badge>
+              {workflowProgress && (
+                <Badge variant="outline" className="ml-2">
+                  {workflowProgress.percentage}% completado
+                </Badge>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              {workflowConfig.statuses.map((status, index) => {
-                const isCurrent = status.key === item.currentStatus
-                const isCompleted = workflowConfig.statuses.findIndex(s => s.key === item.currentStatus) > index
-                
-                return (
-                  <div key={status.key} className="flex items-center">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                        isCurrent
-                          ? 'bg-blue-600 text-white'
-                          : isCompleted
-                          ? 'bg-green-600 text-white'
-                          : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                      }`}
-                    >
-                      {index + 1}
-                    </div>
-                    {index < workflowConfig.statuses.length - 1 && (
-                      <div
-                        className={`w-12 h-1 mx-1 ${
-                          isCompleted ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
-                        }`}
-                      />
-                    )}
-                  </div>
-                )
-              })}
+            <div className="flex items-center gap-1 flex-wrap">
+              {useMemo(() => {
+                if (workflowProgress) {
+                  const progressTasks = generateIndividualTaskProgressBar(workflowProgress)
+                  return progressTasks.map((task, index) => {
+                    const taskColor = getStepColor(task.status, 'CL')
+                    const isTaskCompleted = task.status === 'completed'
+                    
+                    return (
+                      <div key={task.id} className="flex items-center">
+                        <div
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${taskColor}`}
+                          title={`${task.title} (${task.stepLabel}) - ${task.status === 'completed' ? 'Completada' : task.status === 'current' ? 'En progreso' : 'Pendiente'}`}
+                        >
+                          {index + 1}
+                        </div>
+                        {index < progressTasks.length - 1 && (
+                          <div
+                            className={`w-2 h-0.5 mx-0.5 ${getConnectionColor(isTaskCompleted)}`}
+                          />
+                        )}
+                      </div>
+                    )
+                  })
+                } else {
+                  return workflowConfig.statuses.map((status, index) => {
+                    const isCurrent = status.key === item.currentStatus
+                    const isCompleted = workflowConfig.statuses.findIndex(s => s.key === item.currentStatus) > index
+                    
+                    return (
+                      <div key={status.key} className="flex items-center">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                            isCurrent
+                              ? 'bg-blue-600 text-white'
+                              : isCompleted
+                              ? 'bg-green-600 text-white'
+                              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        {index < workflowConfig.statuses.length - 1 && (
+                          <div
+                            className={`w-12 h-1 mx-1 ${
+                              isCompleted ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
+                            }`}
+                          />
+                        )}
+                      </div>
+                    )
+                  })
+                }
+              }, [workflowProgress, item.currentStatus])}
             </div>
           </div>
         </CardHeader>
