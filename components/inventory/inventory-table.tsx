@@ -17,7 +17,7 @@ import {
   Minus
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
-import { auditedInventoryService } from '@/lib/database-with-audit'
+// Removed direct database import - now using API endpoint
 import { categoryService, locationService } from '@/lib/database'
 import { QuickStockModal } from './quick-stock-modal'
 
@@ -179,7 +179,11 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const fetchInventory = async () => {
     try {
       setLoading(true)
-      const data = await auditedInventoryService.getAll()
+      const response = await fetch('/api/inventory/items')
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory items')
+      }
+      const data = await response.json()
       setItems(data || [])
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errorLoadingInventory'))
@@ -191,7 +195,12 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const handleDelete = async (item: InventoryItem) => {
     if (confirm(t('confirmDelete', { name: item.name }))) {
       try {
-        await auditedInventoryService.delete(item.id)
+        const response = await fetch(`/api/inventory?id=${item.id}`, {
+          method: 'DELETE'
+        })
+        if (!response.ok) {
+          throw new Error('Failed to delete item')
+        }
         setItems(prev => prev.filter(i => i.id !== item.id))
       } catch (err) {
         console.error('Failed to delete item:', err)

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { useModal } from '@/components/ui/modal'
 import { Plus, Minus, Save, X } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
-import { auditedInventoryService } from '@/lib/database-with-audit'
+// Removed direct database import - now using API endpoint
 import { useAuth } from '@/lib/auth/auth-context'
 import { useTranslations } from 'next-intl'
 
@@ -101,9 +101,20 @@ export function QuickStockModal({ isOpen, onClose, item, onStockUpdated, initial
         : previousStock - adjustmentQuantity
 
       // Update the inventory item
-      await auditedInventoryService.update(item.id, {
-        quantity: newStock
+      const response = await fetch(`/api/inventory?id=${item.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          quantity: newStock
+        })
       })
+      
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to update inventory item')
+      }
 
       // Create stock adjustment record for history
       const stockAdjustment: Omit<StockAdjustment, 'id'> = {

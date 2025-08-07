@@ -23,7 +23,7 @@ import {
 } from 'lucide-react'
 import { InventoryItem } from '@/lib/types'
 import { formatCurrency } from '@/lib/utils'
-import { auditedInventoryService } from '@/lib/database-with-audit'
+// Removed direct database import - now using API endpoint
 
 // Transaction line item interface
 interface TransactionLineItem {
@@ -131,7 +131,11 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
       try {
         setLoading(true)
         setError(null)
-        const data = await auditedInventoryService.getAll()
+        const response = await fetch('/api/inventory/items')
+        if (!response.ok) {
+          throw new Error('Failed to fetch inventory items')
+        }
+        const data = await response.json()
         const transformedProducts = data.map(transformInventoryItem)
         setProducts(transformedProducts)
       } catch (err) {

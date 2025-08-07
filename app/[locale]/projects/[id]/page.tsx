@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
+import { formatCurrency } from '@/lib/utils'
 import { WorkflowTracker } from '@/components/projects/workflow-tracker'
 import { CLTaskManager } from '@/components/projects/cl-task-manager'
 import { IMPTaskManager } from '@/components/projects/imp-task-manager'
 import { AddItemModal } from '@/components/projects/add-item-modal'
+import { LUImportModal } from '@/components/projects/lu-import-modal'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -41,8 +43,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const t = useTranslations()
   const router = useRouter()
   const [project, setProject] = useState<Project | null>(null)
+  const [luItems, setLuItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddItemModal, setShowAddItemModal] = useState(false)
+  const [showLUImportModal, setShowLUImportModal] = useState(false)
 
   // Mock current user - replace with actual auth
   const currentUser = {
@@ -56,13 +60,22 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   const fetchProjectDetails = async () => {
     try {
-      const response = await fetch(`/api/projects/${params.id}`)
-      const data = await response.json()
-      if (data.success) {
-        setProject(data.data)
+      const [projectResponse, luItemsResponse] = await Promise.all([
+        fetch(`/api/projects/${params.id}`),
+        fetch(`/api/projects/${params.id}/items?product_type=LU`)
+      ])
+      
+      const projectData = await projectResponse.json()
+      if (projectData.success) {
+        setProject(projectData.data)
       } else {
-        // Redirect to projects if project not found
         router.push('/projects')
+        return
+      }
+      
+      const luItemsData = await luItemsResponse.json()
+      if (luItemsData.success) {
+        setLuItems(luItemsData.data)
       }
     } catch (error) {
       console.error('Error fetching project details:', error)
@@ -72,34 +85,37 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     }
   }
 
-  const handleLUImport = async (data: any) => {
+  const handleLUImport = async (items: { inventoryItemId: string; quantity: number; unitPrice: number }[]) => {
     if (!project) return
 
     try {
-      const response = await fetch('/api/projects/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          projectId: project.id,
-          inventoryId: data.inventoryId,
-          quantity: data.quantity,
-          unitPrice: data.unitPrice,
-          notes: data.notes,
-          createdBy: currentUser.id
-        }),
-      })
+      const promises = items.map(item => 
+        fetch(`/api/projects/${project.id}/items`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            inventoryId: item.inventoryItemId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            createdBy: currentUser.id
+          }),
+        })
+      )
 
-      const result = await response.json()
-      if (result.success) {
-        await fetchProjectDetails() // Refresh project data
+      const responses = await Promise.all(promises)
+      const results = await Promise.all(responses.map(r => r.json()))
+      const allSuccessful = results.every(result => result.success)
+
+      if (allSuccessful) {
+        await fetchProjectDetails()
         setShowAddItemModal(false)
       } else {
-        console.error('Error importing LU item:', result.error)
+        console.error('Error importing some LU items:', results.filter(r => !r.success))
       }
     } catch (error) {
-      console.error('Error importing LU item:', error)
+      console.error('Error importing LU items:', error)
     }
   }
 
@@ -393,20 +409,41 @@ export default function ProjectPage({ params }: ProjectPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(project as any).project_items?.length > 0 ? (
-                    (project as any).project_items.map((item: any) => (
+                  {luItems.length > 0 ? (
+                    luItems.map((item: any) => (
                       <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div>
-                          <h4 className="font-medium">{item.name || 'Producto'}</h4>
+                          <h4 className="font-medium">{item.inventory?.name || item.product_name || 'Producto'}</h4>
                           <p className="text-sm text-muted-foreground">Cantidad: {item.quantity}</p>
+                          {item.inventory?.sku && (
+                            <p className="text-xs text-muted-foreground">SKU: {item.inventory.sku}</p>
+                          )}
                         </div>
-                        <Badge variant="outline">LU</Badge>
+                        <div className="text-right">
+                          <Badge variant="outline" className="mb-1">LU</Badge>
+                          {item.unit_price && (
+                            <p className="text-xs text-muted-foreground">
+                              {formatCurrency(item.unit_price * item.quantity)}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-center text-muted-foreground py-8">
-                      No hay productos de inventario en este proyecto
-                    </p>
+                    <div className="text-center py-12">
+                      <Package className="w-16 h-16 text-green-200 mx-auto mb-4" />
+                      <p className="text-muted-foreground text-lg mb-2">No hay productos de inventario</p>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Importa productos desde tu inventario disponible
+                      </p>
+                      <Button 
+                        onClick={() => setShowLUImportModal(true)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Importar del Inventario
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -545,7 +582,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Inventario (LU)</span>
-                        <span className="font-medium">{(project as any).project_items?.length || 0}</span>
+                        <span className="font-medium">{luItems.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Cotización (CL)</span>
@@ -669,6 +706,13 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           </div>
         </div>
       )}
+
+      {/* LU Import Modal */}
+      <LUImportModal
+        isOpen={showLUImportModal}
+        onClose={() => setShowLUImportModal(false)}
+        onImport={handleLUImport}
+      />
     </div>
   )
-} 
+}

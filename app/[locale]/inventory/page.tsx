@@ -10,7 +10,7 @@ import { FilterOptions } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth/auth-context'
-import { auditedInventoryService, auditedCategoryService } from '@/lib/database-with-audit'
+// Removed direct database imports - now using API endpoints
 import { analyticsService } from '@/lib/database'
 import { PageLoading } from '@/components/ui/page-loading'
 import { useModal } from '@/components/ui/modal'
@@ -44,10 +44,18 @@ function InventoryContent() {
       setIsLoading(true)
       
       // Load inventory items
-      const inventory = await auditedInventoryService.getAll()
+      const inventoryResponse = await fetch('/api/inventory/items')
+      if (!inventoryResponse.ok) {
+        throw new Error('Failed to fetch inventory items')
+      }
+      const inventory = await inventoryResponse.json()
       
       // Load categories for context
-      const categories = await auditedCategoryService.getAll()
+      const categoriesResponse = await fetch('/api/categories/items')
+      if (!categoriesResponse.ok) {
+        throw new Error('Failed to fetch categories')
+      }
+      const categories = await categoriesResponse.json()
       
       // Get analytics data
       const analytics = await analyticsService.getDashboardMetrics()

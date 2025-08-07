@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useToast } from '@/components/ui/toast'
 import { Plus, Trash2, Zap, Save, X } from 'lucide-react'
-import { auditedInventoryService, auditedCategoryService, auditedLocationService } from '@/lib/database-with-audit'
+// Removed direct database imports - now using API endpoints
 import { useTranslations } from 'next-intl'
 import { useModal } from '@/components/ui/modal'
 
@@ -43,10 +43,20 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
   // Load categories and locations
   const loadData = useCallback(async () => {
     try {
-      const [categoriesData, locationsData] = await Promise.all([
-        auditedCategoryService.getAll(),
-        auditedLocationService.getAll()
+      const [categoriesResponse, locationsResponse] = await Promise.all([
+        fetch('/api/categories/items'),
+        fetch('/api/locations/items')
       ])
+      
+      if (!categoriesResponse.ok || !locationsResponse.ok) {
+        throw new Error('Failed to fetch data')
+      }
+      
+      const [categoriesData, locationsData] = await Promise.all([
+        categoriesResponse.json(),
+        locationsResponse.json()
+      ])
+      
       setCategories(categoriesData)
       setLocations(locationsData)
     } catch (error) {
@@ -145,17 +155,28 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
             cat.name.toLowerCase().includes('sin categoría')
           ) || categories[0]
 
-          await auditedInventoryService.create({
-            sku: item.sku.trim(),
-            name: item.name.trim(),
-            category_id: item.category_id.trim() || (defaultCategory?.id || ''),
-            location_id: defaultLocation.id,
-            unit_price: 0,
-            quantity: 0,
-            min_stock: 0,
-            max_stock: 0,
-            status: 'active'
+          const response = await fetch('/api/inventory/items', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              sku: item.sku.trim(),
+              name: item.name.trim(),
+              category_id: item.category_id.trim() || (defaultCategory?.id || ''),
+              location_id: defaultLocation.id,
+              unit_price: 0,
+              quantity: 0,
+              min_stock: 0,
+              max_stock: 0,
+              status: 'active'
+            })
           })
+          
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.error || 'Failed to create item')
+          }
           successCount++
         } catch (error) {
           errorCount++

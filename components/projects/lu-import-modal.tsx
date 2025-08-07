@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Card } from '@/components/ui/card'
 import { Search, Package, Plus } from 'lucide-react'
-import { auditedInventoryService } from '@/lib/database-with-audit'
+// Removed direct database import - now using API endpoint
 import { formatCurrency } from '@/lib/utils'
 
 interface InventoryItem {
@@ -48,10 +48,12 @@ export function LUImportModal({ isOpen, onClose, onImport, projectId }: LUImport
   const fetchInventoryItems = async () => {
     setLoading(true)
     try {
-      const items = await auditedInventoryService.getAll()
-      // Filter only items with stock > 0
-      const availableItems = items.filter((item: any) => item.quantity > 0)
-      setInventoryItems(availableItems)
+      const response = await fetch('/api/inventory/items?withStock=true')
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory items')
+      }
+      const items = await response.json()
+      setInventoryItems(items)
     } catch (error) {
       console.error('Error fetching inventory items:', error)
     } finally {
@@ -230,4 +232,4 @@ export function LUImportModal({ isOpen, onClose, onImport, projectId }: LUImport
       </DialogContent>
     </Dialog>
   )
-} 
+}
