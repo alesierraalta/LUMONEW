@@ -22,11 +22,19 @@ export function createClient() {
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
   }
 
-  console.log('🔧 Creating Supabase browser client with URL:', supabaseUrl.substring(0, 30) + '...')
+  // Only log in development to reduce console spam
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔧 Creating Supabase browser client with URL:', supabaseUrl.substring(0, 30) + '...')
+  }
 
   try {
     clientInstance = createBrowserClient(supabaseUrl, supabaseAnonKey)
-    console.log('✅ Supabase browser client created successfully')
+    
+    // Only log in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ Supabase browser client created successfully')
+    }
+    
     return clientInstance
   } catch (error) {
     console.error('❌ Failed to create Supabase browser client:', error)

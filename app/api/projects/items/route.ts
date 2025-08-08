@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
       quantity,
       unit_price: unitPrice,
       total_price: totalPrice,
-      inventory_item_id: inventoryItemId,
       supplier_name: supplierName,
       supplier_contact_info: supplierContactInfo,
       supplier_email: supplierEmail,

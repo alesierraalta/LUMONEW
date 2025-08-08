@@ -50,12 +50,24 @@ export function LUImportModal({ isOpen, onClose, onImport, projectId }: LUImport
     try {
       const response = await fetch('/api/inventory/items?withStock=true')
       if (!response.ok) {
-        throw new Error('Failed to fetch inventory items')
+        const errorText = await response.text()
+        console.error('API Error:', response.status, errorText)
+        throw new Error(`Failed to fetch inventory items: ${response.status} ${errorText}`)
       }
       const items = await response.json()
+      console.log('Fetched inventory items:', items)
+      
+      // Validate items structure
+      if (!Array.isArray(items)) {
+        console.error('Invalid response format - expected array:', items)
+        throw new Error('Invalid response format from API')
+      }
+      
       setInventoryItems(items)
     } catch (error) {
       console.error('Error fetching inventory items:', error)
+      // Set empty array on error to prevent crashes
+      setInventoryItems([])
     } finally {
       setLoading(false)
     }

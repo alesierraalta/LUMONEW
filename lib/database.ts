@@ -1183,6 +1183,97 @@ export const projectService = {
     
     if (error) throw error
     return data
+  },
+
+  async getProjectItems(projectId: string) {
+    return await projectItemService.getAll(projectId)
+  },
+
+  async addInventoryItemToProject(params: {
+    projectId: string
+    inventoryId: string
+    quantity: number
+    unitPrice?: number
+    notes?: string
+    createdBy: string
+  }) {
+    const { projectId, inventoryId, quantity, unitPrice, notes = '', createdBy } = params
+
+    if (!projectId) throw new Error('projectId is required')
+    if (!inventoryId) throw new Error('inventoryId is required')
+    if (!createdBy) throw new Error('createdBy is required')
+    if (!quantity || quantity <= 0) throw new Error('quantity must be greater than 0')
+
+    // Fetch inventory item to validate and get details
+    const inventoryItem = await inventoryService.getById(inventoryId)
+    if (!inventoryItem) throw new Error('Inventory item not found')
+    if (typeof inventoryItem.quantity !== 'number') throw new Error('Inventory item has invalid quantity')
+    if (inventoryItem.quantity < quantity) throw new Error('Insufficient stock for the requested quantity')
+
+    const resolvedUnitPrice = typeof unitPrice === 'number' ? unitPrice : (inventoryItem.unit_price || 0)
+
+    // Check if this item already exists in the project (by SKU)
+    const existingItems = await projectItemService.getAll(projectId)
+    const existingItem = existingItems.find(item => 
+      item.product_type === 'LU' && 
+      item.description === `SKU: ${inventoryItem.sku}`
+    )
+
+    let projectItem
+
+    if (existingItem) {
+      // Update existing item: increase quantity and recalculate total
+      const newQuantity = existingItem.quantity + quantity
+      const newTotal = resolvedUnitPrice * newQuantity
+      
+      console.log(`🔄 Attempting to consolidate ${quantity} units into existing item (${existingItem.quantity} -> ${newQuantity})`)
+      
+      // Map to database column names - project_items table doesn't have notes field
+      const updateData: any = {
+        quantity: newQuantity,
+        unit_cost: resolvedUnitPrice,  // Database uses unit_cost, not unit_price
+        total_cost: newTotal,          // Database uses total_cost, not total_price
+      }
+      
+      console.log('🔧 Update data:', updateData)
+      
+      const { data, error } = await supabase
+        .from('project_items')
+        .update(updateData)
+        .eq('id', existingItem.id)
+        .select()
+        .single()
+      
+      if (error) {
+        console.error('❌ Failed to update existing item:', error)
+        throw error
+      }
+      
+      projectItem = data
+      console.log(`✅ Successfully consolidated ${quantity} units into existing project item (total: ${newQuantity})`)
+    } else {
+      // Create new project item with product_type 'LU' (from inventory)
+      projectItem = await projectItemService.create({
+        project_id: projectId,
+        product_type: 'LU',
+        product_name: inventoryItem.name,
+        product_description: `SKU: ${inventoryItem.sku}`,  // This gets mapped to description in create()
+        quantity,
+        unit_price: resolvedUnitPrice,
+        total_price: resolvedUnitPrice * quantity,
+        notes,  // This gets handled in create() function
+        created_by: createdBy
+      })
+      
+      console.log(`✅ Created new project item with ${quantity} units`)
+    }
+
+    // Decrease stock from inventory
+    await inventoryService.update(inventoryId, {
+      quantity: Math.max(0, (inventoryItem.quantity as number) - quantity)
+    })
+
+    return projectItem
   }
 }
 
@@ -1193,10 +1284,10 @@ export const projectItemService = {
       .from('project_items')
       .select(`
         *,
-        status_history (
+        project_status_history (
           *
         ),
-        attachments (
+        project_attachments (
           *
         )
       `)
@@ -1216,10 +1307,10 @@ export const projectItemService = {
       .from('project_items')
       .select(`
         *,
-        status_history (
+        project_status_history (
           *
         ),
-        attachments (
+        project_attachments (
           *
         )
       `)
@@ -1247,29 +1338,38 @@ export const projectItemService = {
     notes?: string
     created_by: string
   }) {
-    // Determine initial status based on product type
-    let initialStatus: string
+    // Determine initial status based on product type (must satisfy DB check constraint)
+    // Allowed values: 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
+    let initialStatus: 'pending' | 'in_progress' | 'completed' | 'on_hold' | 'cancelled'
     switch (item.product_type) {
       case 'LU':
-        initialStatus = 'inventario_vln'
+        initialStatus = 'completed'
         break
       case 'CL':
-        initialStatus = 'solicitar_cotizacion'
-        break
       case 'MP':
-        initialStatus = 'pagar_pi_proveedor'
+        initialStatus = 'pending'
         break
       default:
-        initialStatus = 'solicitar_cotizacion'
+        initialStatus = 'pending'
     }
     
+    // Map to database columns
+    const insertRecord: any = {
+      project_id: item.project_id,
+      product_type: item.product_type,
+      product_name: item.product_name,
+      description: item.product_description,
+      quantity: item.quantity,
+      unit_cost: item.unit_price,
+      total_cost: item.total_price,
+      current_status: initialStatus,
+      is_completed: item.product_type === 'LU',
+      created_by: item.created_by
+    }
+
     const { data, error } = await supabase
       .from('project_items')
-      .insert([{
-        ...item,
-        current_status: initialStatus,
-        is_completed: item.product_type === 'LU' // LU items are immediately completed
-      }])
+      .insert([insertRecord])
       .select()
       .single()
     
@@ -1330,7 +1430,7 @@ export const projectItemService = {
     if (itemError) throw itemError
     
     const oldStatus = item.current_status
-    const isCompleted = newStatus === 'recibido'
+    const isCompleted = newStatus === 'completed'
     
     // Update item status
     const { data, error } = await supabase
@@ -1338,7 +1438,7 @@ export const projectItemService = {
       .update({
         current_status: newStatus,
         is_completed: isCompleted,
-        completed_at: isCompleted ? new Date().toISOString() : null
+        completed_date: isCompleted ? new Date().toISOString() : null
       })
       .eq('id', id)
       .select()
@@ -1377,8 +1477,14 @@ export const projectItemService = {
     const { data, error } = await supabase
       .from('project_status_history')
       .insert([{
-        ...history,
-        change_date: new Date().toISOString()
+        project_item_id: history.project_item_id,
+        old_status: history.from_status,
+        new_status: history.to_status,
+        changed_by: history.changed_by,
+        changed_by_name: history.changed_by_name,
+        notes: history.notes,
+        cost_incurred: history.cost_incurred,
+        created_at: new Date().toISOString()
       }])
       .select()
       .single()

@@ -89,33 +89,64 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     if (!project) return
 
     try {
-      const promises = items.map(item => 
-        fetch(`/api/projects/${project.id}/items`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inventoryId: item.inventoryItemId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-            createdBy: currentUser.id
-          }),
-        })
-      )
+      console.log('Starting LU import with items:', items)
+      
+      const promises = items.map(async (item, index) => {
+        try {
+          const response = await fetch(`/api/projects/${project.id}/items`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              inventoryItemId: item.inventoryItemId, // Keep original field name
+              quantity: item.quantity,
+              unitPrice: item.unitPrice,
+              notes: `Imported from inventory - Item ${index + 1}`,
+              createdBy: currentUser.id
+            }),
+          })
+          
+          const result = await response.json()
+          console.log(`Item ${index + 1} import result:`, result)
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${result.error || 'Unknown error'}`)
+          }
+          
+          return { success: true, data: result, item }
+        } catch (error) {
+          console.error(`Error importing item ${index + 1}:`, error)
+          return { 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Unknown error',
+            item 
+          }
+        }
+      })
 
-      const responses = await Promise.all(promises)
-      const results = await Promise.all(responses.map(r => r.json()))
-      const allSuccessful = results.every(result => result.success)
+      const results = await Promise.all(promises)
+      const successful = results.filter(r => r.success)
+      const failed = results.filter(r => !r.success)
+      
+      console.log(`Import completed: ${successful.length} successful, ${failed.length} failed`)
 
-      if (allSuccessful) {
+      if (successful.length > 0) {
         await fetchProjectDetails()
         setShowAddItemModal(false)
+        
+        if (failed.length === 0) {
+          console.log('All items imported successfully!')
+        } else {
+          console.warn(`${successful.length} items imported, ${failed.length} failed`)
+        }
       } else {
-        console.error('Error importing some LU items:', results.filter(r => !r.success))
+        console.error('All items failed to import:', failed)
+        alert('Error: No se pudieron importar los productos. Revisa la consola para más detalles.')
       }
     } catch (error) {
       console.error('Error importing LU items:', error)
+      alert('Error inesperado al importar productos. Revisa la consola para más detalles.')
     }
   }
 

@@ -78,6 +78,27 @@ function InventoryContent() {
       // Calculate total value
       const totalValue = inventory.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0)
       
+      // Get recent activity from audit logs
+      let recentActivity = []
+      try {
+        const auditResponse = await fetch('/api/audit/recent?limit=5')
+        if (auditResponse.ok) {
+          const auditResult = await auditResponse.json()
+          if (auditResult.success && auditResult.data) {
+            recentActivity = auditResult.data.map((log: any) => ({
+              id: log.id,
+              action: log.operation === 'INSERT' ? 'Creado' : log.operation === 'UPDATE' ? 'Actualizado' : 'Eliminado',
+              product: log.new_values?.name || log.old_values?.name || `ID: ${log.record_id}`,
+              timestamp: new Date(log.created_at)
+            }))
+          }
+        }
+      } catch (error) {
+        console.error('Error loading recent activity:', error)
+        // Fallback to empty array
+        recentActivity = []
+      }
+      
       // Generate inventory data for cards
       const cardData = {
         totalItems: inventory.length,
@@ -86,9 +107,7 @@ function InventoryContent() {
         goodStockCount: goodStockItems.length,
         lowStockItems: lowStockDetails,
         categories: categories.map((cat: any) => cat.name),
-        recentActivity: [
-          { id: '1', action: 'Inventario cargado', product: 'Sistema', timestamp: new Date() }
-        ],
+        recentActivity,
         criticalAlerts: outOfStockItems.length + lowStockItems.length,
         pendingOrders: 0, // This would come from orders table if implemented
         totalValue
