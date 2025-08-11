@@ -50,13 +50,15 @@ interface InventoryDashboardProps {
   onAddLU: () => void
   onAddCL: () => void
   onAddIMP: () => void
+  addingItems?: boolean
 }
 
 export function InventoryDashboard({ 
   projectId, 
   onAddLU, 
   onAddCL, 
-  onAddIMP 
+  onAddIMP,
+  addingItems = false
 }: InventoryDashboardProps) {
   const [metrics, setMetrics] = useState<InventoryMetrics>({
     lu: { total: 0, available: 0, selected: 0, percentage: 0 },
@@ -139,50 +141,115 @@ export function InventoryDashboard({
 
       {/* Inventory Type Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* LU - Inventario (Stock VLN) */}
-        <Card className="border-green-200 bg-green-50">
+        {/* LU - Inventario (Stock VLN) - Enhanced Design */}
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 to-green-50 hover:shadow-lg transition-all duration-300 group">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg flex items-center gap-2 text-green-800">
-                <Package className="w-5 h-5" />
-                Inventario (LU)
+              <CardTitle className="text-lg flex items-center gap-2 text-emerald-800">
+                <div className="p-2 bg-emerald-100 rounded-lg group-hover:bg-emerald-200 transition-colors">
+                  <Package className="w-5 h-5 text-emerald-600" />
+                </div>
+                <div>
+                  <div className="font-bold">Inventario Local</div>
+                  <div className="text-xs text-emerald-600 font-normal">Stock VLN Disponible</div>
+                </div>
               </CardTitle>
-              <Badge variant="outline" className="bg-green-100 text-green-800 border-green-300">
-                Stock VLN
+              <Badge variant="outline" className="bg-emerald-100 text-emerald-800 border-emerald-300 font-semibold">
+                Inmediato
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-700">{metrics.lu.total}</div>
-                <div className="text-sm text-green-600">Productos disponibles</div>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Disponibles</span>
-                  <span className="font-medium text-green-600">{metrics.lu.available}</span>
+              {/* Enhanced Metrics Display */}
+              <div className="bg-white/50 rounded-xl p-4 border border-emerald-100">
+                <div className="text-center mb-3">
+                  <div className="text-4xl font-bold text-emerald-700 mb-1">{metrics.lu.total}</div>
+                  <div className="text-sm text-emerald-600 font-medium">Productos en Stock</div>
                 </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Seleccionados</span>
-                  <span className="font-medium">{metrics.lu.selected}</span>
+                
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <CheckCircle className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs text-emerald-700 font-medium">Disponibles</span>
+                    </div>
+                    <div className="text-lg font-bold text-emerald-800">{metrics.lu.available}</div>
+                  </div>
+                  <div className="bg-blue-50 rounded-lg p-3 text-center">
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <ShoppingCart className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs text-blue-700 font-medium">Seleccionados</span>
+                    </div>
+                    <div className="text-lg font-bold text-blue-800">{metrics.lu.selected}</div>
+                  </div>
                 </div>
-                <Progress value={metrics.lu.percentage} className="h-2" />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-xs text-gray-600">
+                    <span>Progreso de selección</span>
+                    <span className="font-medium">{metrics.lu.percentage.toFixed(0)}%</span>
+                  </div>
+                  <div className="relative">
+                    <Progress value={metrics.lu.percentage} className="h-3" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-400 rounded-full opacity-20"></div>
+                  </div>
+                </div>
               </div>
 
-              <div className="pt-2 border-t border-green-200">
-                <p className="text-xs text-green-700 mb-3">
-                  ✅ Disponibles inmediatamente
-                </p>
+              {/* Quick Access Features */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs text-emerald-700 font-medium">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  Ventajas del Stock Local
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    <span>Entrega inmediata</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <TrendingUp className="w-3 h-3 text-green-500" />
+                    <span>Sin costos extra</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Building2 className="w-3 h-3 text-green-500" />
+                    <span>Calidad verificada</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-gray-600">
+                    <Package className="w-3 h-3 text-green-500" />
+                    <span>Stock garantizado</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Enhanced Action Button */}
+              <div className="pt-2">
                 <Button 
                   onClick={onAddLU}
-                  className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02] font-semibold"
                   size="sm"
+                  disabled={addingItems}
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Seleccionar del Stock
+                  {addingItems ? (
+                    <>
+                      <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                      Agregando...
+                    </>
+                  ) : (
+                    <>
+                      <Package className="w-4 h-4 mr-2" />
+                      Explorar Inventario
+                    </>
+                  )}
                 </Button>
+                
+                {/* Quick Stats */}
+                <div className="mt-2 text-center">
+                  <span className="text-xs text-emerald-600 font-medium">
+                    🚀 Selección rápida y eficiente
+                  </span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -316,14 +383,27 @@ export function InventoryDashboard({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Button
               variant="outline"
-              className="h-auto p-4 flex flex-col items-center gap-2 border-green-200 hover:bg-green-50"
+              className="h-auto p-4 flex flex-col items-center gap-2 border-green-200 hover:bg-green-50 disabled:opacity-50"
               onClick={onAddLU}
+              disabled={addingItems}
             >
-              <ShoppingCart className="w-6 h-6 text-green-600" />
-              <div className="text-center">
-                <div className="font-medium">Agregar del Stock</div>
-                <div className="text-xs text-gray-500">Productos VLN disponibles</div>
-              </div>
+              {addingItems ? (
+                <>
+                  <div className="w-6 h-6 animate-spin rounded-full border-2 border-green-600 border-t-transparent" />
+                  <div className="text-center">
+                    <div className="font-medium">Agregando...</div>
+                    <div className="text-xs text-gray-500">Procesando items</div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="w-6 h-6 text-green-600" />
+                  <div className="text-center">
+                    <div className="font-medium">Agregar del Stock</div>
+                    <div className="text-xs text-gray-500">Productos VLN disponibles</div>
+                  </div>
+                </>
+              )}
             </Button>
 
             <Button

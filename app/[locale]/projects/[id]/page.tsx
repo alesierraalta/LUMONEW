@@ -12,6 +12,14 @@ import { LUImportModal } from '@/components/projects/lu-import-modal'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -28,7 +36,8 @@ import {
   FileText,
   Share2,
   Settings,
-  Plane
+  Plane,
+  Search
 } from 'lucide-react'
 import { Project } from '@/lib/types'
 
@@ -46,7 +55,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const [luItems, setLuItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [showAddItemModal, setShowAddItemModal] = useState(false)
+  const [addingItems, setAddingItems] = useState(false)
   const [showLUImportModal, setShowLUImportModal] = useState(false)
+  const [luSearchTerm, setLuSearchTerm] = useState('')
+  const [luSortBy, setLuSortBy] = useState<'name_asc' | 'name_desc' | 'qty_desc' | 'qty_asc' | 'cost_desc' | 'cost_asc'>('name_asc')
 
   // Mock current user - replace with actual auth
   const currentUser = {
@@ -60,6 +72,8 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   const fetchProjectDetails = async () => {
     try {
+      console.log('🔄 Refreshing project data...')
+      
       const [projectResponse, luItemsResponse] = await Promise.all([
         fetch(`/api/projects/${params.id}`),
         fetch(`/api/projects/${params.id}/items?product_type=LU`)
@@ -68,7 +82,9 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       const projectData = await projectResponse.json()
       if (projectData.success) {
         setProject(projectData.data)
+        console.log('✅ Project data updated')
       } else {
+        console.error('❌ Failed to fetch project data:', projectData)
         router.push('/projects')
         return
       }
@@ -76,9 +92,17 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       const luItemsData = await luItemsResponse.json()
       if (luItemsData.success) {
         setLuItems(luItemsData.data)
+        console.log(`✅ LU items updated: ${luItemsData.data.length} items found`)
+        
+        // Log item details for debugging
+        luItemsData.data.forEach((item: any, index: number) => {
+          console.log(`  ${index + 1}. ${item.product_name} - Qty: ${item.quantity}`)
+        })
+      } else {
+        console.error('❌ Failed to fetch LU items:', luItemsData)
       }
     } catch (error) {
-      console.error('Error fetching project details:', error)
+      console.error('❌ Error fetching project details:', error)
       router.push('/projects')
     } finally {
       setLoading(false)
@@ -89,7 +113,8 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     if (!project) return
 
     try {
-      console.log('Starting LU import with items:', items)
+      setAddingItems(true)
+      console.log('🚀 Starting LU import with items:', items)
       
       const promises = items.map(async (item, index) => {
         try {
@@ -132,21 +157,31 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       console.log(`Import completed: ${successful.length} successful, ${failed.length} failed`)
 
       if (successful.length > 0) {
+        // Refresh project data to show updated quantities
         await fetchProjectDetails()
         setShowAddItemModal(false)
         
         if (failed.length === 0) {
-          console.log('All items imported successfully!')
+          console.log('✅ All items imported successfully!')
+          // Show success message to user
+          if (successful.length === 1) {
+            console.log('📦 Items consolidated or added successfully')
+          } else {
+            console.log(`📦 ${successful.length} items processed successfully`)
+          }
         } else {
-          console.warn(`${successful.length} items imported, ${failed.length} failed`)
+          console.warn(`⚠️ ${successful.length} items imported, ${failed.length} failed`)
+          alert(`Parcialmente completado: ${successful.length} items agregados correctamente, ${failed.length} fallaron.`)
         }
       } else {
-        console.error('All items failed to import:', failed)
+        console.error('❌ All items failed to import:', failed)
         alert('Error: No se pudieron importar los productos. Revisa la consola para más detalles.')
       }
     } catch (error) {
-      console.error('Error importing LU items:', error)
+      console.error('❌ Error importing LU items:', error)
       alert('Error inesperado al importar productos. Revisa la consola para más detalles.')
+    } finally {
+      setAddingItems(false)
     }
   }
 
@@ -237,6 +272,45 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       default: return 'bg-gray-500'
     }
   }
+
+  function getLuItemName(item: any): string {
+    return (item?.inventory?.name || item?.product_name || '').toString()
+  }
+
+  function getLuItemUnitCost(item: any): number {
+    const unit = Number(item?.unit_cost || 0)
+    return Number.isFinite(unit) ? unit : 0
+  }
+
+  const filteredLuItems = luItems
+    .filter((item: any) => {
+      if (!luSearchTerm) return true
+      const term = luSearchTerm.toLowerCase()
+      const name = getLuItemName(item).toLowerCase()
+      const skuMatch = (item?.description || '').toLowerCase()
+      return name.includes(term) || skuMatch.includes(term)
+    })
+    .sort((a: any, b: any) => {
+      switch (luSortBy) {
+        case 'name_asc':
+          return getLuItemName(a).localeCompare(getLuItemName(b))
+        case 'name_desc':
+          return getLuItemName(b).localeCompare(getLuItemName(a))
+        case 'qty_desc':
+          return (b?.quantity || 0) - (a?.quantity || 0)
+        case 'qty_asc':
+          return (a?.quantity || 0) - (b?.quantity || 0)
+        case 'cost_desc':
+          return (getLuItemUnitCost(b) * (b?.quantity || 0)) - (getLuItemUnitCost(a) * (a?.quantity || 0))
+        case 'cost_asc':
+          return (getLuItemUnitCost(a) * (a?.quantity || 0)) - (getLuItemUnitCost(b) * (b?.quantity || 0))
+        default:
+          return 0
+      }
+    })
+
+  const luTotalQuantity = filteredLuItems.reduce((sum: number, it: any) => sum + (Number(it?.quantity) || 0), 0)
+  const luTotalValue = filteredLuItems.reduce((sum: number, it: any) => sum + (getLuItemUnitCost(it) * (Number(it?.quantity) || 0)), 0)
 
   if (loading) {
     return (
@@ -435,26 +509,100 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <TabsContent value="products" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
-              <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-lg md:text-xl">Productos del Inventario (LU)</CardTitle>
+              <CardHeader className="pb-3 md:pb-4">
+                <div className="flex flex-col gap-3 md:gap-4">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <CardTitle className="text-lg md:text-xl">Productos del Inventario (LU)</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        onClick={() => setShowLUImportModal(true)}
+                        disabled={addingItems}
+                        className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                        size="sm"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Agregar del Inventario
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-col md:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar por nombre o SKU..."
+                        value={luSearchTerm}
+                        onChange={(e) => setLuSearchTerm(e.target.value)}
+                        className="pl-9 h-9"
+                      />
+                    </div>
+                    <div className="w-full md:w-56">
+                      <Select value={luSortBy} onValueChange={(v) => setLuSortBy(v as any)}>
+                        <SelectTrigger className="h-9">
+                          <SelectValue placeholder="Ordenar por" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="name_asc">Nombre (A-Z)</SelectItem>
+                          <SelectItem value="name_desc">Nombre (Z-A)</SelectItem>
+                          <SelectItem value="qty_desc">Cantidad (mayor primero)</SelectItem>
+                          <SelectItem value="qty_asc">Cantidad (menor primero)</SelectItem>
+                          <SelectItem value="cost_desc">Valor total (mayor primero)</SelectItem>
+                          <SelectItem value="cost_asc">Valor total (menor primero)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="rounded-md border border-border bg-muted/40 p-2 text-sm">
+                      <div className="text-muted-foreground">Items</div>
+                      <div className="font-semibold">{filteredLuItems.length}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-muted/40 p-2 text-sm">
+                      <div className="text-muted-foreground">Cantidad total</div>
+                      <div className="font-semibold">{luTotalQuantity}</div>
+                    </div>
+                    <div className="rounded-md border border-border bg-muted/40 p-2 text-sm">
+                      <div className="text-muted-foreground">Valor total</div>
+                      <div className="font-semibold">{formatCurrency(luTotalValue)}</div>
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {luItems.length > 0 ? (
-                    luItems.map((item: any) => (
-                      <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{item.inventory?.name || item.product_name || 'Producto'}</h4>
-                          <p className="text-sm text-muted-foreground">Cantidad: {item.quantity}</p>
-                          {item.inventory?.sku && (
-                            <p className="text-xs text-muted-foreground">SKU: {item.inventory.sku}</p>
-                          )}
+                  {filteredLuItems.length > 0 ? (
+                    filteredLuItems.map((item: any, index: number) => (
+                      <div 
+                        key={item.id} 
+                        className="flex items-center justify-between p-4 rounded-lg border border-border bg-card hover:bg-accent/40 transition-colors duration-200"
+                        style={{
+                          animationDelay: `${index * 50}ms`
+                        }}
+                      >
+                        <div className="flex-1">
+                          <h4 className="font-medium text-foreground">{item.inventory?.name || item.product_name || 'Producto'}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className="text-sm text-muted-foreground">
+                              Cantidad: <span className="font-semibold text-green-600">{item.quantity}</span>
+                            </p>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded border border-border">
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
-                          <Badge variant="outline" className="mb-1">LU</Badge>
-                          {item.unit_price && (
+                          <Badge variant="outline" className="mb-1 bg-success-soft border-success-soft text-success-soft">
+                            LU
+                          </Badge>
+                          {item.unit_cost && (
+                            <p className="text-sm font-medium text-foreground">
+                              {formatCurrency((item.unit_cost || 0) * item.quantity)}
+                            </p>
+                          )}
+                          {item.unit_cost && (
                             <p className="text-xs text-muted-foreground">
-                              {formatCurrency(item.unit_price * item.quantity)}
+                              {formatCurrency(item.unit_cost)} × {item.quantity}
                             </p>
                           )}
                         </div>
@@ -469,10 +617,20 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       </p>
                       <Button 
                         onClick={() => setShowLUImportModal(true)}
-                        className="bg-green-600 hover:bg-green-700"
+                        disabled={addingItems}
+                        className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Importar del Inventario
+                        {addingItems ? (
+                          <>
+                            <div className="w-4 h-4 mr-2 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                            Agregando items...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Importar del Inventario
+                          </>
+                        )}
                       </Button>
                     </div>
                   )}
@@ -743,6 +901,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         isOpen={showLUImportModal}
         onClose={() => setShowLUImportModal(false)}
         onImport={handleLUImport}
+        projectId={params.id}
       />
     </div>
   )

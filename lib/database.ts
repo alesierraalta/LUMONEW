@@ -823,6 +823,263 @@ export const analyticsService = {
       return []
     }
   }
+  ,
+  async getFinancialTrends(months: number = 7) {
+    try {
+      const endDate = new Date()
+      const start = new Date(endDate.getFullYear(), endDate.getMonth() - (months - 1), 1)
+
+      const { data: txs, error } = await supabase
+        .from('transactions')
+        .select('id, type, total, created_at, status')
+        .gte('created_at', start.toISOString())
+        .lte('created_at', endDate.toISOString())
+        .in('type', ['sale', 'stock_addition'])
+        .eq('status', 'completed')
+
+      if (error) throw error
+
+      const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      const monthLabel = (d: Date) => d.toLocaleString('en', { month: 'short' })
+
+      const monthsRange: { key: string; date: Date }[] = []
+      for (let i = 0; i < months; i++) {
+        const d = new Date(start.getFullYear(), start.getMonth() + i, 1)
+        monthsRange.push({ key: monthKey(d), date: d })
+      }
+
+      const aggregates: Record<string, { revenue: number; expenses: number }> = {}
+      monthsRange.forEach(({ key }) => (aggregates[key] = { revenue: 0, expenses: 0 }))
+
+      txs?.forEach((t: any) => {
+        const d = new Date(t.created_at)
+        const key = monthKey(d)
+        if (!aggregates[key]) aggregates[key] = { revenue: 0, expenses: 0 }
+        if (t.type === 'sale') aggregates[key].revenue += Number(t.total) || 0
+        if (t.type === 'stock_addition') aggregates[key].expenses += Number(t.total) || 0
+      })
+
+      const result = monthsRange.map(({ key, date }) => {
+        const revenue = Math.round(aggregates[key].revenue)
+        const expenses = Math.round(aggregates[key].expenses)
+        const profit = revenue - expenses
+        const cashFlow = profit
+        const roi = expenses > 0 ? Math.round((profit / expenses) * 1000) / 10 : 0
+        return {
+          month: monthLabel(date),
+          revenue,
+          expenses,
+          profit,
+          cashFlow,
+          roi
+        }
+      })
+
+      return result
+    } catch (error) {
+      console.error('Error calculating financial trends:', error)
+      return []
+    }
+  }
+  ,
+  async getExpenseBreakdown(monthDate?: Date) {
+    try {
+      const now = monthDate ? new Date(monthDate) : new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
+
+      const { data: purchaseItems } = await supabase
+        .from('transaction_items')
+        .select(
+          `product_id, quantity, unit_price, transaction_id,
+           transactions!inner (id, type, created_at)`
+        )
+        .eq('transactions.type', 'stock_addition')
+        .gte('transactions.created_at', monthStart.toISOString())
+        .lte('transactions.created_at', monthEnd.toISOString())
+
+      const productIds = Array.from(
+        new Set((purchaseItems || []).map((i: any) => String(i.product_id)).filter(Boolean))
+      )
+
+      let inventoryIndex: Record<string, { category: string }> = {}
+      if (productIds.length > 0) {
+        const { data: inv } = await supabase
+          .from('inventory')
+          .select('id, categories ( name )')
+          .in('id', productIds)
+
+        inv?.forEach((it: any) => {
+          inventoryIndex[it.id] = { category: it.categories?.name || 'Other' }
+        })
+      }
+
+      const byCategory: Record<string, { amount: number }> = {}
+      purchaseItems?.forEach((it: any) => {
+        const cat = inventoryIndex[it.product_id]?.category || 'Other'
+        const amount = (Number(it.quantity) || 0) * (Number(it.unit_price) || 0)
+        if (!byCategory[cat]) byCategory[cat] = { amount: 0 }
+        byCategory[cat].amount += amount
+      })
+
+      const total = Object.values(byCategory).reduce((s, v) => s + v.amount, 0)
+      const breakdown = Object.entries(byCategory)
+        .map(([category, v], i) => ({
+          category,
+          amount: Math.round(v.amount),
+          percentage: total > 0 ? Math.round((v.amount / total) * 100) : 0,
+          color: ['#ef4444', '#f59e0b', '#3b82f6', '#10b981', '#8b5cf6', '#6366f1', '#22c55e'][i % 7]
+        }))
+        .sort((a, b) => b.amount - a.amount)
+
+      return breakdown
+    } catch (error) {
+      console.error('Error calculating expense breakdown:', error)
+      return []
+    }
+  }
+  ,
+  async getFinancialKpis() {
+    try {
+      const trends = await this.getFinancialTrends(2)
+      const current = trends[trends.length - 1] || { revenue: 0, expenses: 0, profit: 0, cashFlow: 0, roi: 0 }
+      const previous = trends[trends.length - 2] || { revenue: 0, profit: 0 }
+
+      const revenueGrowth = previous.revenue > 0 ? ((current.revenue - previous.revenue) / previous.revenue) * 100 : 0
+      const profitGrowth = previous.profit > 0 ? ((current.profit - previous.profit) / previous.profit) * 100 : 0
+      const grossProfitMargin = current.revenue > 0 ? (current.profit / current.revenue) * 100 : 0
+
+      // Approximate inventory turnover: average of category turnover
+      const turnoverByCategory = await this.getInventoryTurnoverByCategory()
+      const inventoryTurnover = turnoverByCategory.length
+        ? Math.round((turnoverByCategory.reduce((s, c: any) => s + (Number(c.turnover) || 0), 0) / turnoverByCategory.length) * 10) / 10
+        : 0
+
+      return {
+        current,
+        revenueGrowth: Math.round(revenueGrowth * 10) / 10,
+        profitGrowth: Math.round(profitGrowth * 10) / 10,
+        grossProfitMargin: Math.round(grossProfitMargin * 10) / 10,
+        inventoryTurnover,
+        roi: current.roi,
+      }
+    } catch (error) {
+      console.error('Error calculating financial KPIs:', error)
+      return {
+        current: { revenue: 0, expenses: 0, profit: 0, cashFlow: 0, roi: 0 },
+        revenueGrowth: 0,
+        profitGrowth: 0,
+        grossProfitMargin: 0,
+        inventoryTurnover: 0,
+        roi: 0
+      }
+    }
+  }
+  ,
+  async getLocationPerformance() {
+    try {
+      // Fetch base entities
+      const [{ data: locations }, { data: inventoryData }, { data: saleItems }] = await Promise.all([
+        supabase.from('locations').select('id, name'),
+        supabase
+          .from('inventory')
+          .select('id, location_id, quantity, min_stock, max_stock, unit_price')
+          .eq('status', 'active'),
+        supabase
+          .from('transaction_items')
+          .select(
+            `id, product_id, quantity, unit_price, transaction_id,
+             transactions!inner (id, type, created_at)`
+          )
+          .eq('transactions.type', 'sale')
+      ])
+
+      const locationIndex: Record<string, { id: string; name: string }> = {}
+      locations?.forEach((loc: any) => {
+        locationIndex[loc.id] = { id: loc.id, name: loc.name }
+      })
+
+      const inventoryById: Record<string, any> = {}
+      const perLocation: Record<
+        string,
+        {
+          id: string
+          name: string
+          revenue: number
+          ordersSet: Set<string>
+          totalSold: number
+          quantitySum: number
+          maxStockSum: number
+        }
+      > = {}
+
+      inventoryData?.forEach((inv: any) => {
+        inventoryById[inv.id] = inv
+        if (!perLocation[inv.location_id]) {
+          const locName = locationIndex[inv.location_id]?.name || 'Unknown'
+          perLocation[inv.location_id] = {
+            id: inv.location_id,
+            name: locName,
+            revenue: 0,
+            ordersSet: new Set<string>(),
+            totalSold: 0,
+            quantitySum: 0,
+            maxStockSum: 0
+          }
+        }
+        perLocation[inv.location_id].quantitySum += Number(inv.quantity) || 0
+        perLocation[inv.location_id].maxStockSum += Number(inv.max_stock) || 0
+      })
+
+      saleItems?.forEach((item: any) => {
+        const inv = inventoryById[item.product_id]
+        if (!inv) return
+        const locId = inv.location_id
+        if (!perLocation[locId]) {
+          const locName = locationIndex[locId]?.name || 'Unknown'
+          perLocation[locId] = {
+            id: locId,
+            name: locName,
+            revenue: 0,
+            ordersSet: new Set<string>(),
+            totalSold: 0,
+            quantitySum: 0,
+            maxStockSum: 0
+          }
+        }
+        perLocation[locId].revenue += (Number(item.quantity) || 0) * (Number(item.unit_price) || 0)
+        if (item.transaction_id) perLocation[locId].ordersSet.add(String(item.transaction_id))
+        perLocation[locId].totalSold += Number(item.quantity) || 0
+      })
+
+      const results = Object.values(perLocation).map((loc) => {
+        const stockLevel = loc.maxStockSum > 0 ? Math.round((loc.quantitySum / loc.maxStockSum) * 100) : null
+        const efficiencyBase = loc.quantitySum > 0 ? (loc.totalSold / loc.quantitySum) * 100 : loc.totalSold > 0 ? 100 : 0
+        const efficiency = Math.max(0, Math.min(100, Math.round(efficiencyBase)))
+        const utilization = stockLevel ?? 0
+        return {
+          location: loc.name,
+          revenue: Math.round(loc.revenue),
+          orders: loc.ordersSet.size,
+          efficiency,
+          stockLevel: stockLevel ?? 0,
+          utilization,
+          // Fields not directly tracked; set to null to allow UI to hide or show placeholders
+          staffCount: null as number | null,
+          avgProcessingTime: null as number | null,
+          accuracy: null as number | null
+        }
+      })
+
+      // Sort by revenue desc for a consistent view
+      results.sort((a, b) => b.revenue - a.revenue)
+
+      return results
+    } catch (error) {
+      console.error('Error calculating location performance:', error)
+      return []
+    }
+  }
 }
 
 // Transaction operations
@@ -1214,7 +1471,7 @@ export const projectService = {
 
     // Check if this item already exists in the project (by SKU)
     const existingItems = await projectItemService.getAll(projectId)
-    const existingItem = existingItems.find(item => 
+    const existingItem = existingItems.find((item: any) => 
       item.product_type === 'LU' && 
       item.description === `SKU: ${inventoryItem.sku}`
     )

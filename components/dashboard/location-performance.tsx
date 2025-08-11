@@ -1,92 +1,136 @@
 'use client'
 
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
-import { MapPin, TrendingUp, Users, Package2, AlertTriangle } from 'lucide-react'
+import { MapPin, TrendingUp, Package2, AlertTriangle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { analyticsService } from '@/lib/database'
 
-// Mock data for location performance
-const locationData = [
-  {
-    location: 'Main Warehouse',
-    revenue: 125000,
-    orders: 450,
-    efficiency: 92,
-    stockLevel: 85,
-    staffCount: 12,
-    avgProcessingTime: 2.3,
-    accuracy: 98.5,
-    utilization: 88
-  },
-  {
-    location: 'North Branch',
-    revenue: 89000,
-    orders: 320,
-    efficiency: 87,
-    stockLevel: 78,
-    staffCount: 8,
-    avgProcessingTime: 2.8,
-    accuracy: 96.2,
-    utilization: 82
-  },
-  {
-    location: 'South Branch',
-    revenue: 76000,
-    orders: 280,
-    efficiency: 84,
-    stockLevel: 72,
-    staffCount: 7,
-    avgProcessingTime: 3.1,
-    accuracy: 94.8,
-    utilization: 79
-  },
-  {
-    location: 'East Branch',
-    revenue: 95000,
-    orders: 340,
-    efficiency: 89,
-    stockLevel: 81,
-    staffCount: 9,
-    avgProcessingTime: 2.6,
-    accuracy: 97.1,
-    utilization: 85
-  },
-  {
-    location: 'West Branch',
-    revenue: 68000,
-    orders: 240,
-    efficiency: 81,
-    stockLevel: 69,
-    staffCount: 6,
-    avgProcessingTime: 3.4,
-    accuracy: 93.5,
-    utilization: 76
-  }
-]
+interface LocationMetricRow {
+  location: string
+  revenue: number
+  orders: number
+  efficiency: number
+  stockLevel: number
+  utilization: number
+  staffCount: number | null
+  avgProcessingTime: number | null
+  accuracy: number | null
+}
 
-// Performance radar data for top location
-const radarData = [
-  { subject: 'Efficiency', A: 92, fullMark: 100 },
-  { subject: 'Accuracy', A: 98.5, fullMark: 100 },
-  { subject: 'Utilization', A: 88, fullMark: 100 },
-  { subject: 'Stock Level', A: 85, fullMark: 100 },
-  { subject: 'Processing Speed', A: 87, fullMark: 100 },
-  { subject: 'Staff Productivity', A: 90, fullMark: 100 }
-]
+type AlertType = 'info' | 'warning' | 'alert'
 
-// Location alerts
-const locationAlerts = [
-  { location: 'South Branch', type: 'warning', message: 'Stock level below 75%', priority: 'medium' },
-  { location: 'West Branch', type: 'alert', message: 'Processing time above target', priority: 'high' },
-  { location: 'North Branch', type: 'info', message: 'Efficiency improvement opportunity', priority: 'low' }
-]
+interface LocationAlert {
+  location: string
+  type: AlertType
+  message: string
+  priority: 'low' | 'medium' | 'high'
+}
 
 export function LocationPerformance() {
-  const totalRevenue = locationData.reduce((sum, loc) => sum + loc.revenue, 0)
-  const avgEfficiency = locationData.reduce((sum, loc) => sum + loc.efficiency, 0) / locationData.length
-  const topLocation = locationData.reduce((prev, current) => 
-    (prev.efficiency > current.efficiency) ? prev : current
-  )
+  const [data, setData] = useState<LocationMetricRow[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function load() {
+      try {
+        setLoading(true)
+        const results = await analyticsService.getLocationPerformance()
+        setData(results as LocationMetricRow[])
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load location performance')
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
+  }, [])
+
+  const totalRevenue = useMemo(() => data.reduce((sum, loc) => sum + (loc.revenue || 0), 0), [data])
+  const avgEfficiency = useMemo(() => data.length ? data.reduce((sum, loc) => sum + (loc.efficiency || 0), 0) / data.length : 0, [data])
+  const topLocation = useMemo(() => {
+    if (!data.length) return null
+    return data.reduce((prev, current) => (prev.efficiency > current.efficiency) ? prev : current)
+  }, [data])
+
+  const radarData = useMemo(() => {
+    if (!topLocation) return []
+    return [
+      { subject: 'Efficiency', A: topLocation.efficiency ?? 0, fullMark: 100 },
+      { subject: 'Utilization', A: topLocation.utilization ?? 0, fullMark: 100 },
+      { subject: 'Stock Level', A: topLocation.stockLevel ?? 0, fullMark: 100 },
+      { subject: 'Accuracy', A: topLocation.accuracy ?? 0, fullMark: 100 },
+      { subject: 'Processing Speed', A: topLocation.avgProcessingTime ? Math.max(0, Math.min(100, Math.round(100 - topLocation.avgProcessingTime * 10))) : 0, fullMark: 100 },
+      { subject: 'Staff Productivity', A: topLocation.staffCount ? Math.min(100, topLocation.efficiency) : Math.round(topLocation.efficiency * 0.9), fullMark: 100 }
+    ]
+  }, [topLocation])
+
+  const locationAlerts: LocationAlert[] = useMemo(() => {
+    const alerts: LocationAlert[] = []
+    data.forEach((loc) => {
+      if (typeof loc.stockLevel === 'number' && loc.stockLevel < 30) {
+        alerts.push({ location: loc.location, type: 'alert', message: 'Nivel de stock crítico (<30%)', priority: 'high' })
+      } else if (typeof loc.stockLevel === 'number' && loc.stockLevel < 60) {
+        alerts.push({ location: loc.location, type: 'warning', message: 'Nivel de stock bajo (<60%)', priority: 'medium' })
+      }
+      if (typeof loc.efficiency === 'number' && loc.efficiency < 50) {
+        alerts.push({ location: loc.location, type: 'warning', message: 'Baja eficiencia', priority: 'medium' })
+      }
+      if ((loc.orders || 0) === 0 && (loc.revenue || 0) === 0 && (loc.utilization || 0) === 0) {
+        alerts.push({ location: loc.location, type: 'info', message: 'Ubicación sin actividad reciente', priority: 'low' })
+      }
+    })
+    return alerts.slice(0, 5)
+  }, [data])
+
+  if (loading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-6 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>Error al cargar</CardTitle>
+            <CardDescription>{error}</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!data.length) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MapPin className="h-5 w-5" />
+              Ubicaciones
+            </CardTitle>
+            <CardDescription>No hay datos de ubicaciones para mostrar</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -117,14 +161,14 @@ export function LocationPerformance() {
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-lg">
               <div className="text-2xl font-bold text-purple-600">
-                {locationData.length}
+                {data.length}
               </div>
               <div className="text-sm text-muted-foreground">Active Locations</div>
             </div>
           </div>
 
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={locationData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+            <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="location" 
@@ -156,7 +200,7 @@ export function LocationPerformance() {
                           </div>
                           <div className="flex flex-col">
                             <span className="text-xs text-muted-foreground">Staff</span>
-                            <span className="font-medium">{data.staffCount}</span>
+                            <span className="font-medium">{data.staffCount ?? '-'}</span>
                           </div>
                         </div>
                       </div>
@@ -179,12 +223,12 @@ export function LocationPerformance() {
             Top Performer
           </CardTitle>
           <CardDescription>
-            {topLocation.location} performance metrics
+            {topLocation?.location} performance metrics
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4 p-3 bg-green-50 rounded-lg text-center">
-            <div className="text-lg font-bold text-green-600">{topLocation.efficiency}%</div>
+            <div className="text-lg font-bold text-green-600">{topLocation?.efficiency}%</div>
             <div className="text-sm text-muted-foreground">Overall Efficiency</div>
           </div>
 
@@ -281,7 +325,7 @@ export function LocationPerformance() {
                 </tr>
               </thead>
               <tbody>
-                {locationData.map((location, index) => (
+                {data.map((location, index) => (
                   <tr key={index} className="border-b hover:bg-muted/50">
                     <td className="p-2 font-medium">{location.location}</td>
                     <td className="p-2 text-right">${(location.revenue / 1000).toFixed(0)}K</td>
@@ -296,8 +340,8 @@ export function LocationPerformance() {
                         {location.stockLevel}%
                       </Badge>
                     </td>
-                    <td className="p-2 text-right">{location.avgProcessingTime}h</td>
-                    <td className="p-2 text-right">{location.accuracy}%</td>
+                    <td className="p-2 text-right">{location.avgProcessingTime != null ? `${location.avgProcessingTime}h` : '-'}</td>
+                    <td className="p-2 text-right">{location.accuracy != null ? `${location.accuracy}%` : '-'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -252,7 +252,7 @@ export const impTasksService = {
     const supabase = createClient()
     
     // Get all tasks for this workflow item to determine the next status
-    const tasks = await this.getTasksByWorkflowItem(workflowItemId)
+    const tasks = await this.getAll(workflowItemId)
     
     // Define the workflow step order for IMP
     const stepOrder = [

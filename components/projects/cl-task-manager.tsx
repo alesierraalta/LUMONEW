@@ -75,6 +75,7 @@ interface CLTaskManagerProps {
 
 export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTaskManagerProps) {
   const [tasks, setTasks] = useState<CLTask[]>([])
+  const [loading, setLoading] = useState(true)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState<CLTask | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
@@ -171,10 +172,10 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
 
   // Task status columns for Kanban view
   const taskColumns = [
-    { key: 'pending', label: 'Pendiente', color: 'bg-gray-100 dark:bg-gray-800', count: 0 },
-    { key: 'in_progress', label: 'En Progreso', color: 'bg-blue-100 dark:bg-blue-900/30', count: 0 },
-    { key: 'blocked', label: 'Bloqueado', color: 'bg-red-100 dark:bg-red-900/30', count: 0 },
-    { key: 'completed', label: 'Completado', color: 'bg-green-100 dark:bg-green-900/30', count: 0 }
+    { key: 'pending', label: 'Pendiente', color: 'bg-gray-100 dark:bg-gray-800' },
+    { key: 'in_progress', label: 'En Progreso', color: 'bg-blue-100 dark:bg-blue-900/30' },
+    { key: 'blocked', label: 'Bloqueado', color: 'bg-red-100 dark:bg-red-900/30' },
+    { key: 'completed', label: 'Completado', color: 'bg-green-100 dark:bg-green-900/30' }
   ]
 
   useEffect(() => {
@@ -274,6 +275,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
 
   const loadTasks = async () => {
     try {
+      setLoading(true)
       const response = await fetch(`/api/cl-tasks?workflowItemId=${item.id}`)
       const data = await response.json()
       
@@ -307,33 +309,14 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       console.error('Error loading tasks:', error)
       // Fall back to empty array if API fails
       setTasks([])
+    } finally {
+      setLoading(false)
     }
   }
 
-  // Filter tasks based on search and filters
-  const filteredTasks = tasks.filter(task => {
-    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         task.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === 'all' || task.status === filterStatus
-    const matchesPriority = filterPriority === 'all' || task.priority === filterPriority
-    const matchesAssignee = filterAssignee === 'all' || task.assignedTo === filterAssignee
-    
-    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee
-  })
 
-  // Calculate metrics
-  const metrics = {
-    total: tasks.length,
-    completed: tasks.filter(t => t.status === 'completed').length,
-    inProgress: tasks.filter(t => t.status === 'in_progress').length,
-    overdue: tasks.filter(t => t.dueDate && t.dueDate < new Date() && t.status !== 'completed').length,
-    blocked: tasks.filter(t => t.status === 'blocked').length
-  }
 
-  // Update column counts
-  taskColumns.forEach(column => {
-    column.count = filteredTasks.filter(task => task.status === column.key).length
-  })
+
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -678,7 +661,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
 
   // Droppable Column Component
   const DroppableColumn = ({ column, tasks }: { 
-    column: { key: string; label: string; color: string; count: number }; 
+    column: { key: string; label: string; color: string }; 
     tasks: CLTask[] 
   }) => {
     const { setNodeRef, isOver } = useDroppable({
@@ -696,7 +679,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-medium">{column.label}</CardTitle>
             <Badge variant="secondary" className="text-xs">
-              {column.count}
+              {tasks.length}
             </Badge>
           </div>
         </CardHeader>
@@ -1198,6 +1181,74 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
     )
   }
 
+  // All hooks must be called before any early returns
+  // Filter tasks based on search and filters
+  const filteredTasks = tasks.filter(task => {
+    const matchesSearch = task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         task.description.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = filterStatus === 'all' || task.status === filterStatus
+    const matchesPriority = filterPriority === 'all' || task.priority === filterPriority
+    const matchesAssignee = filterAssignee === 'all' || task.assignedTo === filterAssignee
+    
+    return matchesSearch && matchesStatus && matchesPriority && matchesAssignee
+  })
+
+  // Calculate metrics
+  const metrics = {
+    total: tasks.length,
+    pending: tasks.filter(t => t.status === 'pending').length,
+    inProgress: tasks.filter(t => t.status === 'in_progress').length,
+    completed: tasks.filter(t => t.status === 'completed').length,
+    blocked: tasks.filter(t => t.status === 'blocked').length,
+    overdue: tasks.filter(t => t.dueDate && t.dueDate < new Date() && t.status !== 'completed').length
+  }
+
+  // Memoized computations
+  const progressTasks = useMemo(() => {
+    if (workflowProgress) {
+      return generateIndividualTaskProgressBar(workflowProgress)
+    }
+    return []
+  }, [workflowProgress])
+
+  const workflowSteps = useMemo(() => {
+    return workflowConfig.statuses || []
+  }, [workflowConfig.statuses])
+
+  // Show loading state to prevent flickering
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <Card className="bg-card dark:bg-card border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl text-blue-700 dark:text-blue-300">
+                    Workflow CL - {item.productName}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">Cargando tareas...</p>
+                </div>
+              </div>
+              <div className="w-8 h-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-12 h-12 mx-auto mb-4 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <p className="text-muted-foreground">Cargando workflow CL...</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       {/* Enhanced Dashboard Header */}
@@ -1262,59 +1313,56 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
               )}
             </div>
             <div className="flex items-center gap-1 flex-wrap">
-              {useMemo(() => {
-                if (workflowProgress) {
-                  const progressTasks = generateIndividualTaskProgressBar(workflowProgress)
-                  return progressTasks.map((task, index) => {
-                    const taskColor = getStepColor(task.status, 'CL')
-                    const isTaskCompleted = task.status === 'completed'
-                    
-                    return (
-                      <div key={task.id} className="flex items-center">
-                        <div
-                          className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${taskColor}`}
-                          title={`${task.title} (${task.stepLabel}) - ${task.status === 'completed' ? 'Completada' : task.status === 'current' ? 'En progreso' : 'Pendiente'}`}
-                        >
-                          {index + 1}
-                        </div>
-                        {index < progressTasks.length - 1 && (
-                          <div
-                            className={`w-2 h-0.5 mx-0.5 ${getConnectionColor(isTaskCompleted)}`}
-                          />
-                        )}
+              {progressTasks.length > 0 ? (
+                progressTasks.map((task, index) => {
+                  const taskColor = getStepColor(task.status, 'CL')
+                  const isTaskCompleted = task.status === 'completed'
+                  
+                  return (
+                    <div key={task.id} className="flex items-center">
+                      <div
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${taskColor}`}
+                        title={`${task.title} (${task.stepLabel}) - ${task.status === 'completed' ? 'Completada' : task.status === 'current' ? 'En progreso' : 'Pendiente'}`}
+                      >
+                        {index + 1}
                       </div>
-                    )
-                  })
-                } else {
-                  return workflowConfig.statuses.map((status, index) => {
-                    const isCurrent = status.key === item.currentStatus
-                    const isCompleted = workflowConfig.statuses.findIndex(s => s.key === item.currentStatus) > index
-                    
-                    return (
-                      <div key={status.key} className="flex items-center">
+                      {index < progressTasks.length - 1 && (
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
-                            isCurrent
-                              ? 'bg-blue-600 text-white'
-                              : isCompleted
-                              ? 'bg-green-600 text-white'
-                              : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                          className={`w-2 h-0.5 mx-0.5 ${getConnectionColor(isTaskCompleted)}`}
+                        />
+                      )}
+                    </div>
+                  )
+                })
+              ) : (
+                workflowSteps.map((status, index) => {
+                  const isCurrent = status.key === item.currentStatus
+                  const isCompleted = workflowSteps.findIndex(s => s.key === item.currentStatus) > index
+                  
+                  return (
+                    <div key={status.key} className="flex items-center">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
+                          isCurrent
+                            ? 'bg-blue-600 text-white'
+                            : isCompleted
+                            ? 'bg-green-600 text-white'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                        }`}
+                      >
+                        {index + 1}
+                      </div>
+                      {index < workflowSteps.length - 1 && (
+                        <div
+                          className={`w-12 h-1 mx-1 ${
+                            isCompleted ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
                           }`}
-                        >
-                          {index + 1}
-                        </div>
-                        {index < workflowConfig.statuses.length - 1 && (
-                          <div
-                            className={`w-12 h-1 mx-1 ${
-                              isCompleted ? 'bg-green-600' : 'bg-gray-200 dark:bg-gray-700'
-                            }`}
-                          />
-                        )}
-                      </div>
-                    )
-                  })
-                }
-              }, [workflowProgress, item.currentStatus])}
+                        />
+                      )}
+                    </div>
+                  )
+                })
+              )}
             </div>
           </div>
         </CardHeader>

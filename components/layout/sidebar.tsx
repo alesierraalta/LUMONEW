@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback, memo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, Package as PackageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NavigationItem, createNavigationConfig, getNavigationIcons } from '@/lib/navigation-config'
@@ -207,12 +207,12 @@ export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
         "flex items-center space-x-2 transition-all duration-200",
         collapsed && "justify-center"
       )}>
-        <div className="h-8 w-8 text-primary flex items-center justify-center">
-          📦
+        <div className="h-8 w-8 flex items-center justify-center">
+          <PackageIcon className="h-6 w-6 text-primary" />
         </div>
         {!collapsed && (
           <span className="text-xl font-bold text-foreground transition-opacity duration-200">
-            LUMO2
+            LUMO
           </span>
         )}
       </div>

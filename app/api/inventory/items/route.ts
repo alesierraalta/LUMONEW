@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     
     // Filter items with stock > 0 if requested
     const filteredItems = withStock 
-      ? items.filter(item => item.quantity > 0)
+      ? items.filter((item: any) => item.quantity > 0)
       : items
     
     return NextResponse.json(filteredItems)
