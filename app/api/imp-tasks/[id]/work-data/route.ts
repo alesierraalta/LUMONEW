@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { impTasksService } from '@/lib/imp-tasks-service'
 
+// POST /api/imp-tasks/[id]/work-data
 export async function POST(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -64,3 +65,5 @@ export async function POST(
     )
   }
 }
+
+// (duplicate POST removed)

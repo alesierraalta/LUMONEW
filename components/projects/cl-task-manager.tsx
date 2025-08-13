@@ -437,6 +437,31 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
     }
   }
 
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const confirmed = typeof window !== 'undefined' ? window.confirm('¿Eliminar esta tarea?') : true
+      if (!confirmed) return
+
+      const response = await fetch(`/api/cl-tasks/${taskId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || 'Failed to delete task')
+      }
+
+      await loadTasks()
+      const progress = await calculateWorkflowProgress(item)
+      setWorkflowProgress(progress)
+    } catch (error) {
+      console.error('Error deleting CL task:', error)
+      if (typeof window !== 'undefined') {
+        window.alert('No se pudo eliminar la tarea.')
+      }
+    }
+  }
+
   // Estados para panel lateral de trabajo
   const [workPanelOpen, setWorkPanelOpen] = useState(false)
   const [selectedTaskForWork, setSelectedTaskForWork] = useState<CLTask | null>(null)
@@ -635,6 +660,16 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                   <span className="sm:hidden">▶</span>
                 </Button>
               )}
+              <Button
+                size="sm"
+                variant="outline"
+                className="text-xs px-3 py-2 min-h-[36px] flex-1 sm:flex-none text-red-600 border-red-300 hover:bg-red-50"
+                onClick={() => handleTaskDelete(task.id)}
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                <span className="hidden sm:inline">Eliminar</span>
+                <span className="sm:hidden">🗑</span>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -1280,30 +1315,30 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <Badge variant="outline" className="bg-card dark:bg-card border-blue-200 dark:border-blue-700">
-                <FileText className="w-3 h-3 mr-1" />
-                {item.productType}
-              </Badge>
-              {!readonly && (
-                <div className="flex gap-2">
-                  {tasks.length === 0 && (
-                    <Button
-                      onClick={createWorkflowTasks}
-                      className="bg-green-600 hover:bg-green-700 shadow-lg"
-                    >
-                      <ArrowRight className="w-4 h-4 mr-2" />
-                      Crear Tareas del Workflow
-                    </Button>
-                  )}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Badge variant="outline" className="bg-card dark:bg-card border-blue-200 dark:border-blue-700">
+                  <FileText className="w-3 h-3 mr-1" />
+                  {item.productType}
+                </Badge>
+                {!readonly && tasks.length === 0 && (
                   <Button
-                    onClick={() => setShowTaskModal(true)}
-                    className="bg-blue-600 hover:bg-blue-700 shadow-lg"
+                    onClick={createWorkflowTasks}
+                    className="bg-green-600 hover:bg-green-700 shadow-lg"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nueva Tarea
+                    <ArrowRight className="w-4 h-4 mr-2" />
+                    Crear Tareas del Workflow
                   </Button>
-                </div>
+                )}
+              </div>
+              {!readonly && (
+                <Button
+                  onClick={() => setShowTaskModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 shadow-lg"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nueva Tarea
+                </Button>
               )}
             </div>
           </div>

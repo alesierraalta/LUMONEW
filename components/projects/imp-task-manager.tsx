@@ -131,31 +131,13 @@ export function IMPTaskManager({ item, onStatusUpdate, readonly = false }: IMPTa
       priority: 'high' as const
     },
     {
-      stepKey: 'decision_tipo_envio',
-      title: 'Decisión: ¿aéreo o marítimo?',
-      description: 'Determinar el tipo de envío más conveniente según el producto',
-      priority: 'high' as const
-    },
-    {
-      stepKey: 'pagar_flete_aereo',
-      title: 'Pagar flete aéreo',
-      description: 'Procesar el pago del flete aéreo (si se eligió envío aéreo)',
+      stepKey: 'coordinar_envio',
+      title: 'Coordinar envío (aéreo o marítimo)',
+      description: 'Decidir modalidad y coordinar el envío',
       priority: 'medium' as const
     },
     {
-      stepKey: 'pagar_flete_maritimo_vzla',
-      title: 'Pagar flete mercancía Vzla',
-      description: 'Procesar el pago del flete marítimo a Venezuela',
-      priority: 'medium' as const
-    },
-    {
-      stepKey: 'coordinar_envio_maritimo',
-      title: 'Coordinar envío marítimo',
-      description: 'Coordinar los detalles del envío marítimo con la naviera',
-      priority: 'medium' as const
-    },
-    {
-      stepKey: 'pagar_arancel_aduana',
+      stepKey: 'pagar_arancel_aduanas',
       title: 'Pagar arancel aduana',
       description: 'Procesar el pago de aranceles y tasas aduanales',
       priority: 'high' as const
@@ -461,6 +443,31 @@ export function IMPTaskManager({ item, onStatusUpdate, readonly = false }: IMPTa
     }
   }
 
+  const handleTaskDelete = async (taskId: string) => {
+    try {
+      const confirmed = typeof window !== 'undefined' ? window.confirm('¿Eliminar esta tarea?') : true
+      if (!confirmed) return
+
+      const response = await fetch(`/api/imp-tasks/${taskId}`, {
+        method: 'DELETE'
+      })
+
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || 'Failed to delete task')
+      }
+
+      await loadTasks()
+      const progress = await calculateWorkflowProgress(item)
+      setWorkflowProgress(progress)
+    } catch (error) {
+      console.error('Error deleting IMP task:', error)
+      if (typeof window !== 'undefined') {
+        window.alert('No se pudo eliminar la tarea.')
+      }
+    }
+  }
+
   // Drag & Drop handlers
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event
@@ -665,6 +672,16 @@ export function IMPTaskManager({ item, onStatusUpdate, readonly = false }: IMPTa
               <span className="sm:hidden">▶</span>
             </Button>
           )}
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-xs px-3 py-2 min-h-[36px] flex-1 sm:flex-none text-red-600 border-red-300 hover:bg-red-50"
+            onClick={() => handleTaskDelete(task.id)}
+          >
+            <Trash2 className="w-3 h-3 mr-1" />
+            <span className="hidden sm:inline">Eliminar</span>
+            <span className="sm:hidden">🗑</span>
+          </Button>
         </div>
 
       </CardContent>

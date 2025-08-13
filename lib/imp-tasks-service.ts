@@ -254,12 +254,13 @@ export const impTasksService = {
     // Get all tasks for this workflow item to determine the next status
     const tasks = await this.getAll(workflowItemId)
     
-    // Define the workflow step order for IMP
+    // Define the workflow step order for IMP (según contexto)
+    // 1 Pagar PI -> 2 Enviar etiqueta -> 3 Coordinar envío (aéreo/marítimo) -> 4 Pagar arancel -> 5 Recibido
     const stepOrder = [
       'pagar_pi_proveedor',
       'enviar_etiqueta_envio',
-      'pagar_arancel_aduanas',
       'coordinar_envio',
+      'pagar_arancel_aduanas',
       'recibido'
     ]
     

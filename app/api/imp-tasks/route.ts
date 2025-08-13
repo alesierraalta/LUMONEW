@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { impTasksService, CreateIMPTaskData } from '@/lib/imp-tasks-service'
+import { getServiceRoleClient } from '@/lib/supabase/service-role'
 
+// GET /api/imp-tasks?workflowItemId=xxx
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -29,6 +31,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// POST /api/imp-tasks
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -53,17 +56,73 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Map provided IDs to auth.users.id to satisfy FK constraints
+    const supabaseAdmin = getServiceRoleClient()
+
+    // Resolve creator to an auth user id
+    let createdByAuthId: string | null = createdBy
+    try {
+      const { data: creatorLookup } = await supabaseAdmin.auth.admin.getUserById(createdBy)
+      if (!creatorLookup?.user) {
+        // Treat provided createdBy as public.users.id and map to auth_user_id
+        const { data: publicUser } = await supabaseAdmin
+          .from('users')
+          .select('auth_user_id')
+          .eq('id', createdBy)
+          .single()
+        if (publicUser?.auth_user_id) {
+          createdByAuthId = publicUser.auth_user_id as string
+        } else {
+          // Fallback to first auth user
+          const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
+          createdByAuthId = authUsers?.users?.[0]?.id || null
+        }
+      }
+    } catch {
+      const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
+      createdByAuthId = authUsers?.users?.[0]?.id || null
+    }
+
+    if (!createdByAuthId) {
+      return NextResponse.json(
+        { success: false, error: 'No valid creator could be resolved' },
+        { status: 400 }
+      )
+    }
+
+    // Resolve assignedTo to an auth user id if provided
+    let assignedToAuthId: string | undefined = assignedTo
+    if (assignedToAuthId) {
+      try {
+        const { data: assignedLookup } = await supabaseAdmin.auth.admin.getUserById(assignedToAuthId)
+        if (!assignedLookup?.user) {
+          const { data: publicAssignee } = await supabaseAdmin
+            .from('users')
+            .select('auth_user_id')
+            .eq('id', assignedToAuthId)
+            .single()
+          if (publicAssignee?.auth_user_id) {
+            assignedToAuthId = publicAssignee.auth_user_id as string
+          } else {
+            assignedToAuthId = undefined
+          }
+        }
+      } catch {
+        assignedToAuthId = undefined
+      }
+    }
+
     const taskData: CreateIMPTaskData = {
       workflowItemId,
       stepKey,
       title,
       description,
-      assignedTo,
+      assignedTo: assignedToAuthId,
       assignedToName,
       dueDate,
       priority,
       shippingType,
-      createdBy
+      createdBy: createdByAuthId
     }
 
     const task = await impTasksService.create(taskData)

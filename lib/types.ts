@@ -1211,6 +1211,15 @@ export const WORKFLOW_CONFIGS: Record<ProductType, WorkflowConfig> = {
         allowedNextStatuses: ['pagar_arancel_aduanas']
       },
       {
+        key: 'coordinar_envio',
+        label: 'Coordinar Envío',
+        description: 'Coordinar la entrega (aéreo o marítimo)',
+        color: '#06b6d4',
+        icon: 'MapPin',
+        isCompleted: false,
+        allowedNextStatuses: ['pagar_arancel_aduanas']
+      },
+      {
         key: 'pagar_arancel_aduanas',
         label: 'Pagar Arancel Aduanas',
         description: 'Pagar aranceles aduaneros',
@@ -1218,15 +1227,6 @@ export const WORKFLOW_CONFIGS: Record<ProductType, WorkflowConfig> = {
         icon: 'Building',
         isCompleted: false,
         requiredFields: ['customsDutyAmount'],
-        allowedNextStatuses: ['coordinar_envio']
-      },
-      {
-        key: 'coordinar_envio',
-        label: 'Coordinar Envío',
-        description: 'Coordinar la entrega final',
-        color: '#06b6d4',
-        icon: 'MapPin',
-        isCompleted: false,
         allowedNextStatuses: ['recibido']
       },
       {

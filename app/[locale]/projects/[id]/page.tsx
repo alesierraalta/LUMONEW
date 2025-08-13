@@ -202,6 +202,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   async function handleLUDelete(itemId: string) {
     try {
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm('¿Seguro que deseas eliminar este item de inventario?')
+      if (!confirmed) return
+    }
       const response = await fetch(`/api/projects/items?id=${encodeURIComponent(itemId)}`, { method: 'DELETE' })
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
@@ -218,7 +222,11 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     try {
       const newQty = Math.max(0, Number(currentQty || 0) - 1)
       if (newQty === 0) {
-        await handleLUDelete(itemId)
+      if (typeof window !== 'undefined') {
+        const confirmed = window.confirm('La cantidad quedará en 0. ¿Eliminar el item?')
+        if (!confirmed) return
+      }
+      await handleLUDelete(itemId)
         return
       }
       const response = await fetch('/api/projects/items', {
@@ -239,6 +247,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   async function handleWorkflowDelete(itemId: string) {
     try {
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm('¿Seguro que deseas eliminar este workflow?')
+      if (!confirmed) return
+    }
       const response = await fetch(`/api/projects/workflow-items?id=${encodeURIComponent(itemId)}`, { method: 'DELETE' })
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
@@ -253,6 +265,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
   async function handleWorkflowDecrement(wf: any) {
     try {
+    if (typeof window !== 'undefined') {
+      const confirmed = window.confirm('¿Restar cantidad del workflow?')
+      if (!confirmed) return
+    }
       const currentQty = Number(wf?.step_data?.quantity || 0)
       const newQty = Math.max(0, currentQty - 1)
       const newStepData = { ...(wf?.step_data || {}), quantity: newQty }
