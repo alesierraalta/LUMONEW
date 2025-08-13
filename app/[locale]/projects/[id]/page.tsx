@@ -323,6 +323,38 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     }
   }
 
+  async function handleCompleteProject() {
+    if (!project) return
+    try {
+      if (typeof window !== 'undefined') {
+        const confirmed = window.confirm('¿Marcar el proyecto como completado?')
+        if (!confirmed) return
+      }
+      const response = await fetch('/api/projects', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: project.id,
+          status: 'completed',
+          actualEndDate: new Date().toISOString()
+        })
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Failed to complete project')
+      }
+      await fetchProjectDetails()
+      if (typeof window !== 'undefined') {
+        window.alert('Proyecto marcado como completado.')
+      }
+    } catch (error) {
+      console.error('Error completing project:', error)
+      if (typeof window !== 'undefined') {
+        window.alert('No se pudo completar el proyecto.')
+      }
+    }
+  }
+
   const handleIMPStart = async (data: any) => {
     if (!project) return
 
@@ -948,7 +980,21 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           <TabsContent value="analytics" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
               <CardHeader className="pb-3 md:pb-6">
-                <CardTitle className="text-lg md:text-xl">Estadísticas del Proyecto</CardTitle>
+                <div className="flex items-center justify-between gap-3">
+                  <CardTitle className="text-lg md:text-xl">Estadísticas del Proyecto</CardTitle>
+                  {project.status !== 'completed' ? (
+                    <Button
+                      size="sm"
+                      className="bg-green-600 hover:bg-green-700"
+                      onClick={handleCompleteProject}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Terminar proyecto
+                    </Button>
+                  ) : (
+                    <Badge className="bg-green-600 text-white text-xs">Proyecto completado</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

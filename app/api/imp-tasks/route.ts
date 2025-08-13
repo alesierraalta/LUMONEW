@@ -15,6 +15,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // Fast path: tasks list without heavy relations
     const tasks = await impTasksService.getAll(workflowItemId)
 
     return NextResponse.json({

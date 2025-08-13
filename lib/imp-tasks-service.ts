@@ -65,11 +65,9 @@ export const impTasksService = {
 
     const { data: tasks, error } = await supabase
       .from('imp_tasks')
-      .select(`
-        *,
-        notes:imp_task_notes(*),
-        attachments:imp_task_attachments(*)
-      `)
+      .select(
+        `id, workflow_item_id, step_key, title, description, assigned_to, assigned_to_name, due_date, priority, status, shipping_type, completed_at, created_at, updated_at, created_by, updated_by`
+      )
       .eq('workflow_item_id', workflowItemId)
       .order('created_at', { ascending: true })
 
@@ -94,8 +92,8 @@ export const impTasksService = {
       updatedAt: task.updated_at,
       createdBy: task.created_by,
       updatedBy: task.updated_by,
-      notes: task.notes || [],
-      attachments: task.attachments || []
+      notes: [],
+      attachments: []
     }))
   },
 

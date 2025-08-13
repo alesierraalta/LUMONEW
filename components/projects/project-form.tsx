@@ -1,13 +1,19 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Select } from '@/components/ui/select'
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select'
 import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert } from '@/components/ui/alert'
 import { ProjectFormData } from '@/lib/types'
 import { AlertCircle, CheckCircle } from 'lucide-react'
@@ -35,6 +41,10 @@ export function ProjectForm({ onSubmit, onCancel, loading = false }: ProjectForm
     }
   })
 
+  useEffect(() => {
+    register('priority', { required: 'La prioridad es obligatoria' })
+  }, [register])
+
   const handleFormSubmit = async (data: ProjectFormData) => {
     setIsSubmitting(true)
     setSubmitError(null)
@@ -54,123 +64,124 @@ export function ProjectForm({ onSubmit, onCancel, loading = false }: ProjectForm
   }
 
   return (
-    <Card className="p-6 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold">Crear Nuevo Proyecto</h2>
-        <p className="text-gray-600 mt-1">
-          Complete la información básica del proyecto
-        </p>
-      </div>
-
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-        {/* Error and Success Messages */}
-        {submitError && (
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <div className="ml-2 text-red-800">
-              <strong>Error:</strong> {submitError}
-            </div>
-          </Alert>
-        )}
-        
-        {submitSuccess && (
-          <Alert className="border-green-200 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <div className="ml-2 text-green-800">
-              <strong>¡Éxito!</strong> El proyecto se creó correctamente.
-            </div>
-          </Alert>
-        )}
-
-        {/* Project Name */}
-        <div>
-          <Label htmlFor="name">Nombre del Proyecto *</Label>
-          <Input
-            id="name"
-            {...register('name', { required: 'El nombre del proyecto es obligatorio' })}
-            placeholder="Ej: Implementación Sistema ERP"
-            className={errors.name ? 'border-red-500' : ''}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-2xl">Crear Nuevo Proyecto</CardTitle>
+        <CardDescription>Complete la información básica del proyecto</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
+          {/* Error and Success Messages */}
+          {submitError && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <div className="ml-2">
+                <strong>Error:</strong> {submitError}
+              </div>
+            </Alert>
           )}
-        </div>
+          
+          {submitSuccess && (
+            <Alert className="border-green-200 bg-green-50 dark:border-green-800/30 dark:bg-green-950/30">
+              <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+              <div className="ml-2 text-green-800 dark:text-green-300">
+                <strong>¡Éxito!</strong> El proyecto se creó correctamente.
+              </div>
+            </Alert>
+          )}
 
-        {/* Description */}
-        <div>
-          <Label htmlFor="description">Descripción</Label>
-          <Textarea
-            id="description"
-            {...register('description')}
-            placeholder="Descripción detallada del proyecto..."
-            rows={3}
-          />
-        </div>
-
-        {/* Priority and Dates */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Project Name */}
           <div>
-            <Label htmlFor="priority">Prioridad *</Label>
-            <select
-              id="priority"
-              {...register('priority', { required: 'La prioridad es obligatoria' })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="low">Baja</option>
-              <option value="medium">Media</option>
-              <option value="high">Alta</option>
-              <option value="urgent">Urgente</option>
-            </select>
-            {errors.priority && (
-              <p className="text-red-500 text-sm mt-1">{errors.priority.message}</p>
-            )}
-          </div>
-
-          <div>
-            <Label htmlFor="startDate">Fecha de Inicio *</Label>
+            <Label htmlFor="name">Nombre del Proyecto *</Label>
             <Input
-              id="startDate"
-              type="date"
-              {...register('startDate', { required: 'La fecha de inicio es obligatoria' })}
-              className={errors.startDate ? 'border-red-500' : ''}
+              id="name"
+              aria-invalid={!!errors.name}
+              {...register('name', { required: 'El nombre del proyecto es obligatorio' })}
+              placeholder="Ej: Implementación Sistema ERP"
+              className={errors.name ? 'border-destructive' : ''}
             />
-            {errors.startDate && (
-              <p className="text-red-500 text-sm mt-1">{errors.startDate.message}</p>
+            {errors.name && (
+              <p className="text-destructive text-sm mt-1">{errors.name.message}</p>
             )}
           </div>
-        </div>
 
-        {/* Expected End Date */}
-        <div>
-          <Label htmlFor="expectedEndDate">Fecha Estimada de Finalización</Label>
-          <Input
-            id="expectedEndDate"
-            type="date"
-            {...register('expectedEndDate')}
-          />
-        </div>
+          {/* Description */}
+          <div>
+            <Label htmlFor="description">Descripción</Label>
+            <Textarea
+              id="description"
+              {...register('description')}
+              placeholder="Descripción detallada del proyecto..."
+              rows={3}
+            />
+          </div>
 
+          {/* Priority and Dates */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="priority">Prioridad *</Label>
+              <Select
+                value={watch('priority')}
+                onValueChange={(value) => setValue('priority', value as any, { shouldValidate: true })}
+              >
+                <SelectTrigger id="priority" aria-invalid={!!errors.priority}>
+                  <SelectValue placeholder="Seleccionar prioridad" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baja</SelectItem>
+                  <SelectItem value="medium">Media</SelectItem>
+                  <SelectItem value="high">Alta</SelectItem>
+                  <SelectItem value="urgent">Urgente</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.priority && (
+                <p className="text-destructive text-sm mt-1">{errors.priority.message}</p>
+              )}
+            </div>
 
+            <div>
+              <Label htmlFor="startDate">Fecha de Inicio *</Label>
+              <Input
+                id="startDate"
+                type="date"
+                aria-invalid={!!errors.startDate}
+                {...register('startDate', { required: 'La fecha de inicio es obligatoria' })}
+                className={errors.startDate ? 'border-destructive' : ''}
+              />
+              {errors.startDate && (
+                <p className="text-destructive text-sm mt-1">{errors.startDate.message}</p>
+              )}
+            </div>
+          </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end gap-4 pt-6 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {isSubmitting ? 'Creando...' : 'Crear Proyecto'}
-          </Button>
-        </div>
-      </form>
+          {/* Expected End Date */}
+          <div>
+            <Label htmlFor="expectedEndDate">Fecha Estimada de Finalización</Label>
+            <Input
+              id="expectedEndDate"
+              type="date"
+              {...register('expectedEndDate')}
+            />
+          </div>
+        
+          <CardFooter className="justify-end gap-4 pt-6 border-t p-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Creando...' : 'Crear Proyecto'}
+            </Button>
+          </CardFooter>
+        </form>
+      </CardContent>
     </Card>
   )
 } 

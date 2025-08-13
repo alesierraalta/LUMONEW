@@ -44,7 +44,7 @@ import {
   X
 } from 'lucide-react'
 import { ProjectItem, WORKFLOW_CONFIGS } from '@/lib/types'
-import { calculateWorkflowProgress, getStepStatus, getStepColor, getConnectionColor, generateIndividualTaskProgressBar, updateWorkflowProgressIncremental } from '@/lib/workflow-progress'
+import { calculateWorkflowProgress, calculateWorkflowProgressFromTasks, getStepStatus, getStepColor, getConnectionColor, generateIndividualTaskProgressBar, updateWorkflowProgressIncremental } from '@/lib/workflow-progress'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -248,23 +248,27 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
         return // Ya hay tareas creadas
       }
 
-      // Crear tareas para cada paso del workflow CL
-      for (const workflowTask of clWorkflowTasks) {
+      // Ejecutar creación de tareas en paralelo (3 concurrentes)
+      const concurrency = 3
+      const queue = [...clWorkflowTasks]
+      const runNext = async (): Promise<void> => {
+        const task = queue.shift()
+        if (!task) return
         await fetch('/api/cl-tasks', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             workflowItemId: item.id,
-            stepKey: workflowTask.stepKey,
-            title: workflowTask.title,
-            description: workflowTask.description,
-            priority: workflowTask.priority,
-            createdBy: availableUsers[0]?.id || '3d665a99-7636-4ef9-9316-f8065d010b26' // Real user ID
+            stepKey: task.stepKey,
+            title: task.title,
+            description: task.description,
+            priority: task.priority,
+            createdBy: availableUsers[0]?.id || '3d665a99-7636-4ef9-9316-f8065d010b26'
           })
-        })
+        }).catch(() => {})
+        await runNext()
       }
+      await Promise.all(new Array(concurrency).fill(0).map(() => runNext()))
 
       // Recargar las tareas después de crearlas
       await loadTasks()
@@ -300,6 +304,10 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
           updatedBy: task.createdBy
         }))
         setTasks(formattedTasks)
+        try {
+          const progress = calculateWorkflowProgressFromTasks(item, formattedTasks)
+          setWorkflowProgress(progress)
+        } catch {}
       } else {
         console.error('Error loading tasks:', data.error)
         // Fall back to empty array if API fails
@@ -1361,7 +1369,6 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                 progressTasks.map((task, index) => {
                   const taskColor = getStepColor(task.status, 'CL')
                   const isTaskCompleted = task.status === 'completed'
-                  
                   return (
                     <div key={`progress-${task.id}-${index}`} className="flex items-center">
                       <div
@@ -1371,9 +1378,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                         {index + 1}
                       </div>
                       {index < progressTasks.length - 1 && (
-                        <div
-                          className={`w-2 h-0.5 mx-0.5 ${getConnectionColor(isTaskCompleted)}`}
-                        />
+                        <div className={`w-2 h-0.5 mx-0.5 ${getConnectionColor(isTaskCompleted)}`} />
                       )}
                     </div>
                   )

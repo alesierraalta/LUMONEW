@@ -1114,9 +1114,8 @@ export default function ProjectsPage() {
       {/* Create Project Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl font-bold text-gray-900">Crear Nuevo Proyecto</h2>
+          <div className="bg-background rounded-lg p-4 md:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-end mb-2">
               <Button
                 variant="ghost"
                 onClick={() => setShowCreateModal(false)}

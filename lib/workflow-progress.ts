@@ -124,6 +124,62 @@ export async function calculateWorkflowProgress(item: ProjectItem): Promise<Work
 }
 
 /**
+ * Calculate workflow progress purely from an in-memory task list fetched by the UI/API.
+ * Avoids client-side RLS issues and stays in sync with the visible tasks.
+ */
+export function calculateWorkflowProgressFromTasks(
+  item: ProjectItem,
+  tasks: Array<{ id: string; stepKey: string; status: string; title?: string }>
+): WorkflowProgress {
+  // Group tasks by step
+  const tasksByStep: Record<string, any[]> = tasks.reduce((acc, t) => {
+    const key = t.stepKey
+    if (!acc[key]) acc[key] = []
+    acc[key].push({ id: t.id, title: t.title || '', status: t.status })
+    return acc
+  }, {} as Record<string, any[]>)
+
+  const allTasks = tasks
+  const completedTasks = allTasks.filter(t => t.status === 'completed')
+  const totalTasks = allTasks.length
+  const completedCount = completedTasks.length
+  const percentage = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0
+  const isCompleted = completedCount === totalTasks && totalTasks > 0
+
+  const workflowConfig = WORKFLOW_CONFIGS[item.productType]
+  let currentStepKey = workflowConfig.statuses[workflowConfig.statuses.length - 1].key
+  let currentStepLabel = workflowConfig.statuses[workflowConfig.statuses.length - 1].label
+  const completedSteps: string[] = []
+
+  for (const status of workflowConfig.statuses) {
+    const stepTasks = tasksByStep[status.key] || []
+    const stepCompleted = stepTasks.length > 0 && stepTasks.every((t: any) => t.status === 'completed')
+    if (stepCompleted) {
+      completedSteps.push(status.key)
+    } else if (stepTasks.length > 0) {
+      currentStepKey = status.key
+      currentStepLabel = status.label
+      break
+    }
+  }
+
+  const currentStep = Math.min(completedSteps.length + 1, workflowConfig.statuses.length)
+
+  return {
+    currentStep,
+    totalSteps: totalTasks,
+    percentage,
+    currentStepKey,
+    currentStepLabel,
+    isCompleted,
+    completedSteps,
+    totalTasks,
+    completedTaskCount: completedCount,
+    tasksByStep
+  }
+}
+
+/**
  * Get step status for progress bar rendering
  */
 export function getStepStatus(stepKey: string, progress: WorkflowProgress): 'completed' | 'current' | 'pending' {
@@ -273,6 +329,15 @@ export function generateIndividualTaskProgressBar(progress: WorkflowProgress): A
         })
       })
     })
+  }
+
+  // Ensure there's a visible "current" task even if none is explicitly in_progress.
+  // Pick the first pending task in the currentStepKey as the current one.
+  if (allTasks.length > 0 && !allTasks.some(t => t.status === 'current')) {
+    const index = allTasks.findIndex(t => t.stepKey === progress.currentStepKey && t.status === 'pending')
+    if (index >= 0) {
+      allTasks[index] = { ...allTasks[index], status: 'current' }
+    }
   }
   
   // Debug logging for color issue (uncomment for debugging)
