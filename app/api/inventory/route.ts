@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { inventoryService } from '@/lib/database'
 import { auditedInventoryService } from '@/lib/database-with-audit'
+import { auditService } from '@/lib/audit'
+import { createClient as createServerSupabaseClient } from '@/lib/supabase/server-with-retry'
+
+async function setAuditUserFromRequest() {
+  try {
+    const supabase = createServerSupabaseClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (!error && data?.user) {
+      auditService.setUserContext(data.user)
+    }
+  } catch {
+    // Silenciar errores de contexto de usuario para no bloquear la operación principal
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,6 +72,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await setAuditUserFromRequest()
     const body = await request.json()
     
     // Validate required fields
@@ -107,12 +122,23 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json()
-    const { id, ...updates } = body
+    await setAuditUserFromRequest()
+    const { searchParams } = new URL(request.url)
+    const idFromQuery = searchParams.get('id')
+
+    let body: any = {}
+    try {
+      body = await request.json()
+    } catch (e) {
+      // No JSON body provided; allow updates via query + empty body
+      body = {}
+    }
+    const { id: idFromBody, ...updates } = body
+    const id = idFromBody || idFromQuery
     
     if (!id) {
       return NextResponse.json(
-        { success: false, error: 'Item ID is required' },
+        { success: false, error: "Item ID is required (provide 'id' in body or query parameter)" },
         { status: 400 }
       )
     }
@@ -139,6 +165,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    await setAuditUserFromRequest()
     const { searchParams } = new URL(request.url)
     const id = searchParams.get('id')
     

@@ -470,6 +470,13 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       setActiveTask(null)
       return
     }
+
+    // If dropped into completed, request required data via Work Panel instead of direct status change
+    if (newStatus === 'completed') {
+      setActiveTask(null)
+      openWorkPanel(task)
+      return
+    }
     
     // Check if there's already a pending update for this task
     if (pendingUpdates.has(taskId)) {
@@ -671,7 +678,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
     return (
       <Card 
         ref={setNodeRef}
-        className={`${column.color} bg-card dark:bg-card transition-all duration-200 ${
+        className={`${column.color} bg-card dark:bg-card transition-all duration-200 overflow-hidden ${
           isOver ? 'ring-2 ring-blue-500 ring-opacity-50 scale-[1.02]' : ''
         }`}
       >
@@ -684,11 +691,13 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
           </div>
         </CardHeader>
         <CardContent className="pt-0">
-          <div className={`space-y-3 min-h-[200px] p-2 rounded-lg transition-colors ${
+          <div className={`space-y-3 min-h-[200px] p-2 rounded-lg transition-colors break-words ${
             isOver ? 'bg-blue-50 dark:bg-blue-900/20 border-2 border-dashed border-blue-400 dark:border-blue-500' : ''
           }`}>
             {tasks.map(task => (
-              <DraggableTaskCard key={task.id} task={task} />
+              <div key={task.id} className="min-w-0">
+                <DraggableTaskCard task={task} />
+              </div>
             ))}
             {tasks.length === 0 && (
               <div className={`text-center py-8 text-muted-foreground text-sm transition-all ${
@@ -1049,7 +1058,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
               </SelectTrigger>
               <SelectContent>
                 {availableUsers.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
+                  <SelectItem key={`exec-${user.id}`} value={user.id}>
                     {user.name}
                   </SelectItem>
                 ))}
@@ -1319,7 +1328,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                   const isTaskCompleted = task.status === 'completed'
                   
                   return (
-                    <div key={task.id} className="flex items-center">
+                    <div key={`progress-${task.id}-${index}`} className="flex items-center">
                       <div
                         className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${taskColor}`}
                         title={`${task.title} (${task.stepLabel}) - ${task.status === 'completed' ? 'Completada' : task.status === 'current' ? 'En progreso' : 'Pendiente'}`}
@@ -1340,7 +1349,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                   const isCompleted = workflowSteps.findIndex(s => s.key === item.currentStatus) > index
                   
                   return (
-                    <div key={status.key} className="flex items-center">
+                    <div key={`wf-${status.key}-${index}`} className="flex items-center">
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${
                           isCurrent
@@ -1369,7 +1378,19 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       </Card>
 
       {/* Enhanced Metrics Dashboard */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Resumen Ítems CL */}
+        <Card className="bg-card dark:bg-card border-blue-200 dark:border-blue-800">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{metrics.total} ítems</div>
+            <div className="text-sm text-muted-foreground font-medium">
+              {metrics.completed} completados • {Math.max(0, metrics.total - metrics.completed)} pendientes
+            </div>
+          </CardContent>
+        </Card>
         <Card className="bg-card dark:bg-card border-blue-200 dark:border-blue-800">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">
@@ -1565,7 +1586,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {taskColumns.map(column => (
             <DroppableColumn
               key={column.key}
@@ -1591,12 +1612,13 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
 
       {/* Task Creation Modal */}
       <Dialog open={showTaskModal} onOpenChange={setShowTaskModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="cl-task-modal-desc">
           <DialogHeader>
             <DialogTitle>
               {selectedTask ? 'Editar Tarea' : 'Nueva Tarea'}
             </DialogTitle>
           </DialogHeader>
+          <p id="cl-task-modal-desc" className="sr-only">Gestiona el flujo de trabajo de cotizaciones CL.</p>
           <div className="space-y-4">
             {/* Selector de Tareas Predefinidas del Workflow */}
             <div>
@@ -1646,7 +1668,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="assignedTo">Asignar a</Label>
                 <Select
@@ -1658,7 +1680,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
                   </SelectTrigger>
                   <SelectContent>
                     {availableUsers.map((user) => (
-                      <SelectItem key={user.id} value={user.id}>
+                  <SelectItem key={`create-${user.id}`} value={user.id}>
                         {user.name}
                       </SelectItem>
                     ))}

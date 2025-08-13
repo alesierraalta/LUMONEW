@@ -484,6 +484,13 @@ export function IMPTaskManager({ item, onStatusUpdate, readonly = false }: IMPTa
       setActiveTask(null)
       return
     }
+
+    // If dropping into completed, force collecting work data instead of immediate status swap
+    if (newStatus === 'completed') {
+      setActiveTask(null)
+      openWorkPanel(task)
+      return
+    }
     
     // Check if there's already a pending update for this task
     if (pendingUpdates.has(taskId)) {
@@ -1465,6 +1472,18 @@ export function IMPTaskManager({ item, onStatusUpdate, readonly = false }: IMPTa
 
       {/* Enhanced Metrics Dashboard */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Resumen Ítems IMP */}
+        <Card className="bg-card dark:bg-card border-orange-200 dark:border-orange-800">
+          <CardContent className="p-4 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <FileText className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+            </div>
+            <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">{metrics.total} ítems</div>
+            <div className="text-sm text-muted-foreground font-medium">
+              {metrics.completed} completados • {Math.max(0, metrics.total - metrics.completed)} pendientes
+            </div>
+          </CardContent>
+        </Card>
         <Card className="bg-card dark:bg-card border-orange-200 dark:border-orange-800">
           <CardContent className="p-4 text-center">
             <div className="flex items-center justify-center mb-2">

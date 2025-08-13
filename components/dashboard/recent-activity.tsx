@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 
 interface AuditLog {
   id: string
-  action: string
+  operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'VIEW' | 'EXPORT' | 'IMPORT' | 'BULK_OPERATION'
   table_name: string
   record_id: string
   old_values: any
@@ -18,37 +18,32 @@ interface AuditLog {
     name: string
     email: string
   } | null
+  metadata?: {
+    action_type?: string
+  }
 }
 
-const getActionIcon = (action: string) => {
-  switch (action.toLowerCase()) {
-    case 'insert':
-    case 'create':
+const getActionIcon = (operation: string) => {
+  switch (operation) {
+    case 'INSERT':
       return Plus
-    case 'update':
-    case 'edit':
+    case 'UPDATE':
       return Edit
-    case 'delete':
+    case 'DELETE':
       return Trash2
-    case 'stock_adjusted':
-      return TrendingUp
     default:
       return Package
   }
 }
 
-const getActionColor = (action: string) => {
-  switch (action.toLowerCase()) {
-    case 'insert':
-    case 'create':
+const getActionColor = (operation: string) => {
+  switch (operation) {
+    case 'INSERT':
       return 'text-green-600 bg-green-50'
-    case 'update':
-    case 'edit':
+    case 'UPDATE':
       return 'text-blue-600 bg-blue-50'
-    case 'delete':
+    case 'DELETE':
       return 'text-red-600 bg-red-50'
-    case 'stock_adjusted':
-      return 'text-purple-600 bg-purple-50'
     default:
       return 'text-gray-600 bg-gray-50'
   }
@@ -56,17 +51,33 @@ const getActionColor = (action: string) => {
 
 const getActionDescription = (log: AuditLog) => {
   const tableName = log.table_name
-  const action = log.action.toLowerCase()
-  
-  switch (action) {
-    case 'insert':
-      return `Created new ${tableName.slice(0, -1)}`
-    case 'update':
-      return `Updated ${tableName.slice(0, -1)} details`
-    case 'delete':
-      return `Deleted ${tableName.slice(0, -1)}`
+  const singular = tableName.endsWith('s') ? tableName.slice(0, -1) : tableName
+  // Prefer metadata.action_type when available
+  switch (log.metadata?.action_type) {
+    case 'inventory_item_created':
+      return `Created new ${singular}`
+    case 'inventory_item_updated':
+      return `Updated ${singular}`
+    case 'inventory_item_deleted':
+      return `Deleted ${singular}`
     default:
-      return `${action} on ${tableName}`
+      break
+  }
+  switch (log.operation) {
+    case 'INSERT':
+      return `Created new ${singular}`
+    case 'UPDATE':
+      return `Updated ${singular}`
+    case 'DELETE':
+      return `Deleted ${singular}`
+    case 'IMPORT':
+      return `Imported ${singular} data`
+    case 'EXPORT':
+      return `Exported ${singular} data`
+    case 'BULK_OPERATION':
+      return `Bulk operation on ${singular}`
+    default:
+      return `${log.operation.toLowerCase()} on ${tableName}`
   }
 }
 
@@ -147,13 +158,13 @@ export function RecentActivity() {
       ) : (
         <div className="space-y-3">
           {activities.map((activity) => {
-            const IconComponent = getActionIcon(activity.action)
+            const IconComponent = getActionIcon(activity.operation)
             return (
               <div
                 key={activity.id}
                 className="flex items-start space-x-3 p-3 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
               >
-                <div className={`p-2 rounded-full ${getActionColor(activity.action)}`}>
+                <div className={`p-2 rounded-full ${getActionColor(activity.operation)}`}>
                   <IconComponent className="h-4 w-4" />
                 </div>
                 

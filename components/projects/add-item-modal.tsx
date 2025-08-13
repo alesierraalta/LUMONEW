@@ -48,13 +48,14 @@ export function AddItemModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="add-item-modal-desc">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Plus className="w-5 h-5 text-blue-600" />
               Agregar Item al Proyecto
             </DialogTitle>
           </DialogHeader>
+          <p id="add-item-modal-desc" className="sr-only">Selecciona el tipo de producto a agregar al proyecto.</p>
 
           <div className="space-y-4 py-4">
             <p className="text-gray-600 dark:text-gray-300 mb-6">

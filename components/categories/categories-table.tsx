@@ -158,20 +158,20 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200 dark:border-gray-700">
+          <tr className="border-b border-border">
             <th className="text-left py-3 px-4">
               <input
                 type="checkbox"
                 checked={selectedCategories.length === filteredCategories.length && filteredCategories.length > 0}
                 onChange={toggleAllCategories}
-                className="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800"
+                className="rounded border-input bg-background"
               />
             </th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Category</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Description</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Created</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Updated</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-900 dark:text-gray-100">Actions</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">Category</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">Description</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">Created</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">Updated</th>
+            <th className="text-right py-3 px-4 font-medium text-foreground">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -182,7 +182,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
                   type="checkbox"
                   checked={selectedCategories.includes(category.id)}
                   onChange={() => toggleCategorySelection(category.id)}
-                  className="rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800"
+                  className="rounded border-input bg-background"
                 />
               </td>
               <td className="py-4 px-4">
@@ -192,22 +192,22 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
                     style={{ backgroundColor: category.color || '#6B7280' }}
                   />
                   <div>
-                    <div className="font-medium text-gray-900 dark:text-gray-100">{category.name}</div>
+                    <div className="font-medium text-foreground">{category.name}</div>
                   </div>
                 </div>
               </td>
               <td className="py-4 px-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                <div className="text-sm text-muted-foreground max-w-xs truncate">
                   {category.description || 'No description'}
                 </div>
               </td>
               <td className="py-4 px-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-muted-foreground">
                   {formatDate(new Date(category.created_at))}
                 </div>
               </td>
               <td className="py-4 px-4">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-muted-foreground">
                   {formatDate(new Date(category.updated_at))}
                 </div>
               </td>
@@ -227,7 +227,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 w-8 p-0 text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    className="h-8 w-8 p-0 text-destructive"
                     onClick={() => handleDelete(category)}
                   >
                     <Trash2 className="h-4 w-4" />
@@ -244,17 +244,17 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
 
       {filteredCategories.length === 0 && !loading && (
         <div className="text-center py-12">
-          <div className="text-gray-500 dark:text-gray-400">No categories found</div>
-          <div className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+          <div className="text-muted-foreground">No categories found</div>
+          <div className="text-sm text-muted-foreground mt-1">
             {searchTerm ? 'Try adjusting your search criteria' : 'Create your first category to get started'}
           </div>
         </div>
       )}
 
       {selectedCategories.length > 0 && (
-        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+        <div className="mt-4 p-4 bg-muted rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="text-sm text-foreground">
               {selectedCategories.length} categories selected
             </div>
             <div className="flex space-x-2">
@@ -264,7 +264,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                className="text-destructive"
                 onClick={handleBulkDelete}
               >
                 Delete Selected

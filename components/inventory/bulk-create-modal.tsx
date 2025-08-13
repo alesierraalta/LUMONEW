@@ -14,10 +14,14 @@ interface BulkItem {
   sku: string
   name: string
   category_id: string
+  location_id?: string
+  quantity?: string
   errors?: {
     sku?: string
     name?: string
     category_id?: string
+    location_id?: string
+    quantity?: string
   }
 }
 
@@ -28,13 +32,14 @@ interface BulkCreateModalProps {
 
 export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) => {
   const [items, setItems] = useState<BulkItem[]>([
-    { id: '1', sku: '', name: '', category_id: '' },
-    { id: '2', sku: '', name: '', category_id: '' },
-    { id: '3', sku: '', name: '', category_id: '' }
+    { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+    { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+    { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
+  const [isAdvancedMode, setIsAdvancedMode] = useState(false)
   const { addToast } = useToast()
   const { closeModal } = useModal()
   const t = useTranslations('inventory.bulkCreate')
@@ -70,7 +75,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
 
   const addRow = () => {
     const newId = (Math.max(...items.map(item => parseInt(item.id))) + 1).toString()
-    setItems(prev => [...prev, { id: newId, sku: '', name: '', category_id: '' }])
+    setItems(prev => [...prev, { id: newId, sku: '', name: '', category_id: '', location_id: '', quantity: '' }])
   }
 
   const removeRow = (id: string) => {
@@ -104,6 +109,24 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
       
       // Category is optional - no validation needed
 
+      if (isAdvancedMode) {
+        if (!item.location_id || !item.location_id.trim()) {
+          errors.location_id = 'Selecciona una ubicación'
+          hasErrors = true
+        }
+        const quantityValue = (item.quantity ?? '').trim()
+        if (quantityValue === '') {
+          errors.quantity = 'Ingresa una cantidad'
+          hasErrors = true
+        } else {
+          const parsed = Number.parseInt(quantityValue, 10)
+          if (Number.isNaN(parsed) || parsed < 0) {
+            errors.quantity = 'La cantidad debe ser un número entero mayor o igual a 0'
+            hasErrors = true
+          }
+        }
+      }
+
       return { ...item, errors }
     })
 
@@ -128,13 +151,13 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
         item.sku.trim() && item.name.trim()
       )
 
-      // Find default location if not provided
+      // Find default location if not provided (basic mode)
       const defaultLocation = locations.find(loc => 
         loc.name.toLowerCase().includes('general') || 
         loc.name.toLowerCase().includes('sin ubicación')
       ) || locations[0]
 
-      if (!defaultLocation) {
+      if (!defaultLocation && !isAdvancedMode) {
         addToast({
           type: 'error',
           title: 'Error',
@@ -164,9 +187,9 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
               sku: item.sku.trim(),
               name: item.name.trim(),
               category_id: item.category_id.trim() || (defaultCategory?.id || ''),
-              location_id: defaultLocation.id,
+              location_id: isAdvancedMode ? (item.location_id || '') : (defaultLocation?.id || ''),
               unit_price: 0,
-              quantity: 0,
+              quantity: isAdvancedMode ? Number.parseInt(item.quantity || '0', 10) || 0 : 0,
               min_stock: 0,
               max_stock: 0,
               status: 'active'
@@ -193,9 +216,9 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
         
         // Reset form
         setItems([
-          { id: '1', sku: '', name: '', category_id: '' },
-          { id: '2', sku: '', name: '', category_id: '' },
-          { id: '3', sku: '', name: '', category_id: '' }
+          { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+          { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+          { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
         ])
         
         onSuccess()
@@ -231,46 +254,57 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
       {/* Header with close button */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-yellow-100 rounded-lg">
-            <Zap className="h-5 w-5 text-yellow-600" />
+          <div className="p-2 rounded-lg bg-warning-soft">
+            <Zap className="h-5 w-5 text-warning-soft" />
           </div>
           <div>
             <h2 className="text-xl font-semibold">Creación Rápida Múltiple</h2>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-muted-foreground">
               Crea múltiples items de inventario simultáneamente con información básica
             </p>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleClose}
-          disabled={isSubmitting}
-          className="text-gray-500 hover:text-gray-700"
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={isAdvancedMode ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setIsAdvancedMode(prev => !prev)}
+            disabled={isSubmitting || locations.length === 0}
+            title={locations.length === 0 ? 'No hay ubicaciones disponibles' : 'Activar modo avanzado'}
+          >
+            {isAdvancedMode ? 'Modo avanzado: ON' : 'Modo avanzado: OFF'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            disabled={isSubmitting}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">
         <div className="max-h-96 overflow-y-auto space-y-3">
           {items.map((item, index) => (
             <div key={item.id} className="flex items-start gap-3 p-3 bg-muted rounded-lg">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm font-medium text-blue-600">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium bg-info-soft text-info-soft">
                 {index + 1}
               </div>
               
-              <div className="flex-1 grid grid-cols-3 gap-3">
+              <div className={`flex-1 grid ${isAdvancedMode ? 'grid-cols-5' : 'grid-cols-3'} gap-3`}>
                 <div className="space-y-1">
                   <Input
                     placeholder="SKU"
                     value={item.sku}
                     onChange={(e) => updateItem(item.id, 'sku', e.target.value)}
-                    className={item.errors?.sku ? 'border-red-500' : ''}
+                    className={item.errors?.sku ? 'border-destructive' : ''}
                     disabled={isSubmitting}
                   />
                   {item.errors?.sku && (
-                    <p className="text-xs text-red-500">{item.errors.sku}</p>
+                    <p className="text-xs text-error-soft">{item.errors.sku}</p>
                   )}
                 </div>
                 
@@ -279,11 +313,11 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
                     placeholder="Nombre del producto"
                     value={item.name}
                     onChange={(e) => updateItem(item.id, 'name', e.target.value)}
-                    className={item.errors?.name ? 'border-red-500' : ''}
+                    className={item.errors?.name ? 'border-destructive' : ''}
                     disabled={isSubmitting}
                   />
                   {item.errors?.name && (
-                    <p className="text-xs text-red-500">{item.errors.name}</p>
+                    <p className="text-xs text-error-soft">{item.errors.name}</p>
                   )}
                 </div>
                 
@@ -291,8 +325,8 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
                   <select
                     value={item.category_id}
                     onChange={(e) => updateItem(item.id, 'category_id', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      item.errors?.category_id ? 'border-red-500' : 'border-input'
+                    className={`w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring ${
+                      item.errors?.category_id ? 'border-destructive' : 'border-input'
                     }`}
                     disabled={isSubmitting}
                   >
@@ -304,9 +338,50 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
                     ))}
                   </select>
                   {item.errors?.category_id && (
-                    <p className="text-xs text-red-500">{item.errors.category_id}</p>
+                    <p className="text-xs text-error-soft">{item.errors.category_id}</p>
                   )}
                 </div>
+
+                {isAdvancedMode && (
+                  <>
+                    <div className="space-y-1">
+                      <select
+                        value={item.location_id || ''}
+                        onChange={(e) => updateItem(item.id, 'location_id', e.target.value)}
+                        className={`w-full px-3 py-2 rounded-md shadow-sm focus:outline-none focus:ring-2 bg-background text-foreground placeholder:text-muted-foreground focus:ring-ring focus:border-ring ${
+                          item.errors?.location_id ? 'border-destructive' : 'border-input'
+                        }`}
+                        disabled={isSubmitting || locations.length === 0}
+                      >
+                        <option value="">Seleccionar ubicación</option>
+                        {locations.map((location) => (
+                          <option key={location.id} value={location.id}>
+                            {location.name}
+                          </option>
+                        ))}
+                      </select>
+                      {item.errors?.location_id && (
+                        <p className="text-xs text-error-soft">{item.errors.location_id}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1">
+                      <Input
+                        type="number"
+                        min={0}
+                        step={1}
+                        placeholder="Cantidad"
+                        value={item.quantity ?? ''}
+                        onChange={(e) => updateItem(item.id, 'quantity', e.target.value)}
+                        className={item.errors?.quantity ? 'border-destructive' : ''}
+                        disabled={isSubmitting}
+                      />
+                      {item.errors?.quantity && (
+                        <p className="text-xs text-error-soft">{item.errors.quantity}</p>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
               
               <Button
@@ -314,7 +389,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
                 size="sm"
                 onClick={() => removeRow(item.id)}
                 disabled={items.length <= 1 || isSubmitting}
-                className="flex-shrink-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                className="flex-shrink-0 text-error-soft hover:bg-error-soft"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
@@ -344,7 +419,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="bg-yellow-600 hover:bg-yellow-700 text-white"
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               {isSubmitting ? (
                 <>
@@ -361,13 +436,23 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
           </div>
         </div>
         
-        <div className="text-xs text-gray-500 dark:text-gray-400 bg-blue-50 dark:bg-blue-950/20 p-3 rounded-lg">
+        <div className="text-xs text-muted-foreground bg-info-soft p-3 rounded-lg">
           <p className="font-medium mb-1">ℹ️ Información importante:</p>
           <ul className="space-y-1">
-            <li>• Los items se crearán con valores por defecto (stock: 0, precio: 0)</li>
-            <li>• La categoría es opcional - se asignará una por defecto si no se especifica</li>
-            <li>• Se asignará automáticamente la ubicación por defecto</li>
-            <li>• Puedes editar los detalles completos después de la creación</li>
+            {isAdvancedMode ? (
+              <>
+                <li>• Debes seleccionar la ubicación y la cantidad para cada item.</li>
+                <li>• La categoría es opcional - se asignará una por defecto si no se especifica.</li>
+                <li>• El precio se establecerá en 0; podrás actualizarlo luego.</li>
+              </>
+            ) : (
+              <>
+                <li>• Los items se crearán con valores por defecto (stock: 0, precio: 0).</li>
+                <li>• La categoría es opcional - se asignará una por defecto si no se especifica.</li>
+                <li>• Se asignará automáticamente la ubicación por defecto.</li>
+                <li>• Puedes editar los detalles completos después de la creación.</li>
+              </>
+            )}
           </ul>
         </div>
       </div>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Download, Upload, ShoppingCart, Package, History, Zap } from 'lucide-react'
+import { Plus, Download, Upload, ShoppingCart, Package, History, Zap, HelpCircle } from 'lucide-react'
 import { FilterOptions } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { useToast } from '@/components/ui/toast'
@@ -22,6 +22,7 @@ const InventoryFilters = lazy(() => import('@/components/inventory/inventory-fil
 const TransactionBuilder = lazy(() => import('@/components/inventory/transaction-builder').then(mod => ({ default: mod.TransactionBuilder })))
 const AuditHistory = lazy(() => import('@/components/inventory/audit-history').then(mod => ({ default: mod.AuditHistory })))
 const BulkCreateModal = lazy(() => import('@/components/inventory/bulk-create-modal').then(mod => ({ default: mod.BulkCreateModal })))
+const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
 function InventoryContent() {
   const router = useRouter()
@@ -34,6 +35,7 @@ function InventoryContent() {
   const [isAuditHistoryOpen, setIsAuditHistoryOpen] = useState(false)
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const [inventoryData, setInventoryData] = useState<any>(null)
   const [loadingTransactions, setLoadingTransactions] = useState(false)
   const { addToast } = useToast()
@@ -255,6 +257,12 @@ function InventoryContent() {
             {t('description')}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setIsTutorialOpen(true)} aria-label="Abrir tutorial de inventario">
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Tutorial
+          </Button>
+        </div>
       </div>
         
       {/* Inventory Tools - Elegant & Minimalist Design */}
@@ -270,8 +278,9 @@ function InventoryContent() {
           </div>
           
           {/* Action Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4" id="inv-actions">
             <button
+              id="inv-action-create"
               className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/10 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               onClick={() => router.push('/inventory/create')}
               title="Crear un nuevo producto en el inventario"
@@ -288,6 +297,7 @@ function InventoryContent() {
             </button>
             
             <button
+              id="inv-action-add-stock"
               className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-green-500/10 hover:border-green-200 dark:hover:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-500/20"
               onClick={() => {
                 setTransactionMode('stock_addition')
@@ -307,6 +317,7 @@ function InventoryContent() {
             </button>
             
             <button
+              id="inv-action-sale"
               className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/10 hover:border-purple-200 dark:hover:border-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500/20"
               onClick={() => {
                 setTransactionMode('sale')
@@ -326,6 +337,7 @@ function InventoryContent() {
             </button>
             
             <button
+              id="inv-action-bulk"
               className="group relative overflow-hidden rounded-xl border border-border bg-card p-6 text-left transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/10 hover:border-orange-200 dark:hover:border-orange-800 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
               onClick={handleBulkCreate}
               title="Crear múltiples productos de una vez"
@@ -346,7 +358,7 @@ function InventoryContent() {
         {/* Quick Stats */}
         <Card className="border-border/50 shadow-sm">
           <CardContent className="p-6">
-            <div className="flex items-center space-x-3 mb-6">
+            <div className="flex items-center space-x-3 mb-6" id="inv-quick-stats">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
                 <Package className="h-5 w-5 text-muted-foreground" />
               </div>
@@ -357,13 +369,13 @@ function InventoryContent() {
             </div>
             
             <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
+              <div className="flex items-center justify-between py-2" id="inv-stat-total">
                 <span className="text-sm text-muted-foreground">Total de productos</span>
                 <span className="font-semibold text-foreground">{inventoryData?.totalItems || 0}</span>
               </div>
               
               <div className="space-y-3">
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between py-2" id="inv-stat-out">
                   <div className="flex items-center space-x-2">
                     <div className="h-2 w-2 rounded-full bg-red-500"></div>
                     <span className="text-sm text-muted-foreground">Sin stock</span>
@@ -371,7 +383,7 @@ function InventoryContent() {
                   <span className="font-medium text-red-600 dark:text-red-400">{inventoryData?.outOfStockCount || 0}</span>
                 </div>
                 
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between py-2" id="inv-stat-low">
                   <div className="flex items-center space-x-2">
                     <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
                     <span className="text-sm text-muted-foreground">Stock bajo</span>
@@ -379,7 +391,7 @@ function InventoryContent() {
                   <span className="font-medium text-yellow-600 dark:text-yellow-400">{inventoryData?.lowStockCount || 0}</span>
                 </div>
                 
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between py-2" id="inv-stat-good">
                   <div className="flex items-center space-x-2">
                     <div className="h-2 w-2 rounded-full bg-green-500"></div>
                     <span className="text-sm text-muted-foreground">Stock óptimo</span>
@@ -412,6 +424,7 @@ function InventoryContent() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <button
+            id="inv-audit-history"
             className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-blue-500/5 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             onClick={() => setIsAuditHistoryOpen(true)}
             title="Ver historial completo de cambios y movimientos del inventario"
@@ -498,15 +511,19 @@ function InventoryContent() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-4" id="inv-filters-table">
             <Suspense fallback={<PageLoading message={t('loading.filters')} size="sm" />}>
-              <InventoryFilters
-                filters={filters}
-                onFiltersChange={setFilters}
-              />
+              <div id="inv-filters">
+                <InventoryFilters
+                  filters={filters}
+                  onFiltersChange={setFilters}
+                />
+              </div>
             </Suspense>
             <Suspense fallback={<PageLoading message={t('loading.table')} />}>
-              <InventoryTable filters={filters} />
+              <div id="inv-table">
+                <InventoryTable filters={filters} />
+              </div>
             </Suspense>
           </div>
         </CardContent>
@@ -530,6 +547,29 @@ function InventoryContent() {
           <AuditHistory
             open={isAuditHistoryOpen}
             onOpenChange={setIsAuditHistoryOpen}
+          />
+        </Suspense>
+      )}
+
+      {/* Inventory Tutorial Overlay */}
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <InventoryTutorial
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+            steps={[
+              { id: 'action-create', target: '#inv-action-create', title: 'Nuevo producto', description: 'Crea un artículo de inventario desde cero (nombre, SKU, categoría, ubicación, stock y precio).', placement: 'bottom' },
+              { id: 'action-add-stock', target: '#inv-action-add-stock', title: 'Agregar stock', description: 'Suma cantidades a productos existentes registrando una “Adición de stock”.', placement: 'bottom' },
+              { id: 'action-sale', target: '#inv-action-sale', title: 'Registrar venta', description: 'Genera una transacción de venta que descuenta stock automáticamente.', placement: 'bottom' },
+              { id: 'action-bulk', target: '#inv-action-bulk', title: 'Creación múltiple', description: 'Carga rápida de varios productos a la vez para acelerar la configuración inicial.', placement: 'bottom' },
+              { id: 'stat-total', target: '#inv-stat-total', title: 'Total de productos', description: 'Conteo total de ítems activos en tu inventario.', placement: 'right' },
+              { id: 'stat-out', target: '#inv-stat-out', title: 'Sin stock', description: 'Artículos con stock en 0; revisa y repón para evitar quiebres.', placement: 'right' },
+              { id: 'stat-low', target: '#inv-stat-low', title: 'Stock bajo', description: 'Artículos con cantidad en o por debajo del mínimo definido.', placement: 'right' },
+              { id: 'stat-good', target: '#inv-stat-good', title: 'Stock óptimo', description: 'Artículos con nivel saludable por encima del mínimo.', placement: 'right' },
+              { id: 'audit-history', target: '#inv-audit-history', title: 'Historial de auditoría', description: 'Consulta cambios en inventario (quién, qué y cuándo) con detalle.', placement: 'bottom' },
+              { id: 'filters', target: '#inv-filters', title: 'Filtros', description: 'Refina por nombre/SKU/categorías y más para encontrar artículos rápido.', placement: 'bottom' },
+              { id: 'table', target: '#inv-table', title: 'Tabla de inventario', description: 'Visualiza y gestiona tus productos; edita o abre acciones desde cada fila.', placement: 'top' }
+            ]}
           />
         </Suspense>
       )}

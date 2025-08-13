@@ -76,13 +76,14 @@ export function CLStep1Modal({ isOpen, onClose, onComplete, projectId }: CLStep1
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="cl-step1-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-blue-600" />
             Paso 1: Solicitar Cotización
           </DialogTitle>
         </DialogHeader>
+        <p id="cl-step1-desc" className="sr-only">Formulario para solicitar la cotización del producto.</p>
 
         <div className="space-y-4 py-4">
           <div>
@@ -200,13 +201,14 @@ export function CLStep2Modal({ isOpen, onClose, onComplete, projectId, itemData 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="cl-step2-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-green-600" />
             Paso 2: Pagar Cotización
           </DialogTitle>
         </DialogHeader>
+        <p id="cl-step2-desc" className="sr-only">Formulario para registrar el pago de la cotización.</p>
 
         <div className="space-y-4 py-4">
           <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
@@ -313,13 +315,14 @@ export function CLStep3Modal({ isOpen, onClose, onComplete, projectId, itemData 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="cl-step3-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="w-5 h-5 text-orange-600" />
             Paso 3: Coordinar Envío y Pagar Flete
           </DialogTitle>
         </DialogHeader>
+        <p id="cl-step3-desc" className="sr-only">Formulario para coordinar el envío y registrar el flete.</p>
 
         <div className="space-y-4 py-4">
           <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
@@ -405,13 +408,14 @@ export function CLStep4Modal({ isOpen, onClose, onComplete, projectId, itemData 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-lg" aria-describedby="cl-step4-desc">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CheckCircle className="w-5 h-5 text-green-600" />
             Paso 4: Marcar como Recibido
           </DialogTitle>
         </DialogHeader>
+        <p id="cl-step4-desc" className="sr-only">Formulario para completar el proceso de cotización.</p>
 
         <div className="space-y-4 py-4">
           <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">

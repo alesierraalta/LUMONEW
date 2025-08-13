@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, Suspense, lazy } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Plus, Package, Download, Upload } from 'lucide-react'
+import { Plus, Package, Download, Upload, HelpCircle } from 'lucide-react'
 import { Category } from '@/lib/types'
 import { CardProvider, usePageCards } from '@/components/cards/card-provider'
 import { CardContainer } from '@/components/cards/card-container'
@@ -14,12 +14,14 @@ import { useAuth } from '@/lib/auth/auth-context'
 import { categoryService, inventoryService } from '@/lib/database'
 import { PageLoading } from '@/components/ui/page-loading'
 import { useTranslations } from 'next-intl'
+import { formatCurrency } from '@/lib/utils'
 import { useModal } from '@/components/ui/modal'
 import { CreateCategoryModal } from '@/components/categories/create-category-modal'
 
 // Dynamic imports for better performance
 const CategoriesTable = lazy(() => import('@/components/categories/categories-table').then(mod => ({ default: mod.CategoriesTable })))
 const CategoriesFilters = lazy(() => import('@/components/categories/categories-filters').then(mod => ({ default: mod.CategoriesFilters })))
+const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
 // Helper function to map database category to Category type
 const mapDatabaseToCategory = (dbCategory: any): Category => ({
@@ -53,6 +55,7 @@ function CategoriesContent() {
   const [isClient, setIsClient] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [categoriesData, setCategoriesData] = useState<any>(null)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const { addToast } = useToast()
   const { openModal } = useModal()
 
@@ -188,11 +191,12 @@ function CategoriesContent() {
         </div>
         
         {/* Action Buttons - Mobile Responsive */}
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2" id="cat-actions">
           <Button 
             variant="outline" 
             size="sm" 
             className="text-xs md:text-sm hover:scale-105 transition-transform"
+            id="cat-import"
           >
             <Upload className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">{tCommon('import')}</span>
@@ -202,6 +206,7 @@ function CategoriesContent() {
             variant="outline" 
             size="sm" 
             className="text-xs md:text-sm hover:scale-105 transition-transform"
+            id="cat-export"
           >
             <Download className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">{tCommon('export')}</span>
@@ -211,31 +216,117 @@ function CategoriesContent() {
             size="sm"
             className="text-xs md:text-sm hover:scale-105 transition-transform"
             onClick={handleCreateCategory}
+            id="cat-add"
           >
             <Plus className="h-4 w-4 mr-1 md:mr-2" />
             <span className="hidden sm:inline">{t('addCategory')}</span>
             <span className="sm:hidden">Agregar</span>
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsTutorialOpen(true)} aria-label="Abrir tutorial de categorías">
+            <HelpCircle className="h-4 w-4 mr-1 md:mr-2" />
+            Tutorial
+          </Button>
         </div>
       </div>
 
       {/* Information Cards - Mobile Responsive Grid */}
-      <CardContainer
-        layout="grid"
-        columns={1}
-        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-      />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {/* Resumen principal */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Resumen de Categorías</CardTitle>
+            <CardDescription>Total y asociados</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{categories.length} categorías</div>
+            <div className="text-sm text-muted-foreground">
+              {categories.reduce((sum, c) => sum + c.itemCount, 0)} items totales
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Promedio por categoría */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Promedio por Categoría</CardTitle>
+            <CardDescription>Items / categoría</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {categories.length > 0 ? Math.round(
+                categories.reduce((sum, c) => sum + c.itemCount, 0) / categories.length
+              ) : 0}
+            </div>
+            <div className="text-sm text-muted-foreground">promedio</div>
+          </CardContent>
+        </Card>
+
+        {/* Categorías vacías */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Categorías Vacías</CardTitle>
+            <CardDescription>Sin items</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {categories.filter(c => c.itemCount === 0).length}
+            </div>
+            <div className="text-sm text-muted-foreground">disponibles</div>
+          </CardContent>
+        </Card>
+
+        {/* Categoría con más items */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Categoría con más items</CardTitle>
+            <CardDescription>Top 1</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {categories.length > 0 ? (
+              (() => {
+                const top = [...categories].sort((a, b) => b.itemCount - a.itemCount)[0]
+                return (
+                  <div>
+                    <div className="text-lg font-semibold">{top.name}</div>
+                    <div className="text-sm text-muted-foreground">{top.itemCount} items</div>
+                  </div>
+                )
+              })()
+            ) : (
+              <div className="text-sm text-muted-foreground">—</div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Valor total de inventario */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">Valor Total</CardTitle>
+            <CardDescription>Suma de quantity × unit_price</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {formatCurrency(
+                categories.reduce((sum, c) => sum + c.totalValue, 0)
+              )}
+            </div>
+            <div className="text-sm text-muted-foreground">inventario</div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Filters - Mobile Responsive */}
       <Suspense fallback={<PageLoading message={t('loadingFilters')} size="sm" />}>
-        <CategoriesFilters
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-        />
+        <div id="cat-filters">
+          <CategoriesFilters
+            searchTerm={searchTerm}
+            onSearchChange={setSearchTerm}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            sortOrder={sortOrder}
+            onSortOrderChange={setSortOrder}
+          />
+        </div>
       </Suspense>
 
       {/* Categories Table - Mobile Responsive */}
@@ -248,10 +339,27 @@ function CategoriesContent() {
         </CardHeader>
         <CardContent>
           <Suspense fallback={<PageLoading message={t('loadingTable')} />}>
-            <CategoriesTable />
+            <div id="cat-table">
+              <CategoriesTable />
+            </div>
           </Suspense>
         </CardContent>
       </Card>
+
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <InventoryTutorial
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+            steps={[
+              { id: 'add', target: '#cat-add', title: 'Nueva categoría', description: 'Crea una categoría definiendo nombre, color y descripción.', placement: 'bottom' },
+              { id: 'import', target: '#cat-import', title: 'Importar categorías', description: 'Carga categorías desde un archivo para acelerar la configuración.', placement: 'bottom' },
+              { id: 'export', target: '#cat-export', title: 'Exportar categorías', description: 'Descarga tus categorías para respaldo o análisis externo.', placement: 'bottom' },
+              { id: 'table', target: '#cat-table', title: 'Tabla de categorías', description: 'Administra y consulta las categorías y la cantidad de productos asociados.', placement: 'top' }
+            ]}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

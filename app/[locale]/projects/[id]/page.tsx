@@ -37,7 +37,9 @@ import {
   Share2,
   Settings,
   Plane,
-  Search
+  Search,
+  Trash2,
+  Minus
 } from 'lucide-react'
 import { Project } from '@/lib/types'
 
@@ -54,11 +56,14 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const [project, setProject] = useState<Project | null>(null)
   const [luItems, setLuItems] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [projectMetrics, setProjectMetrics] = useState<any>(null)
   const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [addingItems, setAddingItems] = useState(false)
   const [showLUImportModal, setShowLUImportModal] = useState(false)
   const [luSearchTerm, setLuSearchTerm] = useState('')
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'cl-workflows' | 'imp-workflows' | 'analytics'>('overview')
   const [luSortBy, setLuSortBy] = useState<'name_asc' | 'name_desc' | 'qty_desc' | 'qty_asc' | 'cost_desc' | 'cost_asc'>('name_asc')
+  const [editMode, setEditMode] = useState(false)
 
   // Mock current user - replace with actual auth
   const currentUser = {
@@ -74,9 +79,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     try {
       console.log('🔄 Refreshing project data...')
       
-      const [projectResponse, luItemsResponse] = await Promise.all([
+      const [projectResponse, luItemsResponse, metricsResponse] = await Promise.all([
         fetch(`/api/projects/${params.id}`),
-        fetch(`/api/projects/${params.id}/items?product_type=LU`)
+        fetch(`/api/projects/${params.id}/items?product_type=LU`),
+        fetch(`/api/projects/${params.id}/inventory-metrics`)
       ])
       
       const projectData = await projectResponse.json()
@@ -100,6 +106,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         })
       } else {
         console.error('❌ Failed to fetch LU items:', luItemsData)
+      }
+
+      const metricsData = await metricsResponse.json()
+      if (metricsData.success) {
+        setProjectMetrics(metricsData.data)
+        console.log('📈 Project metrics loaded')
+      } else {
+        console.warn('⚠️ Failed to fetch project metrics:', metricsData)
+        setProjectMetrics(null)
       }
     } catch (error) {
       console.error('❌ Error fetching project details:', error)
@@ -185,6 +200,78 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     }
   }
 
+  async function handleLUDelete(itemId: string) {
+    try {
+      const response = await fetch(`/api/projects/items?id=${encodeURIComponent(itemId)}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || `Failed to delete item ${itemId}`)
+      }
+      await fetchProjectDetails()
+    } catch (error) {
+      console.error('Error deleting LU item:', error)
+      alert('No se pudo eliminar el item.')
+    }
+  }
+
+  async function handleLUDecrement(itemId: string, currentQty: number) {
+    try {
+      const newQty = Math.max(0, Number(currentQty || 0) - 1)
+      if (newQty === 0) {
+        await handleLUDelete(itemId)
+        return
+      }
+      const response = await fetch('/api/projects/items', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: itemId, quantity: newQty })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || `Failed to update quantity for ${itemId}`)
+      }
+      await fetchProjectDetails()
+    } catch (error) {
+      console.error('Error decrementing LU item quantity:', error)
+      alert('No se pudo restar la cantidad del item.')
+    }
+  }
+
+  async function handleWorkflowDelete(itemId: string) {
+    try {
+      const response = await fetch(`/api/projects/workflow-items?id=${encodeURIComponent(itemId)}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || `Failed to delete workflow item ${itemId}`)
+      }
+      await fetchProjectDetails()
+    } catch (error) {
+      console.error('Error deleting workflow item:', error)
+      alert('No se pudo eliminar el workflow.')
+    }
+  }
+
+  async function handleWorkflowDecrement(wf: any) {
+    try {
+      const currentQty = Number(wf?.step_data?.quantity || 0)
+      const newQty = Math.max(0, currentQty - 1)
+      const newStepData = { ...(wf?.step_data || {}), quantity: newQty }
+      const response = await fetch('/api/projects/workflow-items', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: wf.id, stepData: newStepData })
+      })
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || `Failed to update workflow item ${wf?.id}`)
+      }
+      await fetchProjectDetails()
+    } catch (error) {
+      console.error('Error decrementing workflow quantity:', error)
+      alert('No se pudo restar la cantidad del workflow.')
+    }
+  }
+
   const handleCLStart = async (data: any) => {
     if (!project) return
 
@@ -211,6 +298,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       if (result.success) {
         await fetchProjectDetails()
         setShowAddItemModal(false)
+        setActiveTab('cl-workflows')
       } else {
         console.error('Error creating CL workflow item:', result.error)
       }
@@ -245,6 +333,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       if (result.success) {
         await fetchProjectDetails()
         setShowAddItemModal(false)
+        setActiveTab('imp-workflows')
       } else {
         console.error('Error creating IMP workflow item:', result.error)
       }
@@ -270,6 +359,33 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       case 'medium': return 'bg-yellow-500'
       case 'low': return 'bg-green-500'
       default: return 'bg-gray-500'
+    }
+  }
+
+  // Map workflow current_step ids to CL/IMP status keys used by CLTaskManager/IMPTaskManager
+  function mapClStepToStatus(stepId: string | undefined): string {
+    if (!stepId) return 'solicitar_cotizacion'
+    switch (stepId) {
+      case 'cl_step1': return 'solicitar_cotizacion'
+      case 'cl_step2': return 'pagar_cotizacion'
+      case 'cl_step3': return 'coordinar_envio_pagar_flete'
+      case 'cl_step4': return 'recibido'
+      default: return 'solicitar_cotizacion'
+    }
+  }
+
+  function mapImpStepToStatus(stepId: string | undefined): string {
+    if (!stepId) return 'pagar_pi_proveedor'
+    switch (stepId) {
+      case 'imp_step1': return 'pagar_pi_proveedor'
+      case 'imp_step2': return 'enviar_etiqueta_envio'
+      case 'imp_step3': return 'pagar_arancel_aduanas'
+      case 'imp_step4a':
+      case 'imp_step4b':
+      case 'imp_step5': return 'coordinar_envio'
+      case 'imp_step7':
+      case 'imp_step6': return 'recibido'
+      default: return 'pagar_pi_proveedor'
     }
   }
 
@@ -375,6 +491,14 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           </div>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => setEditMode((v) => !v)}
+          >
+            {editMode ? 'Modo edición: ON' : 'Modo edición: OFF'}
+          </Button>
           <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Share2 className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Compartir</span>
@@ -393,7 +517,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
       {/* Project Details Content - Mobile Responsive */}
       <div className="space-y-6">
-        <Tabs defaultValue="overview" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
           <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
             <TabsTrigger value="overview" className="text-xs md:text-sm">Resumen</TabsTrigger>
             <TabsTrigger value="products" className="text-xs md:text-sm">Productos</TabsTrigger>
@@ -605,6 +729,26 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                               {formatCurrency(item.unit_cost)} × {item.quantity}
                             </p>
                           )}
+                          {editMode && (
+                            <div className="flex items-center justify-end gap-2 mt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleLUDecrement(item.id, item.quantity)}
+                              >
+                                <Minus className="w-4 h-4 mr-1" />
+                                Restar
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="bg-red-600 hover:bg-red-700 text-white"
+                                onClick={() => handleLUDelete(item.id)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Eliminar
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     ))
@@ -652,31 +796,44 @@ export default function ProjectPage({ params }: ProjectPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(project as any).project_items?.filter((item: any) => item.product_type === 'CL').length > 0 ? (
-                    (project as any).project_items
-                      .filter((item: any) => item.product_type === 'CL')
-                      .map((item: any) => (
-                        <CLTaskManager
-                          key={item.id}
-                          item={{
-                            id: item.id,
-                            projectId: item.project_id,
-                            productType: item.product_type,
-                            productName: item.product_name,
-                            currentStatus: item.current_status,
-                            quantity: 1,
-                            statusHistory: [],
-                            attachments: [],
-                            isCompleted: false,
-                            createdAt: item.created_at,
-                            updatedAt: item.updated_at,
-                            createdBy: 'system',
-                            updatedBy: 'system'
-                          }}
-                          onStatusUpdate={async (itemId: string, newStatus: string, notes?: string, cost?: number) => {
-                            await fetchProjectDetails()
-                          }}
-                        />
+                  {(project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL').length > 0 ? (
+                    (project as any).workflow_items
+                      .filter((wf: any) => wf.product_type === 'CL')
+                      .map((wf: any) => (
+                        <div key={wf.id} className="space-y-2">
+                          {editMode && (
+                            <div className="flex justify-end gap-2">
+                              {typeof wf?.step_data?.quantity === 'number' && (
+                                <Button size="sm" variant="outline" onClick={() => handleWorkflowDecrement(wf)}>
+                                  <Minus className="w-4 h-4 mr-1" /> Restar
+                                </Button>
+                              )}
+                              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleWorkflowDelete(wf.id)}>
+                                <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                              </Button>
+                            </div>
+                          )}
+                          <CLTaskManager
+                            item={{
+                              id: wf.id,
+                              projectId: wf.project_id,
+                              productType: wf.product_type,
+                              productName: wf.product_name,
+                              currentStatus: mapClStepToStatus(wf.current_step) as any,
+                              quantity: wf.step_data?.quantity || 1,
+                              statusHistory: [],
+                              attachments: [],
+                              isCompleted: Boolean(wf.is_completed),
+                              createdAt: wf.created_at,
+                              updatedAt: wf.updated_at,
+                              createdBy: 'system',
+                              updatedBy: 'system'
+                            }}
+                            onStatusUpdate={async () => {
+                              await fetchProjectDetails()
+                            }}
+                          />
+                        </div>
                       ))
                   ) : (
                     <div className="text-center py-12">
@@ -712,31 +869,44 @@ export default function ProjectPage({ params }: ProjectPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {(project as any).project_items?.filter((item: any) => item.product_type === 'IMP').length > 0 ? (
-                    (project as any).project_items
-                      .filter((item: any) => item.product_type === 'IMP')
-                      .map((item: any) => (
-                        <IMPTaskManager
-                          key={item.id}
-                          item={{
-                            id: item.id,
-                            projectId: item.project_id,
-                            productType: item.product_type,
-                            productName: item.product_name,
-                            currentStatus: item.current_status,
-                            quantity: 1,
-                            statusHistory: [],
-                            attachments: [],
-                            isCompleted: false,
-                            createdAt: item.created_at,
-                            updatedAt: item.updated_at,
-                            createdBy: 'system',
-                            updatedBy: 'system'
-                          }}
-                          onStatusUpdate={async (itemId: string, newStatus: string, notes?: string, cost?: number) => {
-                            await fetchProjectDetails()
-                          }}
-                        />
+                  {(project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP').length > 0 ? (
+                    (project as any).workflow_items
+                      .filter((wf: any) => wf.product_type === 'IMP')
+                      .map((wf: any) => (
+                        <div key={wf.id} className="space-y-2">
+                          {editMode && (
+                            <div className="flex justify-end gap-2">
+                              {typeof wf?.step_data?.quantity === 'number' && (
+                                <Button size="sm" variant="outline" onClick={() => handleWorkflowDecrement(wf)}>
+                                  <Minus className="w-4 h-4 mr-1" /> Restar
+                                </Button>
+                              )}
+                              <Button size="sm" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => handleWorkflowDelete(wf.id)}>
+                                <Trash2 className="w-4 h-4 mr-1" /> Eliminar
+                              </Button>
+                            </div>
+                          )}
+                          <IMPTaskManager
+                            item={{
+                              id: wf.id,
+                              projectId: wf.project_id,
+                              productType: wf.product_type,
+                              productName: wf.product_name,
+                              currentStatus: mapImpStepToStatus(wf.current_step) as any,
+                              quantity: wf.step_data?.quantity || 1,
+                              statusHistory: [],
+                              attachments: [],
+                              isCompleted: Boolean(wf.is_completed),
+                              createdAt: wf.created_at,
+                              updatedAt: wf.updated_at,
+                              createdBy: 'system',
+                              updatedBy: 'system'
+                            }}
+                            onStatusUpdate={async () => {
+                              await fetchProjectDetails()
+                            }}
+                          />
+                        </div>
                       ))
                   ) : (
                     <div className="text-center py-12">
@@ -768,22 +938,18 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
                     <h4 className="font-medium mb-3">Productos por Tipo</h4>
-                    <div className="space-y-2">
+                      <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Inventario (LU)</span>
-                        <span className="font-medium">{luItems.length}</span>
+                          <span className="font-medium">{projectMetrics?.lu?.total ?? luItems.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Cotización (CL)</span>
-                        <span className="font-medium text-blue-600">
-                          {(project as any).workflow_items?.filter((item: any) => item.product_type === 'CL').length || 0}
-                        </span>
+                          <span className="font-medium text-blue-600">{projectMetrics?.cl?.total ?? ((project as any).workflow_items?.filter((item: any) => item.product_type === 'CL').length || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Importación (IMP)</span>
-                        <span className="font-medium text-purple-600">
-                          {(project as any).workflow_items?.filter((item: any) => item.product_type === 'IMP').length || 0}
-                        </span>
+                          <span className="font-medium text-purple-600">{projectMetrics?.imp?.total ?? ((project as any).workflow_items?.filter((item: any) => item.product_type === 'IMP').length || 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -793,25 +959,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="font-medium">
-                          {(project as any).project_items?.filter((item: any) => item.product_type === 'CL').length || 0}
-                        </span>
+                        <span className="font-medium">{projectMetrics?.cl?.total ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL').length || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">En Proceso</span>
-                        <span className="font-medium text-blue-600">
-                          {(project as any).project_items?.filter((item: any) => 
-                            item.product_type === 'CL' && item.current_status !== 'recibido'
-                          ).length || 0}
-                        </span>
+                        <span className="font-medium text-blue-600">{projectMetrics?.cl ? (projectMetrics.cl.total - (projectMetrics.cl.completed || 0)) : ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL' && mapClStepToStatus(wf.current_step) !== 'recibido').length || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Completados</span>
-                        <span className="font-medium text-green-600">
-                          {(project as any).project_items?.filter((item: any) => 
-                            item.product_type === 'CL' && item.current_status === 'recibido'
-                          ).length || 0}
-                        </span>
+                        <span className="font-medium text-green-600">{projectMetrics?.cl?.completed ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL' && mapClStepToStatus(wf.current_step) === 'recibido').length || 0)}</span>
                       </div>
                     </div>
                   </div>
@@ -821,25 +977,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="font-medium">
-                          {(project as any).project_items?.filter((item: any) => item.product_type === 'IMP').length || 0}
-                        </span>
+                        <span className="font-medium">{projectMetrics?.imp?.total ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP').length || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">En Proceso</span>
-                        <span className="font-medium text-purple-600">
-                          {(project as any).project_items?.filter((item: any) => 
-                            item.product_type === 'IMP' && item.current_status !== 'recibido'
-                          ).length || 0}
-                        </span>
+                        <span className="font-medium text-purple-600">{projectMetrics?.imp ? (projectMetrics.imp.total - (projectMetrics.imp.completed || 0)) : ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP' && mapImpStepToStatus(wf.current_step) !== 'recibido').length || 0)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Completados</span>
-                        <span className="font-medium text-green-600">
-                          {(project as any).project_items?.filter((item: any) => 
-                            item.product_type === 'IMP' && item.current_status === 'recibido'
-                          ).length || 0}
-                        </span>
+                        <span className="font-medium text-green-600">{projectMetrics?.imp?.completed ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP' && mapImpStepToStatus(wf.current_step) === 'recibido').length || 0)}</span>
                       </div>
                     </div>
                   </div>

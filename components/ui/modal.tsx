@@ -119,7 +119,7 @@ function ModalOverlay({ content, options }: ModalOverlayProps) {
             onClick={handleClose}
             className="absolute top-4 right-4 z-10 p-2 rounded-lg hover:bg-accent transition-colors"
           >
-            <X className="h-5 w-5 text-gray-500" />
+            <X className="h-5 w-5 text-muted-foreground" />
           </button>
         )}
         {content}
