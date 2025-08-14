@@ -1405,11 +1405,53 @@ export const projectService = {
   },
 
   async delete(id: string) {
+    // Before deleting the project, return LU items back to inventory
+    // and remove related project items to maintain referential integrity.
+    // 1) Fetch LU project items for this project
+    const { data: luItems } = await supabase
+      .from('project_items')
+      .select('id, product_type, description, quantity')
+      .eq('project_id', id)
+
+    if (Array.isArray(luItems) && luItems.length > 0) {
+      for (const item of luItems) {
+        try {
+          if (item?.product_type === 'LU') {
+            const description: string = (item as any)?.description || ''
+            const match = description.match(/^SKU:\s*(.+)$/)
+            const sku = match ? match[1].trim() : null
+            if (sku && typeof item.quantity === 'number' && item.quantity > 0) {
+              const { data: inv } = await supabase
+                .from('inventory')
+                .select('id, quantity')
+                .eq('sku', sku)
+                .single()
+              if (inv?.id) {
+                await inventoryService.update(inv.id, {
+                  quantity: (Number(inv.quantity) || 0) + Number(item.quantity)
+                })
+              }
+            }
+          }
+        } catch (e) {
+          // Continue best-effort restock per item but do not block project deletion
+          console.warn('Failed to restock LU item during project delete:', e)
+        }
+      }
+    }
+
+    // 2) Delete project items explicitly
+    const { error: piError } = await supabase
+      .from('project_items')
+      .delete()
+      .eq('project_id', id)
+    if (piError) throw piError
+
+    // 3) Delete the project
     const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', id)
-    
     if (error) throw error
   },
 
@@ -1751,22 +1793,45 @@ export const projectItemService = {
   },
 
   async delete(id: string) {
-    // Get project ID before deletion
+    // Get item details before deletion for restock logic and project progress
     const { data: item } = await supabase
       .from('project_items')
-      .select('project_id')
+      .select('id, project_id, product_type, description, quantity')
       .eq('id', id)
       .single()
-    
+
+    // If LU item: return quantity to inventory by matching SKU in description
+    if (item && item.product_type === 'LU') {
+      try {
+        const description: string = (item as any)?.description || ''
+        const match = description.match(/^SKU:\s*(.+)$/)
+        const sku = match ? match[1].trim() : null
+        if (sku && typeof item.quantity === 'number' && item.quantity > 0) {
+          const { data: inv } = await supabase
+            .from('inventory')
+            .select('id, quantity')
+            .eq('sku', sku)
+            .single()
+          if (inv?.id) {
+            await inventoryService.update(inv.id, {
+              quantity: (Number(inv.quantity) || 0) + Number(item.quantity)
+            })
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to restock LU item on delete:', e)
+      }
+    }
+
+    // Proceed to delete the project item
     const { error } = await supabase
       .from('project_items')
       .delete()
       .eq('id', id)
-    
     if (error) throw error
-    
+
     // Update project progress if item existed
-    if (item) {
+    if (item?.project_id) {
       await projectService.updateProgress(item.project_id)
     }
   }

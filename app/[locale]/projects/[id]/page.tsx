@@ -64,6 +64,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'cl-workflows' | 'imp-workflows' | 'analytics'>('overview')
   const [luSortBy, setLuSortBy] = useState<'name_asc' | 'name_desc' | 'qty_desc' | 'qty_asc' | 'cost_desc' | 'cost_asc'>('name_asc')
   const [editMode, setEditMode] = useState(false)
+  // Finalización del proyecto se maneja en la pantalla dedicada /complete
 
   // Mock current user - replace with actual auth
   const currentUser = {
@@ -323,36 +324,11 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     }
   }
 
+
   async function handleCompleteProject() {
     if (!project) return
-    try {
-      if (typeof window !== 'undefined') {
-        const confirmed = window.confirm('¿Marcar el proyecto como completado?')
-        if (!confirmed) return
-      }
-      const response = await fetch('/api/projects', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: project.id,
-          status: 'completed',
-          actualEndDate: new Date().toISOString()
-        })
-      })
-      const result = await response.json().catch(() => ({}))
-      if (!response.ok || !result?.success) {
-        throw new Error(result?.error || 'Failed to complete project')
-      }
-      await fetchProjectDetails()
-      if (typeof window !== 'undefined') {
-        window.alert('Proyecto marcado como completado.')
-      }
-    } catch (error) {
-      console.error('Error completing project:', error)
-      if (typeof window !== 'undefined') {
-        window.alert('No se pudo completar el proyecto.')
-      }
-    }
+    // Navegar a la pantalla dedicada de finalización
+    router.push(`/${params.locale}/projects/${params.id}/complete`)
   }
 
   const handleIMPStart = async (data: any) => {
@@ -1003,15 +979,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Inventario (LU)</span>
-                          <span className="font-medium">{projectMetrics?.lu?.total ?? luItems.length}</span>
+                          <span className="font-medium">{projectMetrics?.lu?.total ?? 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Cotización (CL)</span>
-                          <span className="font-medium text-blue-600">{projectMetrics?.cl?.total ?? ((project as any).workflow_items?.filter((item: any) => item.product_type === 'CL').length || 0)}</span>
+                          <span className="font-medium text-blue-600">{projectMetrics?.cl?.total ?? 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Importación (IMP)</span>
-                          <span className="font-medium text-purple-600">{projectMetrics?.imp?.total ?? ((project as any).workflow_items?.filter((item: any) => item.product_type === 'IMP').length || 0)}</span>
+                          <span className="font-medium text-purple-600">{projectMetrics?.imp?.total ?? 0}</span>
                       </div>
                     </div>
                   </div>
@@ -1021,15 +997,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="font-medium">{projectMetrics?.cl?.total ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL').length || 0)}</span>
+                        <span className="font-medium">{projectMetrics?.cl?.total ?? 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">En Proceso</span>
-                        <span className="font-medium text-blue-600">{projectMetrics?.cl ? (projectMetrics.cl.total - (projectMetrics.cl.completed || 0)) : ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL' && mapClStepToStatus(wf.current_step) !== 'recibido').length || 0)}</span>
+                        <span className="font-medium text-blue-600">{projectMetrics?.cl ? Math.max(0, (projectMetrics.cl.total - (projectMetrics.cl.completed || 0))) : 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Completados</span>
-                        <span className="font-medium text-green-600">{projectMetrics?.cl?.completed ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL' && mapClStepToStatus(wf.current_step) === 'recibido').length || 0)}</span>
+                        <span className="font-medium text-green-600">{projectMetrics?.cl?.completed ?? 0}</span>
                       </div>
                     </div>
                   </div>
@@ -1039,15 +1015,15 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     <div className="space-y-2">
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Total</span>
-                        <span className="font-medium">{projectMetrics?.imp?.total ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP').length || 0)}</span>
+                        <span className="font-medium">{projectMetrics?.imp?.total ?? 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">En Proceso</span>
-                        <span className="font-medium text-purple-600">{projectMetrics?.imp ? (projectMetrics.imp.total - (projectMetrics.imp.completed || 0)) : ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP' && mapImpStepToStatus(wf.current_step) !== 'recibido').length || 0)}</span>
+                        <span className="font-medium text-purple-600">{projectMetrics?.imp ? Math.max(0, (projectMetrics.imp.total - (projectMetrics.imp.completed || 0))) : 0}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-sm text-muted-foreground">Completados</span>
-                        <span className="font-medium text-green-600">{projectMetrics?.imp?.completed ?? ((project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP' && mapImpStepToStatus(wf.current_step) === 'recibido').length || 0)}</span>
+                        <span className="font-medium text-green-600">{projectMetrics?.imp?.completed ?? 0}</span>
                       </div>
                     </div>
                   </div>
@@ -1111,6 +1087,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         onImport={handleLUImport}
         projectId={params.id}
       />
+
     </div>
   )
 }
