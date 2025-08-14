@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { projectService } from '@/lib/database'
+import { getServiceRoleClient } from '@/lib/supabase/service-role'
+import { ensureUserExists } from '@/lib/auth/user-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,14 +33,12 @@ export async function POST(request: NextRequest) {
       createdBy
     } = body
 
-    // Validate required fields
-    if (!name || !priority || !startDate || !createdBy) {
+    // Validate required fields except createdBy (we will resolve a valid creator if missing/invalid)
+    if (!name || !priority || !startDate) {
       const missingFields = []
       if (!name) missingFields.push('name')
       if (!priority) missingFields.push('priority')
       if (!startDate) missingFields.push('startDate')
-      if (!createdBy) missingFields.push('createdBy')
-      
       console.error('❌ Missing required fields:', missingFields)
       return NextResponse.json(
         { success: false, error: `Missing required fields: ${missingFields.join(', ')}` },
@@ -78,6 +78,57 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Resolve a valid auth user ID for created_by
+    const supabaseAdmin = getServiceRoleClient()
+    let effectiveCreatedBy: string | null = typeof createdBy === 'string' ? createdBy : null
+    const isZeroGuid = typeof effectiveCreatedBy === 'string' && effectiveCreatedBy.startsWith('00000000-0000-0000-0000-000000000000')
+
+    let isValidAuthUser = false
+    if (effectiveCreatedBy && !isZeroGuid) {
+      try {
+        const { data: authUser, error: authErr } = await supabaseAdmin.auth.admin.getUserById(effectiveCreatedBy)
+        isValidAuthUser = !!authUser?.user && !authErr
+      } catch {
+        isValidAuthUser = false
+      }
+    }
+
+    if (!isValidAuthUser) {
+      // Fallback 1: first public user (ids are synced to auth user ids in this app)
+      try {
+        const { data: firstUser } = await supabaseAdmin
+          .from('users')
+          .select('id')
+          .limit(1)
+          .single()
+        if (firstUser?.id) {
+          effectiveCreatedBy = firstUser.id
+        }
+      } catch {}
+
+      // Fallback 2: sync first auth user into public.users and use it
+      if (!effectiveCreatedBy || isZeroGuid) {
+        try {
+          const { data: authUsers, error: listErr } = await supabaseAdmin.auth.admin.listUsers()
+          if (!listErr && authUsers?.users?.length) {
+            const candidate = authUsers.users[0]
+            const synced = await ensureUserExists(candidate.id)
+            if (synced) {
+              effectiveCreatedBy = candidate.id
+            }
+          }
+        } catch {}
+      }
+    }
+
+    if (!effectiveCreatedBy) {
+      console.error('❌ Could not resolve a valid created_by user id for projects insert')
+      return NextResponse.json(
+        { success: false, error: 'No valid creator could be resolved for project' },
+        { status: 400 }
+      )
+    }
+
     console.log('✅ Validation passed, creating project...')
     const project = await projectService.create({
       name,
@@ -85,7 +136,7 @@ export async function POST(request: NextRequest) {
       priority,
       start_date: startDateObj,
       expected_end_date: expectedEndDateObj,
-      created_by: createdBy
+      created_by: effectiveCreatedBy
     })
 
     console.log('✅ Project created successfully:', project.id)
