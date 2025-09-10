@@ -203,7 +203,7 @@ function RoleDetailsModal({
       blue: 'text-blue-600 bg-blue-100 border-blue-200',
       green: 'text-green-600 bg-green-100 border-green-200',
       yellow: 'text-yellow-600 bg-yellow-100 border-yellow-200',
-      gray: 'text-gray-600 bg-gray-100 border-gray-200',
+      gray: 'text-gray-600 bg-gray-100 border-border',
       purple: 'text-purple-600 bg-purple-100 border-purple-200'
     }
     return colors[color as keyof typeof colors] || colors.gray
@@ -227,7 +227,7 @@ function RoleDetailsModal({
             <Shield className="h-8 w-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">{role.name}</h2>
+            <h2 className="text-2xl font-bold text-foreground">{role.name}</h2>
             {role.isSystem && (
               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
                 {t('systemRole')}
@@ -239,11 +239,11 @@ function RoleDetailsModal({
         
         <div className="flex justify-center gap-6 text-sm text-gray-600">
           <div className="text-center">
-            <div className="font-semibold text-gray-900">{role.userCount}</div>
+            <div className="font-semibold text-foreground">{role.userCount}</div>
             <div>{t('assignedUsers')}</div>
           </div>
           <div className="text-center">
-            <div className="font-semibold text-gray-900">{role.permissions.length}</div>
+            <div className="font-semibold text-foreground">{role.permissions.length}</div>
             <div>{t('permissions')}</div>
           </div>
         </div>
@@ -251,12 +251,12 @@ function RoleDetailsModal({
 
       <div className="space-y-6">
         {/* Role Information */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">{t('roleInformation')}</h3>
+        <div className="bg-muted/50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-foreground mb-3">{t('roleInformation')}</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">{t('created')}:</span>
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-foreground">
                 {role.createdAt ? new Date(role.createdAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -266,7 +266,7 @@ function RoleDetailsModal({
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">{t('lastUpdate')}:</span>
-              <span className="font-medium text-gray-900">
+              <span className="font-medium text-foreground">
                 {role.updatedAt ? new Date(role.updatedAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
                   month: 'long',
@@ -278,12 +278,12 @@ function RoleDetailsModal({
         </div>
 
         {/* Permissions by Category */}
-        <div className="bg-gray-50 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('permissionsByCategory')}</h3>
+        <div className="bg-muted/50 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t('permissionsByCategory')}</h3>
           <div className="space-y-4">
             {Object.entries(groupedPermissions).map(([category, permissions]) => (
-              <div key={category} className="border border-gray-200 rounded-lg p-3 bg-white">
-                <h4 className="font-medium text-gray-900 mb-2">{category}</h4>
+              <div key={category} className="border border-border rounded-lg p-3 bg-card">
+                <h4 className="font-medium text-foreground mb-2">{category}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {permissions.map((permission) => (
                     <div key={permission.id} className="flex items-center gap-2 text-sm text-gray-700">

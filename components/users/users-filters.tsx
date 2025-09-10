@@ -39,7 +39,7 @@ export function UsersFilters({
         <div className="flex flex-col lg:flex-row gap-4">
           {/* Search */}
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               placeholder={t('searchPlaceholder')}
               value={searchTerm}
@@ -52,7 +52,7 @@ export function UsersFilters({
           <select
             value={roleFilter}
             onChange={(e) => onRoleFilterChange(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-2 border border-input rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <option value="all">{t('filters.allRoles')}</option>
             <option value="admin">{t('admin')}</option>

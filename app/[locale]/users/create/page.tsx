@@ -160,21 +160,77 @@ function CreateUserContent() {
   const getRoleColor = (color?: string) => {
     const colors = {
       red: 'bg-red-100 text-red-800 border-red-200',
-      blue: 'bg-blue-100 text-blue-800 border-blue-200',
+      blue: 'bg-primary/10 text-primary border-primary/20',
       green: 'bg-green-100 text-green-800 border-green-200',
-      gray: 'bg-gray-100 text-gray-800 border-gray-200'
+      gray: 'bg-muted text-muted-foreground border-border'
     }
     return colors[color as keyof typeof colors] || colors.gray
   }
 
-  // Email validation
+  // Enhanced Email validation
   const emailValidation = {
     required: true,
     pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    maxLength: 254, // RFC 5321 standard
     custom: (value: string) => {
-      if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
-        return 'Email inválido'
+      if (!value) return null
+      
+      // Check basic format first
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+        return 'Formato de email inválido'
       }
+      
+      // Check length
+      if (value.length > 254) {
+        return 'El email es demasiado largo (máximo 254 caracteres)'
+      }
+      
+      // Check local part (before @)
+      const [localPart, domain] = value.split('@')
+      if (localPart.length > 64) {
+        return 'La parte local del email es demasiado larga'
+      }
+      
+      // Check for consecutive dots
+      if (value.includes('..')) {
+        return 'El email no puede contener puntos consecutivos'
+      }
+      
+      // Check for valid characters in local part
+      if (!/^[a-zA-Z0-9._-]+$/.test(localPart)) {
+        return 'El email contiene caracteres no válidos'
+      }
+      
+      // Check domain format
+      if (domain) {
+        const domainParts = domain.split('.')
+        if (domainParts.length < 2) {
+          return 'El dominio debe tener al menos un punto'
+        }
+        
+        // Check each domain part
+        for (const part of domainParts) {
+          if (part.length === 0) {
+            return 'El dominio no puede tener partes vacías'
+          }
+          if (!/^[a-zA-Z0-9-]+$/.test(part)) {
+            return 'El dominio contiene caracteres no válidos'
+          }
+          if (part.startsWith('-') || part.endsWith('-')) {
+            return 'Las partes del dominio no pueden empezar o terminar con guión'
+          }
+        }
+        
+        // Check TLD (last part)
+        const tld = domainParts[domainParts.length - 1]
+        if (tld.length < 2) {
+          return 'El dominio de nivel superior debe tener al menos 2 caracteres'
+        }
+      }
+      
+      return null
+    }
+  }
       return null
     }
   }
@@ -212,18 +268,18 @@ function CreateUserContent() {
             <div className="flex items-center gap-4 mb-4">
               <button
                 onClick={handleCancel}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
                 disabled={isLoading}
               >
-                <ArrowLeft className="h-5 w-5 text-gray-600" />
+                <ArrowLeft className="h-5 w-5 text-muted-foreground" />
               </button>
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <User className="h-8 w-8 text-blue-600" />
+                <div className="p-3 bg-primary/10 rounded-xl">
+                  <User className="h-8 w-8 text-primary" />
                 </div>
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Crear Nuevo Usuario</h1>
-                  <p className="text-gray-600">Completa la información para crear un nuevo usuario</p>
+                  <h1 className="text-3xl font-bold text-foreground">Crear Nuevo Usuario</h1>
+                  <p className="text-muted-foreground">Completa la información para crear un nuevo usuario</p>
                 </div>
               </div>
             </div>
@@ -234,9 +290,9 @@ function CreateUserContent() {
               {/* Main Form */}
               <div className="lg:col-span-2 space-y-8">
                 {/* User Information */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <User className="h-5 w-5 text-gray-600" />
+                <div className="bg-card rounded-xl border border-border p-6">
+                  <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                    <User className="h-5 w-5 text-muted-foreground" />
                     Información del Usuario
                   </h2>
                   
@@ -258,6 +314,18 @@ function CreateUserContent() {
                       onChange={handleInputChange('email')}
                       onValidation={handleValidation('email')}
                       validation={emailValidation}
+                      showValidation={true}
+                      realTimeValidation={true}
+                      disabled={isLoading}
+                    />
+
+                    <FloatingInput
+                      label="Contraseña *"
+                      type="password"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      onValidation={handleValidation('password')}
+                      validation={passwordValidation}
                       disabled={isLoading}
                     />
                   </div>
@@ -266,22 +334,22 @@ function CreateUserContent() {
 
               {/* Role Selection Sidebar */}
               <div className="space-y-6">
-                <div className="bg-white rounded-xl border border-gray-200 p-6 overflow-hidden">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
-                    <Shield className="h-5 w-5 text-gray-600" />
+                <div className="bg-card rounded-xl border border-border p-6 overflow-hidden">
+                  <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-muted-foreground" />
                     Asignar Rol *
                   </h2>
                   
                   {isLoadingRoles ? (
                     <div className="flex items-center justify-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                      <span className="ml-2 text-gray-600">Cargando roles...</span>
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <span className="ml-2 text-muted-foreground">Cargando roles...</span>
                     </div>
                   ) : (
                     <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar">
                       {roles.map((role) => (
                         <div key={role.id}>
-                          <label className="flex items-start gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                          <label className="flex items-start gap-3 p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors">
                             <input
                               type="radio"
                               name="role"
@@ -293,13 +361,13 @@ function CreateUserContent() {
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="font-medium text-gray-900 break-words">{role.name}</span>
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${getRoleColor()}`}>
+                                <span className="font-medium text-foreground break-words">{role.name}</span>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border flex-shrink-0 ${getRoleColor('blue')}`}>
                                   {role.permissions.length} permisos
                                 </span>
                               </div>
                               {role.description && (
-                                <p className="text-sm text-gray-600 break-words">{role.description}</p>
+                                <p className="text-sm text-muted-foreground break-words">{role.description}</p>
                               )}
                             </div>
                           </label>
@@ -309,12 +377,12 @@ function CreateUserContent() {
                   )}
 
                   {selectedRole && (
-                    <div className="mt-6 p-4 bg-gray-50 rounded-lg overflow-hidden">
-                      <h3 className="font-medium text-gray-900 mb-2">Permisos del Rol</h3>
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg overflow-hidden">
+                      <h3 className="font-medium text-foreground mb-2">Permisos del Rol</h3>
                       <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                         {selectedRole.permissions.map((permission) => (
-                          <div key={permission} className="text-sm text-gray-600 flex items-center gap-2 break-words">
-                            <div className="w-1.5 h-1.5 bg-gray-400 rounded-full flex-shrink-0"></div>
+                          <div key={permission} className="text-sm text-muted-foreground flex items-center gap-2 break-words">
+                            <div className="w-1.5 h-1.5 bg-muted-foreground rounded-full flex-shrink-0"></div>
                             <span className="break-words">{permission}</span>
                           </div>
                         ))}
@@ -324,14 +392,14 @@ function CreateUserContent() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-card rounded-xl border border-border p-6">
                   <div className="space-y-3">
                     <LoadingButton
                       type="submit"
                       isLoading={isLoading}
                       loadingText={'Creando Usuario...'}
                       disabled={!isFormValid || isLoadingRoles}
-                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Crear Usuario
@@ -341,7 +409,7 @@ function CreateUserContent() {
                       type="button"
                       onClick={handleCancel}
                       disabled={isLoading}
-                      className="w-full px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+                      className="w-full px-4 py-2 border border-input text-foreground rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50"
                     >
                       Cancelar
                     </button>

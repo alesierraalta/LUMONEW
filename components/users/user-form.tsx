@@ -151,10 +151,10 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             <User className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-blue-600" />
           </div>
           <div>
-            <h2 className="text-base xs:text-lg sm:text-xl font-semibold text-gray-900">
+            <h2 className="text-base xs:text-lg sm:text-xl font-semibold text-foreground">
               {isEditing ? 'Editar Usuario' : 'Nuevo Usuario'}
             </h2>
-            <p className="text-xs xs:text-sm text-gray-500">
+            <p className="text-xs xs:text-sm text-muted-foreground">
               {isEditing ? 'Actualizar información' : 'Completa los datos básicos'}
             </p>
           </div>
@@ -163,8 +163,8 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* User Information */}
           <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900 flex items-center gap-2">
-              <Mail className="h-5 w-5 text-gray-600" />
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Mail className="h-5 w-5 text-muted-foreground" />
               Información del Usuario
             </h3>
             
@@ -213,13 +213,13 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
             )}
 
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 Rol *
               </label>
               <select
                 value={formData.roleId}
                 onChange={(e) => setFormData(prev => ({ ...prev, roleId: e.target.value }))}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 border border-input rounded-lg focus:ring-2 focus:ring-ring focus:border-ring transition-colors"
                 disabled={isLoading}
                 required
               >
@@ -234,7 +234,7 @@ export function UserForm({ user, onSubmit, onCancel, isLoading = false }: UserFo
           </div>
 
           {/* Form Actions */}
-          <div className="flex flex-col xs:flex-row gap-2 xs:gap-3 pt-4 xs:pt-6 border-t border-gray-200">
+          <div className="flex flex-col xs:flex-row gap-2 xs:gap-3 pt-4 xs:pt-6 border-t border-border">
             <LoadingButton
               type="submit"
               isLoading={isLoading}

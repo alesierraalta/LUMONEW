@@ -33,10 +33,10 @@ export const ProtectedRoute = ({ children, fallback }: ProtectedRouteProps) => {
   if (!mounted || loading) {
     return (
       fallback || (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
-            <p className="text-gray-600">Verificando autenticación...</p>
+            <p className="text-muted-foreground">Verificando autenticación...</p>
           </div>
         </div>
       )

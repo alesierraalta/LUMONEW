@@ -332,7 +332,7 @@ export function FinancialKPIs() {
               ))}
             </div>
             
-            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
               <div className="flex justify-between items-center">
                 <span className="font-medium">{t('totalExpenses')}</span>
                 <span className="font-bold text-lg">

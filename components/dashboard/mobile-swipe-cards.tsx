@@ -138,7 +138,7 @@ export function MobileSwipeCards({
               style={{ width: `${100 / cards.length}%` }}
             >
               <Card 
-                className="bg-white shadow-sm border-0 mx-1 cursor-pointer haptic-light"
+                className="bg-card shadow-sm border-0 mx-1 cursor-pointer haptic-light"
                 onClick={() => onCardTap?.(card)}
               >
                 <CardContent className="p-4">
@@ -146,7 +146,7 @@ export function MobileSwipeCards({
                     {/* Header */}
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {card.icon && <card.icon className="w-4 h-4 text-gray-600" />}
+                        {card.icon && <card.icon className="w-4 h-4 text-muted-foreground" />}
                         <p className="text-xs text-gray-500 font-medium">{card.title}</p>
                       </div>
                       <Badge 
@@ -159,7 +159,7 @@ export function MobileSwipeCards({
 
                     {/* Value */}
                     <div>
-                      <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                      <p className="text-2xl font-bold text-foreground">{card.value}</p>
                       {card.description && (
                         <p className="text-xs text-gray-500 mt-1">{card.description}</p>
                       )}
@@ -194,7 +194,7 @@ export function MobileSwipeCards({
           <Button
             variant="ghost"
             size="sm"
-            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-white/80 backdrop-blur-sm shadow-sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-card/80 backdrop-blur-sm shadow-sm"
             onClick={handlePrev}
             disabled={isTransitioning}
           >
@@ -204,7 +204,7 @@ export function MobileSwipeCards({
           <Button
             variant="ghost"
             size="sm"
-            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-white/80 backdrop-blur-sm shadow-sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-card/80 backdrop-blur-sm shadow-sm"
             onClick={handleNext}
             disabled={isTransitioning}
           >

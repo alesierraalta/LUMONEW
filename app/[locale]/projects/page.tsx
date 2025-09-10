@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, lazy } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { ProjectDashboard } from '@/components/projects/project-dashboard'
@@ -52,9 +52,13 @@ import {
   Building2,
   ShoppingCart,
   Truck,
-  Plane
+  Plane,
+  HelpCircle
 } from 'lucide-react'
 import { Project, ProjectFormData, ProjectItem } from '@/lib/types'
+
+// Dynamic import for tutorial overlay
+const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
 // Enhanced project management interface
 export default function ProjectsPage() {
@@ -70,6 +74,7 @@ export default function ProjectsPage() {
   const [showProjectDetails, setShowProjectDetails] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
   const [showAddItemModal, setShowAddItemModal] = useState(false)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
 
   // Mock current user - replace with actual auth
   const currentUser = {
@@ -518,7 +523,7 @@ export default function ProjectsPage() {
                     ) : (
                       <div className="text-center py-12">
                         <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay productos aún</h3>
+                        <h3 className="text-lg font-medium text-foreground mb-2">No hay productos aún</h3>
                         <p className="text-gray-500 mb-4">Agrega productos LU, CL o IMP a este proyecto</p>
                         <Button 
                           onClick={() => setShowAddItemModal(true)}
@@ -582,7 +587,7 @@ export default function ProjectsPage() {
                     ) : (
                       <div className="text-center py-12">
                         <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                        <h3 className="text-lg font-medium text-gray-900 mb-2">No hay workflows activos</h3>
+                        <h3 className="text-lg font-medium text-foreground mb-2">No hay workflows activos</h3>
                         <p className="text-gray-500">Los workflows aparecerán cuando agregues productos al proyecto</p>
                       </div>
                     )
@@ -682,9 +687,9 @@ export default function ProjectsPage() {
         {/* Add Item Modal */}
         {showAddItemModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-card rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-4 md:mb-6">
-                <h2 className="text-lg md:text-2xl font-bold text-gray-900">Agregar Producto al Proyecto</h2>
+                <h2 className="text-lg md:text-2xl font-bold text-foreground">Agregar Producto al Proyecto</h2>
                 <Button
                   variant="ghost"
                   onClick={() => setShowAddItemModal(false)}
@@ -718,19 +723,24 @@ export default function ProjectsPage() {
           <p className="text-muted-foreground text-sm">Administra y supervisa todos tus proyectos</p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" id="proj-export">
             <Download className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Exportar</span>
             <span className="sm:hidden">Export</span>
           </Button>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" id="proj-import">
             <Upload className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Importar</span>
             <span className="sm:hidden">Import</span>
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setIsTutorialOpen(true)} aria-label="Abrir tutorial de proyectos" id="proj-help">
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Tutorial
+          </Button>
           <Button 
             onClick={() => setShowCreateModal(true)}
             className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            id="proj-add"
           >
             <Plus className="w-4 h-4 mr-2" />
             Nuevo Proyecto
@@ -739,7 +749,7 @@ export default function ProjectsPage() {
       </div>
 
       {/* Navigation Tabs - Mobile Responsive */}
-      <div className="border-b border-border">
+      <div className="border-b border-border" id="proj-tabs">
         <div className="flex overflow-x-auto scrollbar-hide">
           <button
             onClick={() => setActiveView('overview')}
@@ -869,7 +879,7 @@ export default function ProjectsPage() {
             </div>
 
             {/* Filters and Search - Mobile Responsive */}
-            <Card className="shadow-sm md:shadow-lg">
+            <Card className="shadow-sm md:shadow-lg" id="proj-filters">
               <CardContent className="p-4 md:p-6">
                 <div className="flex flex-col gap-4">
                   <div className="flex-1">
@@ -912,7 +922,7 @@ export default function ProjectsPage() {
             </Card>
 
             {/* Projects Grid - Mobile Responsive */}
-            <div className="w-full">
+            <div className="w-full" id="proj-grid">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-12 md:mb-16 auto-rows-fr">
                 {filteredProjects.map((project) => (
                 <Card key={project.id} className="hover:shadow-lg transition-shadow cursor-pointer shadow-sm h-full flex flex-col">
@@ -988,7 +998,7 @@ export default function ProjectsPage() {
                   <CardContent className="p-8 md:p-12 text-center">
                     <div className="max-w-md mx-auto">
                       <Target className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">
+                      <h3 className="text-lg md:text-xl font-medium text-foreground mb-2">
                         {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
                           ? 'No se encontraron proyectos'
                           : 'No hay proyectos aún'
@@ -1031,7 +1041,7 @@ export default function ProjectsPage() {
           <Card className="mb-12 md:mb-16">
             <CardContent className="p-8 md:p-12 text-center">
               <Columns className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">Vista Kanban</h3>
+              <h3 className="text-lg md:text-xl font-medium text-foreground mb-2">Vista Kanban</h3>
               <p className="text-gray-500 text-sm md:text-base">Próximamente disponible</p>
             </CardContent>
           </Card>
@@ -1042,7 +1052,7 @@ export default function ProjectsPage() {
           <Card className="mb-12 md:mb-16">
             <CardContent className="p-8 md:p-12 text-center">
               <CalendarDays className="w-12 h-12 md:w-16 md:h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg md:text-xl font-medium text-gray-900 mb-2">Vista de Cronograma</h3>
+              <h3 className="text-lg md:text-xl font-medium text-foreground mb-2">Vista de Cronograma</h3>
               <p className="text-gray-500 text-sm md:text-base">Próximamente disponible</p>
             </CardContent>
           </Card>
@@ -1129,6 +1139,23 @@ export default function ProjectsPage() {
             />
           </div>
         </div>
+      )}
+
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <InventoryTutorial
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+            steps={[
+              { id: 'add', target: '#proj-add', title: 'Nuevo proyecto', description: 'Crea un proyecto para organizar productos y workflows (LU, CL, IMP).', placement: 'bottom' },
+              { id: 'import', target: '#proj-import', title: 'Importar proyectos', description: 'Carga proyectos desde un archivo para acelerar la configuración.', placement: 'bottom' },
+              { id: 'export', target: '#proj-export', title: 'Exportar proyectos', description: 'Descarga tus proyectos para respaldo o análisis.', placement: 'bottom' },
+              { id: 'tabs', target: '#proj-tabs', title: 'Vistas', description: 'Alterna entre General, Stock, Kanban, Cronograma y Analíticas.', placement: 'bottom' },
+              { id: 'filters', target: '#proj-filters', title: 'Búsqueda y filtros', description: 'Filtra por estado, prioridad y busca por nombre o descripción.', placement: 'bottom' },
+              { id: 'grid', target: '#proj-grid', title: 'Lista de proyectos', description: 'Explora y gestiona tus proyectos desde esta cuadrícula.', placement: 'top' }
+            ]}
+          />
+        </Suspense>
       )}
     </div>
   )

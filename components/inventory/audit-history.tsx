@@ -492,7 +492,7 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
         </div>
         
         {/* Información de fecha completa */}
-        <div className="mb-3 p-2 bg-white rounded border border-slate-100">
+        <div className="mb-3 p-2 bg-card rounded border border-slate-100">
           <div className="flex items-center gap-2 text-xs text-slate-600">
             <Calendar className="h-3 w-3" />
             <span className="font-medium">Fecha y hora exacta:</span>
@@ -545,7 +545,7 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
                   <XCircle className="h-4 w-4 text-red-600" />
                   <h5 className="text-sm font-medium text-red-800">Valores anteriores</h5>
                 </div>
-                <div className="bg-white rounded border border-red-200 p-2 max-h-32 overflow-y-auto">
+                <div className="bg-card rounded border border-red-200 p-2 max-h-32 overflow-y-auto">
                   <pre className="text-xs text-red-700 whitespace-pre-wrap">
                     {JSON.stringify(old_values, null, 2)}
                   </pre>
@@ -559,7 +559,7 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
                   <CheckCircle className="h-4 w-4 text-emerald-600" />
                   <h5 className="text-sm font-medium text-emerald-800">Valores nuevos</h5>
                 </div>
-                <div className="bg-white rounded border border-emerald-200 p-2 max-h-32 overflow-y-auto">
+                <div className="bg-card rounded border border-emerald-200 p-2 max-h-32 overflow-y-auto">
                   <pre className="text-xs text-emerald-700 whitespace-pre-wrap">
                     {JSON.stringify(new_values, null, 2)}
                   </pre>

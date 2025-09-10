@@ -4,7 +4,7 @@ async function globalTeardown() {
   console.log('🧹 Starting global teardown for E2E tests...');
 
   // Initialize Supabase client for cleanup
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hnbtninlyzpdemyudaqg.supabase.co';
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-key';
   
   const supabase = createClient(supabaseUrl, supabaseAnonKey);

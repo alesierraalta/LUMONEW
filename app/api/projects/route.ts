@@ -171,6 +171,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json()
+    console.log('PUT /api/projects - Request body:', JSON.stringify(body, null, 2))
     const { id, ...updates } = body
 
     if (!id) {
@@ -180,19 +181,24 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    // Convert date strings to Date objects
+    // Convert date strings to ISO strings for Supabase
     const processedUpdates = {
       ...updates,
-      expected_end_date: updates.expectedEndDate ? new Date(updates.expectedEndDate) : undefined,
-      actual_end_date: updates.actualEndDate ? new Date(updates.actualEndDate) : undefined
+      expected_end_date: updates.expectedEndDate ? new Date(updates.expectedEndDate).toISOString() : undefined,
+      actual_end_date: updates.actualEndDate ? new Date(updates.actualEndDate).toISOString() : undefined
     }
+    
+    console.log('Processed updates:', JSON.stringify(processedUpdates, null, 2))
 
     const project = await projectService.update(id, processedUpdates)
+    console.log('Project updated successfully:', project.id)
     return NextResponse.json({ success: true, data: project })
   } catch (error) {
     console.error('Error updating project:', error)
+    console.error('Error details:', error instanceof Error ? error.message : 'Unknown error')
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
     return NextResponse.json(
-      { success: false, error: 'Failed to update project' },
+      { success: false, error: 'Failed to update project', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }

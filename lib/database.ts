@@ -1387,8 +1387,8 @@ export const projectService = {
     description: string
     status: 'active' | 'completed' | 'cancelled' | 'on_hold'
     priority: 'low' | 'medium' | 'high' | 'urgent'
-    expected_end_date: Date
-    actual_end_date: Date
+    expected_end_date: string
+    actual_end_date: string
     progress: number
     total_items: number
     completed_items: number

@@ -5,8 +5,8 @@ async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting global setup for E2E tests...');
 
   // Initialize Supabase client for test data setup
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321';
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-key';
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://hnbtninlyzpdemyudaqg.supabase.co';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhuYnRuaW5seXpwZGVteXVkYXFnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTI3OTQsImV4cCI6MjA2ODY2ODc5NH0.IxnwffD8nkbj85aQR1MLzme5snaD711hnWGH7LOkYHE';
   
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

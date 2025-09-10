@@ -1,34 +1,42 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.js
 .yarn/install-state.gz
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+jspm_packages/
 
-# local env files
+# Testing
+/coverage
+*.lcov
+.nyc_output
+test-results/
+playwright-report/
+junit.xml
+test-*.js
+
+# Next.js
+/.next/
+/out/
+.next
+
+# Production builds
+/build
+/dist
+.nuxt
+
+# Environment files
 .env*.local
 .env.production
 .env.staging
+.env
 
 # Security - Never commit these files
 *.pem
@@ -44,18 +52,21 @@ config/secrets/
 backup/
 dumps/
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# IDE
+# IDE and editors
 .vscode/
 .idea/
 *.swp
 *.swo
+.cursor/
+.clinerules/
+.kilocode/
 
 # Logs
 logs
@@ -71,28 +82,14 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
-coverage/
-*.lcov
-
-# nyc test coverage
-.nyc_output
-
-# Dependency directories
-node_modules/
-jspm_packages/
-
-# Optional npm cache directory
-.npm
-
-# Optional eslint cache
-.eslintcache
-
-# Microbundle cache
+# Cache directories
+.cache
+.parcel-cache
 .rpt2_cache/
 .rts2_cache_cjs/
 .rts2_cache_es/
 .rts2_cache_umd/
+.smartbatch_cache/
 
 # Optional REPL history
 .node_repl_history
@@ -102,17 +99,6 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# parcel-bundler cache (https://parceljs.org/)
-.cache
-.parcel-cache
-
-# Next.js build output
-.next
-
-# Nuxt.js build / generate output
-.nuxt
-dist
 
 # Gatsby files
 .cache/
@@ -126,16 +112,93 @@ public
 tmp/
 temp/
 
-# Test results and reports
-test-results/
-playwright-report/
-junit.xml
+# MCP and AI tool directories
+.serena/
+.context7/
+.lotus/
+.magic/
+.playwright/
 
-# Tool-specific directories
-.cursor/
-.clinerules/
-.kilocode/
+# Python files (for utility scripts)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+PIPFILE.lock
 
-# Temporary test files
-test-*.js
+# Migration and script artifacts
 apply-migration-*.js
+smartbatch_state.json
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Windows
+*.tmp
+*.temp
+*.lnk
+
+# Linux
+*~
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*.rej
+
+# Compressed files
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Media files (unless specifically needed)
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.webm
+*.mp3
+*.wav
+*.flac
+*.aac
+
+# Large data files
+*.csv
+*.json.bak
+*.xml.bak
+
+# User-specific files
+userinput.py

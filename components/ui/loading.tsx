@@ -18,11 +18,15 @@ export function LoadingSpinner({ size = 'md', className }: LoadingSpinnerProps) 
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-2 border-gray-300 border-t-blue-600',
+        'animate-spin rounded-full border-2 border-muted border-t-primary',
         sizeClasses[size],
         className
       )}
-    />
+      role="status"
+      aria-label="Loading"
+    >
+      <span className="sr-only">Loading...</span>
+    </div>
   )
 }
 
@@ -44,7 +48,7 @@ export function LoadingDots({ size = 'md', className }: LoadingDotsProps) {
         <div
           key={i}
           className={cn(
-            'bg-blue-600 rounded-full animate-pulse',
+            'bg-primary rounded-full animate-pulse',
             sizeClasses[size]
           )}
           style={{
@@ -77,7 +81,7 @@ export function LoadingOverlay({
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
           <div className="flex flex-col items-center gap-3">
             <LoadingSpinner size="lg" />
-            <p className="text-sm text-gray-600 font-medium">{message}</p>
+            <p className="text-sm text-muted-foreground font-medium">{message}</p>
           </div>
         </div>
       )}
@@ -128,7 +132,8 @@ export function LoadingButton({
       disabled={disabled || isLoading}
       className={cn(
         'relative inline-flex items-center justify-center px-4 py-2 rounded-lg font-medium transition-all duration-200',
-        'bg-blue-600 hover:bg-blue-700 text-white',
+        'bg-primary hover:bg-primary/90 text-primary-foreground',
+        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring',
         'disabled:opacity-50 disabled:cursor-not-allowed',
         isLoading && 'cursor-wait',
         className
@@ -168,7 +173,7 @@ export function ProgressBar({
       </div>
       <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
         <div
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+          className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${clampedProgress}%` }}
         />
       </div>
@@ -186,7 +191,7 @@ export function PulseLoader({ className }: PulseLoaderProps) {
       {[0, 1, 2].map((i) => (
         <div
           key={i}
-          className="w-3 h-3 bg-blue-600 rounded-full animate-pulse"
+          className="w-3 h-3 bg-primary rounded-full animate-pulse"
           style={{
             animationDelay: `${i * 0.15}s`,
             animationDuration: '1.4s'

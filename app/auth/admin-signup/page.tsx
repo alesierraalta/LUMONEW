@@ -86,12 +86,12 @@ export default function AdminSignupPage() {
   // Si no está autorizado, mostrar mensaje de acceso restringido
   if (!isAuthorized) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-md w-full space-y-8">
           <Card>
             <CardHeader className="text-center">
               <Shield className="mx-auto h-12 w-12 text-red-500" />
-              <CardTitle className="text-2xl font-bold text-gray-900">
+              <CardTitle className="text-2xl font-bold text-foreground">
                 Acceso Restringido
               </CardTitle>
               <CardDescription>
@@ -100,7 +100,7 @@ export default function AdminSignupPage() {
             </CardHeader>
             <CardContent>
               <div className="text-center">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-muted-foreground mb-4">
                   Solo los administradores pueden crear nuevos usuarios en el sistema.
                 </p>
                 <Link
@@ -119,14 +119,14 @@ export default function AdminSignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <UserPlus className="mx-auto h-12 w-12 text-blue-600" />
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-3xl font-extrabold text-foreground">
             Crear Usuario
           </h2>
-          <p className="mt-2 text-sm text-gray-600">
+          <p className="mt-2 text-sm text-muted-foreground">
             Panel de administración - Crear nuevo usuario
           </p>
         </div>
@@ -184,7 +184,7 @@ export default function AdminSignupPage() {
                   id="role"
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
                   disabled={loading}
                 >
                   <option value="user">Usuario</option>

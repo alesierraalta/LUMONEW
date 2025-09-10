@@ -237,3 +237,25 @@ export class AuthenticationFlow {
     await expect(emailError).toBeVisible();
   }
 }
+
+// Simple AuthPage class for basic authentication in tests
+export class AuthPage extends BasePage {
+  constructor(page: Page) {
+    super(page);
+  }
+
+  async login(email: string, password: string): Promise<void> {
+    await this.page.goto(urls.login);
+    await this.waitForPageLoad();
+    await this.fillField(selectors.auth.emailInput, email);
+    await this.fillField(selectors.auth.passwordInput, password);
+    await this.click(selectors.auth.loginButton);
+    await this.page.waitForURL(urls.dashboard);
+  }
+
+  async logout(): Promise<void> {
+    await this.page.click(selectors.nav.userMenu);
+    await this.page.click(selectors.auth.logoutButton);
+    await this.page.waitForURL(urls.login);
+  }
+}

@@ -127,7 +127,7 @@ export function ImageUpload({
             ? 'border-blue-500 bg-blue-50'
             : 'border-gray-300 hover:border-gray-400',
           disabled && 'opacity-50 cursor-not-allowed',
-          preview ? 'border-solid border-gray-200' : ''
+          preview ? 'border-solid border-border' : ''
         )}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
@@ -160,7 +160,7 @@ export function ImageUpload({
                   className="p-2 bg-background rounded-full shadow-lg hover:bg-muted transition-colors"
                   disabled={disabled}
                 >
-                  <Upload className="h-4 w-4 text-gray-600" />
+                  <Upload className="h-4 w-4 text-muted-foreground" />
                 </button>
                 <button
                   onClick={(e) => {
@@ -178,7 +178,7 @@ export function ImageUpload({
               <div className="absolute inset-0 bg-background/80 flex items-center justify-center rounded-lg">
                 <div className="flex flex-col items-center gap-2">
                   <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent" />
-                  <span className="text-sm text-gray-600">Procesando...</span>
+                  <span className="text-sm text-muted-foreground">Procesando...</span>
                 </div>
               </div>
             )}

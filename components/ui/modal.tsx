@@ -189,7 +189,7 @@ export function ConfirmationModal({
         </h3>
       </div>
       
-      <p className="text-gray-600 mb-6 leading-relaxed">
+      <p className="text-muted-foreground mb-6 leading-relaxed">
         {message}
       </p>
       

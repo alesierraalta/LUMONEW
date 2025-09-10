@@ -20,6 +20,7 @@ interface FloatingInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEle
     custom?: (value: string) => string | null
   }
   showValidation?: boolean
+  realTimeValidation?: boolean
 }
 
 export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
@@ -32,6 +33,7 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
     onValidation,
     validation,
     showValidation = true,
+    realTimeValidation = false,
     type = 'text',
     className,
     disabled,
@@ -61,12 +63,17 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
         return `Máximo ${validation.maxLength} caracteres`
       }
 
-      if (val && validation.pattern && !validation.pattern.test(val)) {
-        return 'Formato inválido'
+      // Execute custom validation first (it has more specific error messages)
+      if (val && validation.custom) {
+        const customError = validation.custom(val)
+        if (customError) {
+          return customError
+        }
       }
 
-      if (val && validation.custom) {
-        return validation.custom(val)
+      // Only check basic pattern if custom validation passed
+      if (val && validation.pattern && !validation.pattern.test(val)) {
+        return 'Formato inválido'
       }
 
       return null
@@ -82,14 +89,14 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
       onChange?.(newValue)
 
       // Real-time validation
-      if (showValidation) {
+      if (realTimeValidation && showValidation) {
         const error = validateValue(newValue)
         setValidationError(error)
         const valid = !error
         setIsValid(valid)
         onValidation?.(valid)
       }
-    }, [controlledValue, onChange, validateValue, showValidation, onValidation])
+    }, [controlledValue, onChange, validateValue, showValidation, realTimeValidation, onValidation])
 
     const handleFocus = useCallback(() => {
       setIsFocused(true)
@@ -98,15 +105,15 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
     const handleBlur = useCallback(() => {
       setIsFocused(false)
       
-      // Validate on blur if not already validating in real-time
-      if (!showValidation && validation) {
+      // Always validate on blur to ensure validation happens
+      if (validation) {
         const error = validateValue(currentValue as string)
         setValidationError(error)
         const valid = !error
         setIsValid(valid)
         onValidation?.(valid)
       }
-    }, [showValidation, validation, validateValue, currentValue, onValidation])
+    }, [validation, validateValue, currentValue, onValidation])
 
     const togglePasswordVisibility = useCallback(() => {
       setShowPassword(prev => !prev)
@@ -135,9 +142,9 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
               'placeholder-transparent',
               'focus:ring-2 focus:ring-offset-0',
               displayError
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
                 : displaySuccess
-                ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
+                ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
                 : 'border-border focus:border-primary focus:ring-primary/20',
               disabled && 'bg-muted cursor-not-allowed opacity-60'
             )}
@@ -147,13 +154,13 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
           <label
             className={cn(
               'absolute left-4 transition-all duration-200 pointer-events-none',
-              'text-gray-500 peer-placeholder-shown:text-gray-400',
+              'text-muted-foreground peer-placeholder-shown:text-muted-foreground/70',
               isFloating
                 ? 'top-2 text-xs font-medium'
                 : 'top-1/2 -translate-y-1/2 text-sm',
-              displayError && isFloating && 'text-red-600',
-              displaySuccess && isFloating && 'text-green-600',
-              disabled && 'text-gray-400'
+              displayError && isFloating && 'text-destructive',
+              displaySuccess && isFloating && 'text-green-600 dark:text-green-400',
+              disabled && 'text-muted-foreground'
             )}
           >
             {label}
@@ -163,7 +170,7 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
             <button
               type="button"
               onClick={togglePasswordVisibility}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors"
               disabled={disabled}
             >
               {showPassword ? (
@@ -188,19 +195,19 @@ export const FloatingInput = forwardRef<HTMLInputElement, FloatingInputProps>(
         {(displayError || displaySuccess || helperText) && (
           <div className="mt-1 min-h-[1.25rem]">
             {displayError && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
+              <p className="text-xs text-destructive flex items-center gap-1">
                 <AlertCircle className="h-3 w-3 flex-shrink-0" />
                 {displayError}
               </p>
             )}
             {!displayError && displaySuccess && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
+              <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                 <CheckCircle className="h-3 w-3 flex-shrink-0" />
                 {displaySuccess}
               </p>
             )}
             {!displayError && !displaySuccess && helperText && (
-              <p className="text-xs text-gray-500">{helperText}</p>
+              <p className="text-xs text-muted-foreground">{helperText}</p>
             )}
           </div>
         )}
@@ -290,7 +297,7 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
         setIsValid(valid)
         onValidation?.(valid)
       }
-    }, [controlledValue, onChange, validateValue, showValidation, onValidation])
+    }, [controlledValue, onChange, validateValue, showValidation, realTimeValidation, onValidation])
 
     const handleFocus = useCallback(() => {
       setIsFocused(true)
@@ -329,9 +336,9 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
               'placeholder-transparent',
               'focus:ring-2 focus:ring-offset-0',
               displayError
-                ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
+                ? 'border-destructive focus:border-destructive focus:ring-destructive/20'
                 : displaySuccess
-                ? 'border-green-300 focus:border-green-500 focus:ring-green-200'
+                ? 'border-green-500 focus:border-green-500 focus:ring-green-500/20'
                 : 'border-border focus:border-primary focus:ring-primary/20',
               disabled && 'bg-muted cursor-not-allowed opacity-60'
             )}
@@ -341,13 +348,13 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
           <label
             className={cn(
               'absolute left-4 transition-all duration-200 pointer-events-none',
-              'text-gray-500 peer-placeholder-shown:text-gray-400',
+              'text-muted-foreground peer-placeholder-shown:text-muted-foreground/70',
               isFloating
                 ? 'top-2 text-xs font-medium'
                 : 'top-6 text-sm',
-              displayError && isFloating && 'text-red-600',
-              displaySuccess && isFloating && 'text-green-600',
-              disabled && 'text-gray-400'
+              displayError && isFloating && 'text-destructive',
+              displaySuccess && isFloating && 'text-green-600 dark:text-green-400',
+              disabled && 'text-muted-foreground'
             )}
           >
             {label}
@@ -367,19 +374,19 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
         {(displayError || displaySuccess || helperText) && (
           <div className="mt-1 min-h-[1.25rem]">
             {displayError && (
-              <p className="text-xs text-red-600 flex items-center gap-1">
+              <p className="text-xs text-destructive flex items-center gap-1">
                 <AlertCircle className="h-3 w-3 flex-shrink-0" />
                 {displayError}
               </p>
             )}
             {!displayError && displaySuccess && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
+              <p className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
                 <CheckCircle className="h-3 w-3 flex-shrink-0" />
                 {displaySuccess}
               </p>
             )}
             {!displayError && !displaySuccess && helperText && (
-              <p className="text-xs text-gray-500">{helperText}</p>
+              <p className="text-xs text-muted-foreground">{helperText}</p>
             )}
           </div>
         )}

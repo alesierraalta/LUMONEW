@@ -1,19 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { DashboardPage } from '../page-objects/dashboard-page';
-import { AuthenticationFlow } from '../page-objects/auth-page';
+import { AuthPage } from '../page-objects/auth-page';
 import { urls } from '../fixtures/test-data';
 
 test.describe('Dashboard Workflows', () => {
   let dashboardPage: DashboardPage;
-  let authFlow: AuthenticationFlow;
+  let authPage: AuthPage;
 
   test.beforeEach(async ({ page }) => {
     dashboardPage = new DashboardPage(page);
-    authFlow = new AuthenticationFlow(page);
+    authPage = new AuthPage(page);
     
     // Login as admin before each test
-    await authFlow.login.goto();
-    await authFlow.login.loginAsAdmin();
+    await authPage.login.goto();
+    await authPage.login.loginAsAdmin();
   });
 
   test.describe('Dashboard Loading and Metrics Display', () => {

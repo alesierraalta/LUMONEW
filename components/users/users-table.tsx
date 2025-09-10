@@ -134,17 +134,17 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-border">
               <th className="text-left py-3 px-4">
                 <div className="w-4 h-4 bg-muted rounded animate-pulse"></div>
               </th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('user')}</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('email')}</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('role')}</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('status')}</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('lastLogin')}</th>
-              <th className="text-left py-3 px-4 font-medium text-gray-900">{t('created')}</th>
-              <th className="text-right py-3 px-4 font-medium text-gray-900">{t('actions')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('user')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('email')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('role')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('status')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('lastLogin')}</th>
+              <th className="text-left py-3 px-4 font-medium text-foreground">{t('created')}</th>
+              <th className="text-right py-3 px-4 font-medium text-foreground">{t('actions')}</th>
             </tr>
           </thead>
           <tbody>
@@ -201,7 +201,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[800px]">
         <thead>
-          <tr className="border-b border-gray-200">
+          <tr className="border-b border-border">
             <th className="text-left py-3 px-4">
               <input
                 type="checkbox"
@@ -210,13 +210,13 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                 className="rounded border-gray-300"
               />
             </th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('user')}</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('email')}</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('role')}</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('status')}</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('lastLogin')}</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-900">{t('created')}</th>
-            <th className="text-right py-3 px-4 font-medium text-gray-900">{t('actions')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('user')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('email')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('role')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('status')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('lastLogin')}</th>
+            <th className="text-left py-3 px-4 font-medium text-foreground">{t('created')}</th>
+            <th className="text-right py-3 px-4 font-medium text-foreground">{t('actions')}</th>
           </tr>
         </thead>
         <tbody>
@@ -246,7 +246,7 @@ export function UsersTable({ searchTerm = '' }: UsersTableProps) {
                     )}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-medium text-gray-900">{user.name}</div>
+                    <div className="font-medium text-foreground">{user.name}</div>
                   </div>
                 </div>
               </td>

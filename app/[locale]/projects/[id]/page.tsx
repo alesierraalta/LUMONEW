@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, lazy, useMemo } from 'react'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { formatCurrency } from '@/lib/utils'
@@ -39,9 +39,12 @@ import {
   Plane,
   Search,
   Trash2,
-  Minus
+  Minus,
+  HelpCircle
 } from 'lucide-react'
 import { Project } from '@/lib/types'
+
+const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
 interface ProjectPageProps {
   params: {
@@ -64,6 +67,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'cl-workflows' | 'imp-workflows' | 'analytics'>('overview')
   const [luSortBy, setLuSortBy] = useState<'name_asc' | 'name_desc' | 'qty_desc' | 'qty_asc' | 'cost_desc' | 'cost_asc'>('name_asc')
   const [editMode, setEditMode] = useState(false)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   // Finalización del proyecto se maneja en la pantalla dedicada /complete
 
   // Mock current user - replace with actual auth
@@ -474,7 +478,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
     return (
       <div className="flex-1 space-y-4 p-4 md:p-8 pt-6 pb-12 md:pb-16 safe-area-pb overflow-y-auto min-h-0">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Proyecto no encontrado</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Proyecto no encontrado</h2>
           <Button onClick={() => router.push('/projects')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver a Proyectos
@@ -528,10 +532,22 @@ export default function ProjectPage({ params }: ProjectPageProps) {
             <span className="hidden sm:inline">Compartir</span>
             <span className="sm:hidden">Share</span>
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            onClick={() => setIsTutorialOpen(true)}
+            id="proj-detail-help"
+            aria-label="Abrir tutorial"
+          >
+            <HelpCircle className="w-4 h-4 mr-2" />
+            Tutorial
+          </Button>
           <Button 
             onClick={() => setShowAddItemModal(true)}
             size="sm" 
             className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+            id="proj-detail-add-item"
           >
             <Plus className="w-4 h-4 mr-2" />
             Agregar Producto
@@ -542,7 +558,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       {/* Project Details Content - Mobile Responsive */}
       <div className="space-y-6">
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5" id="proj-detail-tabs">
             <TabsTrigger value="overview" className="text-xs md:text-sm">Resumen</TabsTrigger>
             <TabsTrigger value="products" className="text-xs md:text-sm">Productos</TabsTrigger>
             <TabsTrigger value="cl-workflows" className="text-xs md:text-sm">CL</TabsTrigger>
@@ -553,7 +569,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
           <TabsContent value="overview" className="space-y-6">
             {/* Project Overview Cards - Mobile Responsive */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
-              <Card className="shadow-sm md:shadow-lg">
+              <Card className="shadow-sm md:shadow-lg" id="proj-overview-progress">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -566,7 +582,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm md:shadow-lg">
+              <Card className="shadow-sm md:shadow-lg" id="proj-overview-total-products">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -580,7 +596,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm md:shadow-lg">
+              <Card className="shadow-sm md:shadow-lg" id="proj-overview-budget">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -594,7 +610,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-sm md:shadow-lg">
+              <Card className="shadow-sm md:shadow-lg" id="proj-overview-status">
                 <CardContent className="p-4 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -608,7 +624,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
             </div>
 
             {/* Product Types Overview - Mobile Responsive */}
-            <Card className="shadow-sm md:shadow-lg">
+            <Card className="shadow-sm md:shadow-lg" id="proj-overview-types">
               <CardHeader className="pb-3 md:pb-6">
                 <CardTitle className="text-lg md:text-xl">Tipos de Productos en este Proyecto</CardTitle>
               </CardHeader>
@@ -645,7 +661,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
             </Card>
 
             {/* Project Description */}
-            <Card className="shadow-sm md:shadow-lg">
+            <Card className="shadow-sm md:shadow-lg" id="proj-overview-description">
               <CardHeader className="pb-3 md:pb-6">
                 <CardTitle className="text-lg md:text-xl">Descripción del Proyecto</CardTitle>
               </CardHeader>
@@ -657,7 +673,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <TabsContent value="products" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
-              <CardHeader className="pb-3 md:pb-4">
+              <CardHeader className="pb-3 md:pb-4" id="proj-products-header">
                 <div className="flex flex-col gap-3 md:gap-4">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                     <CardTitle className="text-lg md:text-xl">Productos del Inventario (LU)</CardTitle>
@@ -667,6 +683,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                         disabled={addingItems}
                         className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
                         size="sm"
+                        id="proj-products-add-lu"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Agregar del Inventario
@@ -681,11 +698,12 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                         value={luSearchTerm}
                         onChange={(e) => setLuSearchTerm(e.target.value)}
                         className="pl-9 h-9"
+                        id="proj-products-search"
                       />
                     </div>
                     <div className="w-full md:w-56">
                       <Select value={luSortBy} onValueChange={(v) => setLuSortBy(v as any)}>
-                        <SelectTrigger className="h-9">
+                        <SelectTrigger className="h-9" id="proj-products-sort">
                           <SelectValue placeholder="Ordenar por" />
                         </SelectTrigger>
                         <SelectContent>
@@ -699,7 +717,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       </Select>
                     </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2" id="proj-products-stats">
                     <div className="rounded-md border border-border bg-muted/40 p-2 text-sm">
                       <div className="text-muted-foreground">Items</div>
                       <div className="font-semibold">{filteredLuItems.length}</div>
@@ -716,7 +734,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4" id="proj-products-list">
                   {filteredLuItems.length > 0 ? (
                     filteredLuItems.map((item: any, index: number) => (
                       <div 
@@ -787,6 +805,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                         onClick={() => setShowLUImportModal(true)}
                         disabled={addingItems}
                         className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                        id="proj-products-empty-add"
                       >
                         {addingItems ? (
                           <>
@@ -809,7 +828,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <TabsContent value="cl-workflows" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
-              <CardHeader className="pb-3 md:pb-6">
+              <CardHeader className="pb-3 md:pb-6" id="proj-cl-header">
                 <div className="flex items-center gap-3">
                   <FileText className="w-6 h-6 text-blue-600" />
                   <CardTitle className="text-lg md:text-xl">Workflows de Cotización (CL)</CardTitle>
@@ -819,7 +838,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4" id="proj-cl-list">
                   {(project as any).workflow_items?.filter((wf: any) => wf.product_type === 'CL').length > 0 ? (
                     (project as any).workflow_items
                       .filter((wf: any) => wf.product_type === 'CL')
@@ -869,6 +888,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       <Button 
                         onClick={() => setShowAddItemModal(true)}
                         className="bg-blue-600 hover:bg-blue-700"
+                        id="proj-cl-add"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Agregar Producto CL
@@ -882,7 +902,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <TabsContent value="imp-workflows" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
-              <CardHeader className="pb-3 md:pb-6">
+              <CardHeader className="pb-3 md:pb-6" id="proj-imp-header">
                 <div className="flex items-center gap-3">
                   <Plane className="w-6 h-6 text-purple-600" />
                   <CardTitle className="text-lg md:text-xl">Workflows de Importación (IMP)</CardTitle>
@@ -892,7 +912,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </p>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
+                <div className="space-y-4" id="proj-imp-list">
                   {(project as any).workflow_items?.filter((wf: any) => wf.product_type === 'IMP').length > 0 ? (
                     (project as any).workflow_items
                       .filter((wf: any) => wf.product_type === 'IMP')
@@ -942,6 +962,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       <Button 
                         onClick={() => setShowAddItemModal(true)}
                         className="bg-purple-600 hover:bg-purple-700"
+                        id="proj-imp-add"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Agregar Producto IMP
@@ -955,7 +976,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
           <TabsContent value="analytics" className="space-y-6">
             <Card className="shadow-sm md:shadow-lg">
-              <CardHeader className="pb-3 md:pb-6">
+              <CardHeader className="pb-3 md:pb-6" id="proj-analytics-header">
                 <div className="flex items-center justify-between gap-3">
                   <CardTitle className="text-lg md:text-xl">Estadísticas del Proyecto</CardTitle>
                   {project.status !== 'completed' ? (
@@ -963,6 +984,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
                       onClick={handleCompleteProject}
+                      id="proj-analytics-complete"
                     >
                       <CheckCircle className="w-4 h-4 mr-2" />
                       Terminar proyecto
@@ -974,7 +996,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
+                  <div id="proj-analytics-types">
                     <h4 className="font-medium mb-3">Productos por Tipo</h4>
                       <div className="space-y-2">
                       <div className="flex justify-between">
@@ -991,8 +1013,8 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                       </div>
                     </div>
                   </div>
-                  
-                  <div>
+
+                  <div id="proj-analytics-cl">
                     <h4 className="font-medium mb-3">Workflows CL</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -1010,7 +1032,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                     </div>
                   </div>
 
-                  <div>
+                  <div id="proj-analytics-imp">
                     <h4 className="font-medium mb-3">Workflows IMP</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
@@ -1030,7 +1052,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
                 </div>
 
                 {/* Overall Project Status */}
-                <div className="mt-6 pt-6 border-t">
+                <div className="mt-6 pt-6 border-t" id="proj-analytics-overall">
                   <h4 className="font-medium mb-3">Estado General del Proyecto</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex justify-between">
@@ -1057,9 +1079,9 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       {/* Add Item Modal */}
       {showAddItemModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-card rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4 md:mb-6">
-              <h2 className="text-lg md:text-2xl font-bold text-gray-900">Agregar Producto al Proyecto</h2>
+              <h2 className="text-lg md:text-2xl font-bold text-foreground">Agregar Producto al Proyecto</h2>
               <Button
                 variant="ghost"
                 onClick={() => setShowAddItemModal(false)}
@@ -1087,6 +1109,60 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         onImport={handleLUImport}
         projectId={params.id}
       />
+
+      {/* Tutorial overlay per active tab */}
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <InventoryTutorial
+            isOpen={isTutorialOpen}
+            onClose={() => setIsTutorialOpen(false)}
+            steps={(() => {
+              if (activeTab === 'overview') {
+                return [
+                  { id: 'add', target: '#proj-detail-add-item', title: 'Agregar productos', description: 'Abre el selector para agregar items LU, CL o IMP al proyecto.', placement: 'bottom' },
+                  { id: 'progress', target: '#proj-overview-progress', title: 'Progreso del proyecto', description: 'Indicador general del avance del proyecto.', placement: 'bottom' },
+                  { id: 'total', target: '#proj-overview-total-products', title: 'Total de productos', description: 'Conteo combinado de productos del inventario y workflows.', placement: 'bottom' },
+                  { id: 'budget', target: '#proj-overview-budget', title: 'Presupuesto', description: 'Monto presupuestado del proyecto.', placement: 'bottom' },
+                  { id: 'types', target: '#proj-overview-types', title: 'Tipos de productos', description: 'Resumen de LU (inventario), CL (cotización) e IMP (importación).', placement: 'top' },
+                  { id: 'desc', target: '#proj-overview-description', title: 'Descripción', description: 'Detalles generales del proyecto.', placement: 'top' }
+                ]
+              }
+              if (activeTab === 'products') {
+                return [
+                  { id: 'add-lu', target: '#proj-products-add-lu', title: 'Agregar del inventario', description: 'Importa productos LU desde el stock.', placement: 'bottom' },
+                  { id: 'search', target: '#proj-products-search', title: 'Búsqueda', description: 'Filtra productos por nombre o SKU.', placement: 'bottom' },
+                  { id: 'sort', target: '#proj-products-sort', title: 'Ordenar', description: 'Cambia el criterio de ordenamiento.', placement: 'bottom' },
+                  { id: 'stats', target: '#proj-products-stats', title: 'Estadísticas rápidas', description: 'Items, cantidad total y valor total.', placement: 'top' },
+                  { id: 'list', target: '#proj-products-list', title: 'Listado de productos', description: 'Administra los productos LU del proyecto.', placement: 'top' }
+                ]
+              }
+              if (activeTab === 'cl-workflows') {
+                return [
+                  { id: 'header', target: '#proj-cl-header', title: 'Workflows CL', description: 'Productos que requieren proceso de cotización.', placement: 'bottom' },
+                  { id: 'list', target: '#proj-cl-list', title: 'Listado de workflows', description: 'Gestiona el estado y avance de cada workflow CL.', placement: 'top' },
+                  { id: 'add', target: '#proj-cl-add', title: 'Agregar producto CL', description: 'Crea un nuevo workflow de cotización.', placement: 'bottom' }
+                ]
+              }
+              if (activeTab === 'imp-workflows') {
+                return [
+                  { id: 'header', target: '#proj-imp-header', title: 'Workflows IMP', description: 'Productos con proceso completo de importación.', placement: 'bottom' },
+                  { id: 'list', target: '#proj-imp-list', title: 'Listado de workflows', description: 'Gestiona el avance de importaciones.', placement: 'top' },
+                  { id: 'add', target: '#proj-imp-add', title: 'Agregar producto IMP', description: 'Crea un nuevo workflow de importación.', placement: 'bottom' }
+                ]
+              }
+              // analytics
+              return [
+                { id: 'header', target: '#proj-analytics-header', title: 'Analíticas del proyecto', description: 'Resumen de métricas clave.', placement: 'bottom' },
+                { id: 'types', target: '#proj-analytics-types', title: 'Productos por tipo', description: 'Distribución de LU, CL e IMP.', placement: 'top' },
+                { id: 'cl', target: '#proj-analytics-cl', title: 'Estado CL', description: 'Totales, en proceso y completados para CL.', placement: 'top' },
+                { id: 'imp', target: '#proj-analytics-imp', title: 'Estado IMP', description: 'Totales, en proceso y completados para IMP.', placement: 'top' },
+                { id: 'overall', target: '#proj-analytics-overall', title: 'Estado general', description: 'Progreso y estado global del proyecto.', placement: 'top' },
+                { id: 'complete', target: '#proj-analytics-complete', title: 'Terminar proyecto', description: 'Marca el proyecto como completado cuando corresponda.', placement: 'left' }
+              ]
+            })()}
+          />
+        </Suspense>
+      )}
 
     </div>
   )

@@ -45,7 +45,7 @@ const getActionColor = (operation: string) => {
     case 'DELETE':
       return 'text-red-600 bg-red-50'
     default:
-      return 'text-gray-600 bg-gray-50'
+      return 'text-muted-foreground bg-muted/50'
   }
 }
 

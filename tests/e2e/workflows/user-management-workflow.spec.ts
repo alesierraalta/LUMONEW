@@ -1,19 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { UserManagementFlow } from '../page-objects/user-management-page';
-import { AuthenticationFlow } from '../page-objects/auth-page';
+import { AuthPage } from '../page-objects/auth-page';
 import { testUsers, formData, urls } from '../fixtures/test-data';
 
 test.describe('User Management Workflows', () => {
   let userFlow: UserManagementFlow;
-  let authFlow: AuthenticationFlow;
+  let authPage: AuthPage;
 
   test.beforeEach(async ({ page }) => {
     userFlow = new UserManagementFlow(page);
-    authFlow = new AuthenticationFlow(page);
+    authPage = new AuthPage(page);
     
     // Login as admin before each test
-    await authFlow.login.goto();
-    await authFlow.login.loginAsAdmin();
+    await authPage.login.goto();
+    await authPage.login.loginAsAdmin();
   });
 
   test.describe('User Creation Workflow', () => {
