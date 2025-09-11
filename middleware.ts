@@ -193,7 +193,7 @@ export async function middleware(request: NextRequest) {
       
       // Add user info to headers for API routes (for logging/audit)
       if (pathname.startsWith('/api/')) {
-        response.headers.set('X-User-ID', session.user.id)
+        response.headers.set('X-User-ID', user.id)
         response.headers.set('X-User-Role', userRole)
       }
       

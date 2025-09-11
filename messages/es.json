@@ -53,7 +53,16 @@
     "overview": "Vista General",
     "kanban": "Kanban",
     "timeline": "Cronograma",
-    "analytics": "Analíticas",
+    "analytics": {
+      "statusDistribution": "Distribución por Estado",
+      "averageProgress": "Progreso Promedio",
+      "totalProjectValue": "Valor Total de Proyectos",
+      "combinedValue": "Valor combinado de todos los proyectos",
+      "overallProgress": "Progreso general de todos los proyectos",
+      "active": "Activos",
+      "completed": "Completados",
+      "onHold": "En pausa"
+    },
     "totalProjects": "Total Proyectos",
     "activeProjects": "Proyectos Activos",
     "completedProjects": "Completados",
@@ -89,7 +98,6 @@
       "files": "Archivos",
       "progress": "Progreso",
       "totalItems": "Items Totales",
-      "budget": "Presupuesto",
       "daysRemaining": "Días Restantes",
       "projectDescription": "Descripción del Proyecto",
       "noDescription": "Sin descripción disponible",
@@ -109,16 +117,6 @@
       "kanbanView": "Vista Kanban",
       "timelineView": "Vista de Cronograma",
       "comingSoon": "Próximamente disponible"
-    },
-    "analytics": {
-      "statusDistribution": "Distribución por Estado",
-      "averageProgress": "Progreso Promedio",
-      "totalProjectValue": "Valor Total de Proyectos",
-      "combinedValue": "Valor combinado de todos los proyectos",
-      "overallProgress": "Progreso general de todos los proyectos",
-      "active": "Activos",
-      "completed": "Completados",
-      "onHold": "En pausa"
     },
     "actions": {
       "export": "Exportar",
@@ -147,7 +145,7 @@
       "viewAll": "Ver todos",
       "quickStats": {
         "dailySales": "Ventas Hoy",
-        "inventory": "Inventario", 
+        "inventory": "Inventario",
         "alerts": "Alertas",
         "orders": "Pedidos"
       },
@@ -179,7 +177,7 @@
       },
       "actions": {
         "inventory": "Inventario",
-        "orders": "Pedidos", 
+        "orders": "Pedidos",
         "reports": "Reportes",
         "customers": "Clientes",
         "config": "Config",
@@ -392,20 +390,7 @@
       "category": "Categoría:",
       "location": "Ubicación:"
     },
-    "stockWarnings": {
-      "outOfStockTitle": "Productos Agotados:",
-      "outOfStockDescription": "productos sin stock",
-      "lowStockTitle": "Stock Bajo:",
-      "lowStockDescription": "productos con poco stock",
-      "moreProducts": "productos más",
-      "stockSummary": {
-        "goodStock": "Buen Stock:",
-        "lowStock": "Stock Bajo:",
-        "outOfStock": "Agotado:"
-      },
-      "stockLabel": "Stock:",
-      "minLabel": "Min:"
-    },
+    "stockWarnings": "Advertencias de Stock",
     "quickStock": {
       "title": "Ajuste Rápido de Stock",
       "description": "Sumar o restar stock rápidamente para:",
@@ -486,11 +471,7 @@
     "lowStockWarning": "Advertencia de Stock Bajo",
     "outOfStock": "Sin Stock",
     "inStock": "En Stock",
-    "stockWarnings": "Advertencias de Stock",
     "quickStockOperations": "Operaciones Rápidas de Stock",
-    "bulkOperations": "Operaciones en Lote",
-    "transactionHistory": "Historial de Transacciones",
-    "auditHistory": "Historial de Auditoría",
     "bulkOperations": {
       "title": "Operaciones en Lote",
       "update": "Actualizar",
@@ -502,6 +483,8 @@
       "processing": "Procesando...",
       "selectOperation": "Selecciona una operación"
     },
+    "transactionHistory": "Historial de Transacciones",
+    "auditHistory": "Historial de Auditoría",
     "bulkCreate": {
       "title": "Creación en Lote",
       "addRow": "Agregar Fila",
@@ -881,7 +864,8 @@
       "green": "Verde",
       "yellow": "Amarillo",
       "gray": "Gris",
-      "purple": "Morado"
+      "purple": "Morado",
+      "orange": "Naranja"
     },
     "form": {
       "editRole": "Editar Rol",
@@ -908,7 +892,16 @@
       "updateRole": "Actualizar Rol",
       "createRole": "Crear Rol",
       "systemRoleWarning": "Rol del Sistema",
-      "systemRoleDescription": "Los roles del sistema no pueden ser editados para mantener la integridad del sistema."
+      "systemRoleDescription": "Los roles del sistema no pueden ser editados para mantener la integridad del sistema.",
+      "colors": {
+        "red": "Rojo",
+        "blue": "Azul",
+        "green": "Verde",
+        "yellow": "Amarillo",
+        "gray": "Gris",
+        "purple": "Morado",
+        "orange": "Naranja"
+      }
     }
   },
   "quickActions": {

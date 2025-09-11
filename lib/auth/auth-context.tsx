@@ -41,27 +41,58 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
     setMounted(true)
     
     
-    // Get initial session if not provided
+    // Get initial user if not provided - using secure getUser() instead of getSession()
     if (!initialAuth) {
-      supabase.auth.getSession().then(({ data: { session }, error }) => {
+      supabase.auth.getUser().then(({ data: { user }, error }) => {
         if (error) {
-          console.error('Error getting session:', error)
+          console.error('Error getting user:', error)
           setError(error.message)
+          setUser(null)
+          setSession(null)
         } else {
-          setSession(session)
-          setUser(session?.user ?? null)
+          setUser(user)
+          // If we have a user, get the session for additional data
+          if (user) {
+            supabase.auth.getSession().then(({ data: { session } }) => {
+              setSession(session)
+            })
+          } else {
+            setSession(null)
+          }
         }
         setLoading(false)
       })
     }
 
-    // Listen for auth changes
+    // Listen for auth changes - verify user authenticity on each change
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session)
-        setUser(session?.user ?? null)
+        // Always verify user authenticity with server when auth state changes
+        if (session?.user) {
+          try {
+            const { data: { user }, error } = await supabase.auth.getUser()
+            if (error) {
+              console.warn('User verification failed:', error.message)
+              setUser(null)
+              setSession(null)
+              setError('Authentication verification failed')
+            } else {
+              setUser(user)
+              setSession(session)
+              setError(null)
+            }
+          } catch (error: any) {
+            console.error('Error verifying user:', error)
+            setUser(null)
+            setSession(null)
+            setError('Authentication verification failed')
+          }
+        } else {
+          setUser(null)
+          setSession(null)
+          setError(null)
+        }
         setLoading(false)
-        setError(null)
       }
     )
 

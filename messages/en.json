@@ -52,7 +52,16 @@
     "overview": "Overview",
     "kanban": "Kanban",
     "timeline": "Timeline",
-    "analytics": "Analytics",
+    "analytics": {
+      "statusDistribution": "Status Distribution",
+      "averageProgress": "Average Progress",
+      "totalProjectValue": "Total Project Value",
+      "combinedValue": "Combined value of all projects",
+      "overallProgress": "Overall progress of all projects",
+      "active": "Active",
+      "completed": "Completed",
+      "onHold": "On Hold"
+    },
     "totalProjects": "Total Projects",
     "activeProjects": "Active Projects",
     "completedProjects": "Completed",
@@ -88,7 +97,6 @@
       "files": "Files",
       "progress": "Progress",
       "totalItems": "Total Items",
-      "budget": "Budget",
       "daysRemaining": "Days Remaining",
       "projectDescription": "Project Description",
       "noDescription": "No description available",
@@ -108,16 +116,6 @@
       "kanbanView": "Kanban View",
       "timelineView": "Timeline View",
       "comingSoon": "Coming soon"
-    },
-    "analytics": {
-      "statusDistribution": "Status Distribution",
-      "averageProgress": "Average Progress",
-      "totalProjectValue": "Total Project Value",
-      "combinedValue": "Combined value of all projects",
-      "overallProgress": "Overall progress of all projects",
-      "active": "Active",
-      "completed": "Completed",
-      "onHold": "On Hold"
     },
     "actions": {
       "export": "Export",
@@ -323,20 +321,7 @@
       "category": "Category:",
       "location": "Location:"
     },
-    "stockWarnings": {
-      "outOfStockTitle": "Out of Stock Products:",
-      "outOfStockDescription": "products without stock",
-      "lowStockTitle": "Low Stock:",
-      "lowStockDescription": "products with low stock",
-      "moreProducts": "more products",
-      "stockSummary": {
-        "goodStock": "Good Stock:",
-        "lowStock": "Low Stock:",
-        "outOfStock": "Out of Stock:"
-      },
-      "stockLabel": "Stock:",
-      "minLabel": "Min:"
-    },
+    "stockWarnings": "Stock Warnings",
     "quickStock": {
       "title": "Quick Stock Adjustment",
       "description": "Quickly add or subtract stock for:",
@@ -383,11 +368,7 @@
     "lowStockWarning": "Low Stock Warning",
     "outOfStock": "Out of Stock",
     "inStock": "In Stock",
-    "stockWarnings": "Stock Warnings",
     "quickStockOperations": "Quick Stock Operations",
-    "bulkOperations": "Bulk Operations",
-    "transactionHistory": "Transaction History",
-    "auditHistory": "Audit History",
     "bulkOperations": {
       "title": "Bulk Operations",
       "update": "Update",
@@ -399,6 +380,8 @@
       "processing": "Processing...",
       "selectOperation": "Select an operation"
     },
+    "transactionHistory": "Transaction History",
+    "auditHistory": "Audit History",
     "bulkCreate": {
       "title": "Bulk Create",
       "addRow": "Add Row",
@@ -412,7 +395,7 @@
     }
   },
   "users": {
-    "title": "User Management", 
+    "title": "User Management",
     "description": "Manage system users and permissions",
     "subtitle": "Manage system users and permissions",
     "addUser": "Add User",
@@ -769,7 +752,8 @@
       "green": "Green",
       "yellow": "Yellow",
       "gray": "Gray",
-      "purple": "Purple"
+      "purple": "Purple",
+      "orange": "Orange"
     },
     "form": {
       "editRole": "Edit Role",
@@ -796,7 +780,16 @@
       "updateRole": "Update Role",
       "createRole": "Create Role",
       "systemRoleWarning": "System Role",
-      "systemRoleDescription": "System roles cannot be edited to maintain system integrity."
+      "systemRoleDescription": "System roles cannot be edited to maintain system integrity.",
+      "colors": {
+        "red": "Red",
+        "blue": "Blue",
+        "green": "Green",
+        "yellow": "Yellow",
+        "gray": "Gray",
+        "purple": "Purple",
+        "orange": "Orange"
+      }
     }
   },
   "quickActions": {

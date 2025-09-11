@@ -297,7 +297,7 @@ export const FloatingTextarea = forwardRef<HTMLTextAreaElement, FloatingTextarea
         setIsValid(valid)
         onValidation?.(valid)
       }
-    }, [controlledValue, onChange, validateValue, showValidation, realTimeValidation, onValidation])
+    }, [controlledValue, onChange, validateValue, showValidation, onValidation])
 
     const handleFocus = useCallback(() => {
       setIsFocused(true)
