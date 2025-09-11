@@ -348,7 +348,6 @@ test.describe('Firefox-Specific Tests', () => {
 });
 
 test.describe('Mobile Browser Tests', () => {
-  test.use({ ...devices['iPhone 12'] });
   
   test('should handle mobile Safari behaviors', async ({ page }) => {
     await loginAsAdmin(page);

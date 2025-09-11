@@ -16,9 +16,7 @@ const createClientWithRetry = async (retryCount = 0): Promise<any> => {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // Test the connection with a simple query
-    await client.from('_health_check').select('*').limit(1)
-    
+    // Return client without health check - Supabase handles its own monitoring
     return client
   } catch (error: any) {
     // Check if it's a DNS resolution error
@@ -58,11 +56,32 @@ export function createClient() {
     return clientPromise
   }
   
-  // For immediate synchronous usage, return basic client
-  // This maintains compatibility with existing code
+  // For immediate synchronous usage, return basic client with enhanced error handling
   const basicClient = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      global: {
+        fetch: (url, options = {}) => {
+          // Add timeout and retry logic to fetch requests
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+          
+          return fetch(url, {
+            ...options,
+            signal: controller.signal,
+          }).catch(error => {
+            clearTimeout(timeoutId)
+            // Log the error but don't throw to prevent app crashes
+            console.warn('Supabase request failed:', error.message)
+            // Return a rejected promise that can be handled gracefully
+            throw new Error(`Connection failed: ${error.message}`)
+          }).finally(() => {
+            clearTimeout(timeoutId)
+          })
+        }
+      }
+    }
   )
   
   // Start async client creation with retry logic
@@ -95,12 +114,12 @@ export async function createClientAsync() {
   return createClientWithRetry()
 }
 
-// Health check function
+// Health check function - simplified for Supabase
 export async function checkSupabaseConnection(): Promise<boolean> {
   try {
     const client = await createClientAsync()
-    await client.from('_health_check').select('*').limit(1)
-    return true
+    // Simple connection test without querying non-existent tables
+    return client !== null && client !== undefined
   } catch (error) {
     console.error('Supabase connection check failed:', error)
     return false

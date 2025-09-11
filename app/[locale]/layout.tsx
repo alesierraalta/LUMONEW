@@ -6,6 +6,7 @@ import {ProtectedLayout} from '@/components/layout/protected-layout';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import ErrorBoundary from '@/components/error-boundary';
+import { getServerAuth } from '@/lib/auth/server-auth';
 
 export default async function LocaleLayout({
   children,
@@ -14,11 +15,14 @@ export default async function LocaleLayout({
   children: React.ReactNode;
   params: {locale: string};
 }) {
-  // Ensure that the incoming `locale` is valid
+  // Validate that the incoming `locale` is valid
   if (!routing.locales.includes(locale as any)) {
     notFound();
   }
 
+  // Get server-side auth state for better synchronization
+  const serverAuth = await getServerAuth();
+  
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
@@ -27,7 +31,7 @@ export default async function LocaleLayout({
     <ErrorBoundary>
       <ThemeProvider>
         <NextIntlClientProvider messages={messages}>
-          <AuthProvider>
+          <AuthProvider initialAuth={serverAuth}>
             <ProtectedLayout>
               {children}
             </ProtectedLayout>

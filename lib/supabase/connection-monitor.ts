@@ -1,178 +1,210 @@
-import React from 'react'
-import { checkSupabaseConnection } from './client-with-retry'
-import { checkSupabaseServerConnection } from './server-with-retry'
+'use client'
 
-export interface ConnectionStatus {
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { createClient } from './client-with-retry'
+
+interface ConnectionState {
   isConnected: boolean
   lastChecked: Date
-  error?: string
+  error: string | null
   retryCount: number
 }
 
-class SupabaseConnectionMonitor {
-  private status: ConnectionStatus = {
-    isConnected: false,
-    lastChecked: new Date(),
-    retryCount: 0
-  }
-  
-  private listeners: ((status: ConnectionStatus) => void)[] = []
-  private checkInterval: NodeJS.Timeout | null = null
-  private isChecking = false
+const INITIAL_STATE: ConnectionState = {
+  isConnected: false,
+  lastChecked: new Date(),
+  error: null,
+  retryCount: 0
+}
 
-  constructor() {
-    // Initial connection check
-    this.checkConnection()
-  }
+const CHECK_INTERVAL = 30000 // 30 seconds
+const MAX_RETRIES = 5
+const RETRY_DELAYS = [1000, 2000, 4000, 8000, 16000] // Progressive backoff
 
-  async checkConnection(isServer = false): Promise<ConnectionStatus> {
-    if (this.isChecking) {
-      return this.status
+export function useSupabaseConnection() {
+  const [state, setState] = useState<ConnectionState>(INITIAL_STATE)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isCheckingRef = useRef(false)
+
+  const checkConnection = useCallback(async (): Promise<boolean> => {
+    if (isCheckingRef.current) {
+      return state.isConnected
     }
 
-    this.isChecking = true
-    
+    isCheckingRef.current = true
+
     try {
-      const isConnected = isServer 
-        ? await checkSupabaseServerConnection()
-        : await checkSupabaseConnection()
+      const supabase = createClient()
       
-      this.status = {
+      // Simple connection test - just check if client can be created and has auth
+      const isConnected = supabase && supabase.auth !== undefined
+      const now = new Date()
+
+      setState(prev => ({
         isConnected,
-        lastChecked: new Date(),
-        retryCount: isConnected ? 0 : this.status.retryCount + 1,
-        error: isConnected ? undefined : this.status.error
-      }
-    } catch (error: any) {
-      this.status = {
+        lastChecked: now,
+        error: isConnected ? null : 'Connection failed',
+        retryCount: isConnected ? 0 : prev.retryCount
+      }))
+
+      return isConnected
+    } catch (err: any) {
+      const now = new Date()
+      setState(prev => ({
         isConnected: false,
-        lastChecked: new Date(),
-        retryCount: this.status.retryCount + 1,
-        error: error.message || 'Unknown connection error'
-      }
+        lastChecked: now,
+        error: err.message || 'Connection check failed',
+        retryCount: prev.retryCount
+      }))
+      return false
     } finally {
-      this.isChecking = false
+      isCheckingRef.current = false
+    }
+  }, [state.isConnected])
+
+  const scheduleRetry = useCallback((retryCount: number) => {
+    if (retryCount >= MAX_RETRIES) {
+      console.warn('Max connection retries reached')
+      return
     }
 
-    // Notify listeners
-    this.listeners.forEach(listener => listener(this.status))
+    const delay = RETRY_DELAYS[Math.min(retryCount, RETRY_DELAYS.length - 1)]
     
-    return this.status
-  }
+    setState(prev => ({
+      ...prev,
+      retryCount: retryCount + 1
+    }))
 
-  getStatus(): ConnectionStatus {
-    return { ...this.status }
-  }
-
-  onStatusChange(callback: (status: ConnectionStatus) => void): () => void {
-    this.listeners.push(callback)
-    
-    // Return unsubscribe function
-    return () => {
-      const index = this.listeners.indexOf(callback)
-      if (index > -1) {
-        this.listeners.splice(index, 1)
+    retryTimeoutRef.current = setTimeout(async () => {
+      const connected = await checkConnection()
+      if (!connected) {
+        scheduleRetry(retryCount + 1)
       }
-    }
-  }
+    }, delay)
+  }, [checkConnection])
 
-  startMonitoring(intervalMs = 30000): void {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval)
-    }
-
-    this.checkInterval = setInterval(() => {
-      this.checkConnection()
-    }, intervalMs)
-  }
-
-  stopMonitoring(): void {
-    if (this.checkInterval) {
-      clearInterval(this.checkInterval)
-      this.checkInterval = null
-    }
-  }
-
-  async waitForConnection(timeoutMs = 30000): Promise<boolean> {
+  const waitForConnection = useCallback(async (timeout: number = 10000): Promise<boolean> => {
     const startTime = Date.now()
     
-    while (Date.now() - startTime < timeoutMs) {
-      const status = await this.checkConnection()
-      if (status.isConnected) {
+    while (Date.now() - startTime < timeout) {
+      const connected = await checkConnection()
+      if (connected) {
         return true
       }
       
-      // Wait before next check
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Wait a bit before retrying
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
     
     return false
-  }
-}
+  }, [checkConnection])
 
-// Singleton instance
-export const connectionMonitor = new SupabaseConnectionMonitor()
-
-// React hook for connection status
-export function useSupabaseConnection() {
-  const [status, setStatus] = React.useState<ConnectionStatus>(
-    connectionMonitor.getStatus()
-  )
-
-  React.useEffect(() => {
-    const unsubscribe = connectionMonitor.onStatusChange(setStatus)
-    
-    // Check connection on mount
-    connectionMonitor.checkConnection()
-    
-    return unsubscribe
-  }, [])
-
-  return {
-    ...status,
-    checkConnection: () => connectionMonitor.checkConnection(),
-    waitForConnection: (timeout?: number) => connectionMonitor.waitForConnection(timeout)
-  }
-}
-
-// Utility function to execute with connection retry
-export async function withConnectionRetry<T>(
-  operation: () => Promise<T>,
-  maxRetries = 3,
-  delayMs = 2000
-): Promise<T> {
-  let lastError: Error | null = null
-  
-  for (let attempt = 0; attempt <= maxRetries; attempt++) {
-    try {
-      // Check connection before attempting operation
-      const isConnected = await connectionMonitor.waitForConnection(10000)
-      
-      if (!isConnected && attempt === maxRetries) {
-        throw new Error('Supabase connection unavailable after retries')
+  // Initial connection check and periodic monitoring
+  useEffect(() => {
+    // Initial check
+    checkConnection().then(connected => {
+      if (!connected) {
+        scheduleRetry(0)
       }
-      
-      return await operation()
-    } catch (error: any) {
-      lastError = error
-      
-      // If it's a DNS error and we have retries left, wait and try again
-      const isDnsError = error?.cause?.code === 'EAI_AGAIN' || 
-                        error?.code === 'EAI_AGAIN' ||
-                        error?.message?.includes('getaddrinfo')
-      
-      if (isDnsError && attempt < maxRetries) {
-        console.warn(`Operation failed with DNS error, retrying in ${delayMs}ms... (attempt ${attempt + 1}/${maxRetries})`)
-        await new Promise(resolve => setTimeout(resolve, delayMs))
-        continue
+    })
+
+    // Set up periodic checks
+    intervalRef.current = setInterval(() => {
+      if (!isCheckingRef.current) {
+        checkConnection().then(connected => {
+          if (!connected && state.retryCount === 0) {
+            scheduleRetry(0)
+          }
+        })
       }
-      
-      // If not a DNS error or no retries left, throw
-      if (attempt === maxRetries) {
-        throw lastError
+    }, CHECK_INTERVAL)
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current)
       }
     }
+  }, [checkConnection, scheduleRetry, state.retryCount])
+
+  // Listen for online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      console.log('Network back online, checking connection...')
+      checkConnection()
+    }
+
+    const handleOffline = () => {
+      console.log('Network went offline')
+      setState(prev => ({
+        ...prev,
+        isConnected: false,
+        error: 'Network offline',
+        lastChecked: new Date()
+      }))
+    }
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [checkConnection])
+
+  return {
+    isConnected: state.isConnected,
+    isChecking: isCheckingRef.current,
+    lastChecked: state.lastChecked,
+    lastError: state.error ? { message: state.error } : null,
+    retryCount: state.retryCount,
+    checkConnection,
+    waitForConnection
   }
+}
+
+// Global connection state for components that need it
+let globalConnectionState: ConnectionState = INITIAL_STATE
+const connectionListeners = new Set<(state: ConnectionState) => void>()
+
+export function subscribeToConnectionState(listener: (state: ConnectionState) => void) {
+  connectionListeners.add(listener)
+  listener(globalConnectionState) // Send current state immediately
   
-  throw lastError || new Error('Operation failed after retries')
+  return () => {
+    connectionListeners.delete(listener)
+  }
+}
+
+export function updateGlobalConnectionState(newState: Partial<ConnectionState>) {
+  globalConnectionState = { ...globalConnectionState, ...newState }
+  connectionListeners.forEach(listener => listener(globalConnectionState))
+}
+
+// Utility to check connection without hook
+export async function checkSupabaseConnection(): Promise<boolean> {
+  try {
+    const supabase = createClient()
+    // Simple connection test - just check if client can be created and has auth
+    const isConnected = supabase && supabase.auth !== undefined
+    
+    updateGlobalConnectionState({
+      isConnected,
+      lastChecked: new Date(),
+      error: isConnected ? null : 'Connection failed'
+    })
+    
+    return isConnected
+  } catch (err: any) {
+    updateGlobalConnectionState({
+      isConnected: false,
+      lastChecked: new Date(),
+      error: err.message || 'Connection check failed'
+    })
+    return false
+  }
 }

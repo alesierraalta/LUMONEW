@@ -1,147 +1,72 @@
 'use client'
 
-import React from 'react'
 import { useSupabaseConnection } from '@/lib/supabase/connection-monitor'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Wifi, WifiOff, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Wifi, WifiOff, AlertCircle } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
-interface ConnectionStatusProps {
-  showDetails?: boolean
+interface ConnectionIndicatorProps {
   className?: string
+  showText?: boolean
 }
 
-export const ConnectionStatus: React.FC<ConnectionStatusProps> = ({
-  showDetails = false,
-  className = ''
-}) => {
-  const { isConnected, lastChecked, error, retryCount, checkConnection, waitForConnection } = useSupabaseConnection()
-  const [isReconnecting, setIsReconnecting] = React.useState(false)
+export function ConnectionIndicator({ className, showText = false }: ConnectionIndicatorProps) {
+  const { isConnected, isChecking, lastError, retryCount } = useSupabaseConnection()
 
-  const handleReconnect = async () => {
-    setIsReconnecting(true)
-    try {
-      await waitForConnection(15000)
-    } finally {
-      setIsReconnecting(false)
+  const getStatusIcon = () => {
+    if (isChecking) {
+      return <Wifi className="h-4 w-4 animate-pulse text-yellow-500" />
     }
-  }
-
-  const getStatusColor = () => {
-    if (isConnected) return 'bg-green-500'
-    if (retryCount > 0) return 'bg-yellow-500'
-    return 'bg-red-500'
+    
+    if (!isConnected) {
+      return <WifiOff className="h-4 w-4 text-red-500" />
+    }
+    
+    if (lastError && retryCount > 0) {
+      return <AlertCircle className="h-4 w-4 text-orange-500" />
+    }
+    
+    return <Wifi className="h-4 w-4 text-green-500" />
   }
 
   const getStatusText = () => {
-    if (isConnected) return 'Connected'
-    if (isReconnecting) return 'Reconnecting...'
-    if (retryCount > 0) return `Retrying (${retryCount})`
-    return 'Disconnected'
+    if (isChecking) return 'Checking...'
+    if (!isConnected) return 'Offline'
+    if (lastError && retryCount > 0) return `Unstable (${retryCount} retries)`
+    return 'Connected'
   }
 
-  const getStatusIcon = () => {
-    if (isReconnecting) return <RefreshCw className="h-4 w-4 animate-spin" />
-    if (isConnected) return <Wifi className="h-4 w-4" />
-    if (retryCount > 0) return <AlertTriangle className="h-4 w-4" />
-    return <WifiOff className="h-4 w-4" />
+  const getTooltipText = () => {
+    if (isChecking) return 'Checking connection status...'
+    if (!isConnected) return 'No connection to Supabase'
+    if (lastError && retryCount > 0) {
+      return `Connection unstable. Last error: ${lastError.message}. Retries: ${retryCount}`
+    }
+    return 'Connected to Supabase'
   }
 
   return (
-    <div className={`space-y-2 ${className}`}>
-      <div className="flex items-center gap-2">
-        <Badge 
-          variant={isConnected ? 'default' : 'destructive'}
-          className="flex items-center gap-1"
-        >
-          {getStatusIcon()}
+    <div 
+      data-testid="connection-indicator"
+      className={cn(
+        'flex items-center space-x-2 transition-all duration-200',
+        className
+      )}
+      title={getTooltipText()}
+    >
+      {getStatusIcon()}
+      {showText && (
+        <span className={cn(
+          'text-xs font-medium',
+          isConnected && !lastError ? 'text-green-600' : 
+          !isConnected ? 'text-red-600' : 'text-orange-600'
+        )}>
           {getStatusText()}
-        </Badge>
-        
-        {!isConnected && !isReconnecting && (
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleReconnect}
-            className="h-6 px-2 text-xs"
-          >
-            <RefreshCw className="h-3 w-3 mr-1" />
-            Retry
-          </Button>
-        )}
-      </div>
-
-      {showDetails && (
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div>Last checked: {lastChecked.toLocaleTimeString()}</div>
-          {retryCount > 0 && (
-            <div>Retry attempts: {retryCount}</div>
-          )}
-        </div>
-      )}
-
-      {!isConnected && error && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">
-            <strong>Connection Issue:</strong> {error}
-            <br />
-            <span className="text-xs text-muted-foreground mt-1 block">
-              The app will automatically retry connecting. You can also try refreshing the page.
-            </span>
-          </AlertDescription>
-        </Alert>
+        </span>
       )}
     </div>
   )
 }
 
-// Compact version for header/navbar
-export const ConnectionIndicator: React.FC<{ className?: string }> = ({ className = '' }) => {
-  const { isConnected, retryCount } = useSupabaseConnection()
-  
-  return (
-    <div className={`flex items-center ${className}`}>
-      <div 
-        className={`w-2 h-2 rounded-full ${
-          isConnected ? 'bg-green-500' : retryCount > 0 ? 'bg-yellow-500' : 'bg-red-500'
-        }`}
-        title={isConnected ? 'Connected to Supabase' : 'Connection issues detected'}
-      />
-    </div>
-  )
-}
-
-// Hook for components that need to handle connection state
-export const useConnectionAwareOperation = () => {
-  const { isConnected, waitForConnection } = useSupabaseConnection()
-  
-  const executeWithConnection = React.useCallback(
-    async (
-      operation: () => Promise<any>,
-      options: { timeout?: number; showError?: boolean } = {}
-    ) => {
-      const { timeout = 10000, showError = true } = options
-      
-      if (!isConnected) {
-        const connected = await waitForConnection(timeout)
-        if (!connected) {
-          const error = new Error('Unable to establish connection to Supabase')
-          if (showError) {
-            console.error('Connection timeout:', error)
-          }
-          throw error
-        }
-      }
-      
-      return operation()
-    },
-    [isConnected, waitForConnection]
-  )
-  
-  return {
-    isConnected,
-    executeWithConnection
-  }
+export function ConnectionStatus() {
+  return <ConnectionIndicator showText className="px-2 py-1 rounded-md bg-muted" />
 }

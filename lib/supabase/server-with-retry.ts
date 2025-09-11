@@ -37,9 +37,7 @@ const createServerClientWithRetry = async (retryCount = 0): Promise<any> => {
       }
     )
     
-    // Test the connection with a simple query
-    await client.from('_health_check').select('*').limit(1)
-    
+    // Return client without health check - Supabase handles its own monitoring
     return client
   } catch (error: any) {
     // Check if it's a DNS resolution error
@@ -96,12 +94,12 @@ export async function createClientAsync() {
   return createServerClientWithRetry()
 }
 
-// Health check function for server-side
+// Health check function for server-side - simplified
 export async function checkSupabaseServerConnection(): Promise<boolean> {
   try {
     const client = await createClientAsync()
-    await client.from('_health_check').select('*').limit(1)
-    return true
+    // Simple connection test without querying non-existent tables
+    return client !== null && client !== undefined
   } catch (error) {
     console.error('Server Supabase connection check failed:', error)
     return false

@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
+import { ConnectionIndicator } from '@/components/ui/connection-status'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -46,7 +47,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background py-4 px-4 sm:py-12 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-background py-4 px-4 sm:py-12 sm:px-6 lg:px-8 relative">
+      {/* Connection Status Indicator */}
+      <div className="absolute top-4 right-4 z-10">
+        <ConnectionIndicator />
+      </div>
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
           <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-foreground">

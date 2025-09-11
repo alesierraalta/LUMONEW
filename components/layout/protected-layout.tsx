@@ -9,6 +9,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Button } from '@/components/ui/button'
 import { Menu, X, Package as PackageIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { ConnectionIndicator } from '@/components/ui/connection-status'
 
 interface ProtectedLayoutProps {
   children: React.ReactNode
@@ -70,7 +71,9 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
                       LUMO
                     </span>
                   </div>
-                  <div className="w-7 xs:w-8 sm:w-9" /> {/* Spacer for centering */}
+                  <div className="flex items-center">
+                    <ConnectionIndicator />
+                  </div>
                 </div>
 
                 <div className="h-[calc(100vh-44px)] lg:h-full overflow-y-auto custom-scrollbar">

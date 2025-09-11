@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, Package as Packag
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NavigationItem, createNavigationConfig, getNavigationIcons } from '@/lib/navigation-config'
+import { ConnectionIndicator } from '@/components/ui/connection-status'
 
 interface NavigationItemProps {
   item: NavigationItem
@@ -281,6 +282,11 @@ export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
       <nav className="flex-1 p-4 space-y-2 custom-scrollbar overflow-y-auto" suppressHydrationWarning>
         {navigationItems}
       </nav>
+
+      {/* Connection Status - Desktop */}
+      <div className="px-4 pb-2">
+        <ConnectionIndicator />
+      </div>
 
       {/* User Profile */}
       {userProfile}

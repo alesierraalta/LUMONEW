@@ -7,6 +7,7 @@ import { FloatingInput } from '@/components/ui/floating-input'
 import { LoadingButton } from '@/components/ui/loading'
 import { ToastProvider, useToast } from '@/components/ui/toast'
 import { useTranslations } from 'next-intl'
+import { useCSRF } from '@/hooks/use-csrf.tsx'
 import {
   User,
   Mail,
@@ -49,6 +50,7 @@ function CreateUserContent() {
   const t = useTranslations('users')
   const tCommon = useTranslations('common')
   const tForms = useTranslations('forms')
+  const { token: csrfToken, getHeaders } = useCSRF()
 
   // Fetch roles on component mount
   useEffect(() => {
@@ -119,6 +121,7 @@ function CreateUserContent() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          ...getHeaders(),
         },
         body: JSON.stringify(formData),
       })
@@ -228,9 +231,6 @@ function CreateUserContent() {
         }
       }
       
-      return null
-    }
-  }
       return null
     }
   }
