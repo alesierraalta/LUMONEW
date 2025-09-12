@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react'
 import { User, Session, AuthError } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
@@ -31,9 +31,13 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(initialAuth?.user ?? null)
   const [session, setSession] = useState<Session | null>(initialAuth?.session ?? null)
   const [loading, setLoading] = useState(!initialAuth)
-  const [authTimeout, setAuthTimeout] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [error, setError] = useState<string | null>(initialAuth?.error ?? null)
+  
+  // Refs to track state and prevent race conditions
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isInitializedRef = useRef(false)
+  const lastUpdateRef = useRef<number>(0)
   
   // Initialize Supabase client with error handling
   const [supabaseError, setSupabaseError] = useState<string | null>(null)
@@ -46,13 +50,52 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
     setSupabaseError(err.message || 'Failed to initialize Supabase client')
   }
 
+  // Debounced state update function to prevent race conditions
+  const debouncedStateUpdate = useCallback((
+    newUser: User | null,
+    newSession: Session | null,
+    newError: string | null = null,
+    forceUpdate: boolean = false
+  ) => {
+    const now = Date.now()
+    
+    // Clear existing timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
+    
+    // If this is a forced update or enough time has passed, update immediately
+    if (forceUpdate || now - lastUpdateRef.current > 100) {
+      setUser(newUser)
+      setSession(newSession)
+      setError(newError)
+      setLoading(false)
+      lastUpdateRef.current = now
+      return
+    }
+    
+    // Otherwise, debounce the update
+    debounceTimeoutRef.current = setTimeout(() => {
+      setUser(newUser)
+      setSession(newSession)
+      setError(newError)
+      setLoading(false)
+      lastUpdateRef.current = Date.now()
+    }, 50) // 50ms debounce
+  }, [])
+
   useEffect(() => {
+    // Prevent multiple initializations
+    if (isInitializedRef.current) {
+      return
+    }
+    
     setMounted(true)
+    isInitializedRef.current = true
     
     // If Supabase client failed to initialize, set error and stop loading
     if (supabaseError || !supabase) {
-      setError(supabaseError || 'Failed to initialize authentication service')
-      setLoading(false)
+      debouncedStateUpdate(null, null, supabaseError || 'Failed to initialize authentication service', true)
       return
     }
     
@@ -60,84 +103,62 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
     const timeoutId = setTimeout(() => {
       if (loading) {
         console.warn('Auth loading timeout - forcing completion')
-        setLoading(false)
-        setAuthTimeout(true)
-        setError('Authentication service is taking too long to respond. Please check your internet connection.')
+        debouncedStateUpdate(user, session, 'Authentication service is taking too long to respond. Please check your internet connection.', true)
       }
-    }, 5000) // Reduced to 5 second timeout
+    }, 3000) // Reduced to 3 second timeout as per requirements
     
-    // Get initial user if not provided - using secure getUser() instead of getSession()
-    if (!initialAuth) {
+    // If initialAuth is provided, use it immediately and set up listener without verification
+    if (initialAuth) {
+      // Use server-provided auth state as single source of truth
+      debouncedStateUpdate(initialAuth.user, initialAuth.session, initialAuth.error, true)
+      clearTimeout(timeoutId)
+    } else {
+      // Only get initial user if not provided
       supabase.auth.getUser().then(({ data: { user }, error }: any) => {
         if (error) {
           console.error('Error getting user:', error)
-          setError(error.message)
-          setUser(null)
-          setSession(null)
+          debouncedStateUpdate(null, null, error.message, true)
         } else {
-          setUser(user)
           // If we have a user, get the session for additional data
           if (user) {
             supabase.auth.getSession().then(({ data: { session } }: any) => {
-              setSession(session)
+              debouncedStateUpdate(user, session, null, true)
             })
           } else {
-            setSession(null)
+            debouncedStateUpdate(null, null, null, true)
           }
         }
-        setLoading(false)
         clearTimeout(timeoutId)
       }).catch((err: any) => {
         // Handle auth initialization errors
         console.error('Auth initialization error:', err)
-        setError('Failed to initialize authentication')
-        setLoading(false)
+        debouncedStateUpdate(null, null, 'Failed to initialize authentication', true)
         clearTimeout(timeoutId)
       })
-    } else {
-      // If we have initial auth, we're not loading
-      setLoading(false)
-      clearTimeout(timeoutId)
     }
 
-    // Listen for auth changes - verify user authenticity on each change
+    // Listen for auth changes - NO verification calls, trust the session
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: any, session: any) => {
+      (event: any, session: any) => {
         console.log('Auth state change:', event)
-        // Always verify user authenticity with server when auth state changes
+        
+        // Use debounced update to prevent race conditions
         if (session?.user) {
-          try {
-            const { data: { user }, error } = await supabase.auth.getUser()
-            if (error) {
-              console.warn('User verification failed:', error.message)
-              setUser(null)
-              setSession(null)
-              setError('Authentication verification failed')
-            } else {
-              setUser(user)
-              setSession(session)
-              setError(null)
-            }
-          } catch (error: any) {
-            console.error('Error verifying user:', error)
-            setUser(null)
-            setSession(null)
-            setError('Authentication verification failed')
-          }
+          debouncedStateUpdate(session.user, session, null)
         } else {
-          setUser(null)
-          setSession(null)
-          setError(null)
+          debouncedStateUpdate(null, null, null)
         }
-        setLoading(false)
       }
     )
 
     return () => {
       subscription.unsubscribe()
       clearTimeout(timeoutId)
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
     }
-  }, [initialAuth]) // Removed supabase.auth from dependencies to prevent infinite loop
+  }, []) // Empty dependency array to prevent infinite loops
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
@@ -247,6 +268,15 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
     signOut,
     resetPassword,
   }
+
+  // Cleanup effect for debounce timeout
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Don't render until mounted to prevent hydration issues
   if (!mounted) {
