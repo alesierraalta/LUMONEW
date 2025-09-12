@@ -36,10 +36,25 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   const [error, setError] = useState<string | null>(initialAuth?.error ?? null)
   
   // Initialize Supabase client with error handling
-  const supabase = createClient()
+  const [supabaseError, setSupabaseError] = useState<string | null>(null)
+  let supabase: any = null
+  
+  try {
+    supabase = createClient()
+  } catch (err: any) {
+    console.error('Failed to create Supabase client:', err)
+    setSupabaseError(err.message || 'Failed to initialize Supabase client')
+  }
 
   useEffect(() => {
     setMounted(true)
+    
+    // If Supabase client failed to initialize, set error and stop loading
+    if (supabaseError || !supabase) {
+      setError(supabaseError || 'Failed to initialize authentication service')
+      setLoading(false)
+      return
+    }
     
     // Set a timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
@@ -47,8 +62,9 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
         console.warn('Auth loading timeout - forcing completion')
         setLoading(false)
         setAuthTimeout(true)
+        setError('Authentication service is taking too long to respond. Please check your internet connection.')
       }
-    }, 10000) // 10 second timeout
+    }, 5000) // Reduced to 5 second timeout
     
     // Get initial user if not provided - using secure getUser() instead of getSession()
     if (!initialAuth) {
@@ -124,6 +140,12 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   }, [initialAuth]) // Removed supabase.auth from dependencies to prevent infinite loop
 
   const signIn = async (email: string, password: string) => {
+    if (!supabase) {
+      const errorMessage = 'Authentication service not available. Please check your configuration.'
+      setError(errorMessage)
+      return { error: errorMessage }
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -143,6 +165,12 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   }
 
   const signUp = async (email: string, password: string, options?: { full_name?: string; role?: string }) => {
+    if (!supabase) {
+      const errorMessage = 'Authentication service not available. Please check your configuration.'
+      setError(errorMessage)
+      return { error: errorMessage }
+    }
+    
     try {
       setLoading(true)
       setError(null)
@@ -168,6 +196,11 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   }
 
   const signOut = async () => {
+    if (!supabase) {
+      console.error('Cannot sign out: Authentication service not available')
+      return
+    }
+    
     try {
       setLoading(true)
       await supabase.auth.signOut()
@@ -180,6 +213,12 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
   }
 
   const resetPassword = async (email: string) => {
+    if (!supabase) {
+      const errorMessage = 'Authentication service not available. Please check your configuration.'
+      setError(errorMessage)
+      return { error: errorMessage }
+    }
+    
     try {
       setLoading(true)
       setError(null)
