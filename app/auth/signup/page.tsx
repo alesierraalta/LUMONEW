@@ -51,7 +51,7 @@ export default function SignupPage() {
       })
       
       if (error) {
-        setError(error.message)
+        setError(error)
       } else {
         setSuccess('¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.')
         setTimeout(() => {

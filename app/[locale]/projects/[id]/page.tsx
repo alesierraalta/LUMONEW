@@ -376,7 +376,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       case 'completed': return 'bg-green-500'
       case 'on_hold': return 'bg-yellow-500'
       case 'cancelled': return 'bg-red-500'
-      default: return 'bg-gray-500'
+      default: return 'bg-muted-foreground'
     }
   }
 
@@ -386,7 +386,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
       case 'high': return 'bg-orange-500'
       case 'medium': return 'bg-yellow-500'
       case 'low': return 'bg-green-500'
-      default: return 'bg-gray-500'
+      default: return 'bg-muted-foreground'
     }
   }
 
@@ -465,10 +465,10 @@ export default function ProjectPage({ params }: ProjectPageProps) {
         <div className="animate-pulse space-y-4">
           <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="h-24 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-24 bg-muted rounded-lg animate-pulse"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded-lg"></div>
+          <div className="h-96 bg-muted rounded-lg animate-pulse"></div>
         </div>
       </div>
     )
@@ -1078,7 +1078,7 @@ export default function ProjectPage({ params }: ProjectPageProps) {
 
       {/* Add Item Modal */}
       {showAddItemModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-card rounded-lg p-4 md:p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4 md:mb-6">
               <h2 className="text-lg md:text-2xl font-bold text-foreground">Agregar Producto al Proyecto</h2>

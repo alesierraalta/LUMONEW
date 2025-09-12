@@ -32,12 +32,3 @@ export async function GET(request: NextRequest) {
     })
   }
 }
-
-/**
- * Apply authentication middleware
- * Only authenticated users can get CSRF tokens
- */
-export const middleware = withAuth({
-  requiredPermissions: [], // No specific permissions required, just authentication
-  requireAdmin: false
-})

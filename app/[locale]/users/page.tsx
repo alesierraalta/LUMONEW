@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { UserGrid } from '@/components/users/user-grid'
 import { UserForm, UserData } from '@/components/users/user-form'
 import { UserEditForm, UserEditData } from '@/components/users/user-edit-form'
@@ -10,6 +10,12 @@ import { useToast } from '@/components/ui/toast'
 import { LoadingSpinner } from '@/components/ui/loading'
 import { userService } from '@/lib/database'
 import { useTranslations } from 'next-intl'
+import { Button } from '@/components/ui/button'
+import { HelpCircle } from 'lucide-react'
+
+// Dynamic import for tutorial overlay
+const UsersTutorial = lazy(() => import('@/components/users/users-tutorial').then(mod => ({ default: mod.UsersTutorial })))
+const { userManagementTutorialSteps } = require('@/components/users/users-tutorial')
 
 // Helper function to convert UserData to database format
 const mapUserDataToDatabase = (userData: UserData) => ({
@@ -55,6 +61,7 @@ function UserManagementContent() {
   const [users, setUsers] = useState<UserData[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [isClient, setIsClient] = useState(false)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   const { openModal } = useModal()
   const { addToast } = useToast()
   const t = useTranslations('users')
@@ -200,7 +207,7 @@ function UserManagementContent() {
         <div className="animate-pulse space-y-4">
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
             {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-48 bg-muted rounded-lg animate-pulse"></div>
             ))}
           </div>
         </div>
@@ -212,11 +219,23 @@ function UserManagementContent() {
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       {/* Header - Mobile Responsive */}
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
+        <div data-tutorial="users-header">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">{t('title')}</h2>
           <p className="text-muted-foreground text-sm">
             {t('description')}
           </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setIsTutorialOpen(true)} 
+            aria-label="Abrir tutorial de usuarios"
+            data-tutorial="tutorial-btn"
+          >
+            <HelpCircle className="h-4 w-4 mr-2" />
+            Tutorial
+          </Button>
         </div>
       </div>
 
@@ -229,6 +248,17 @@ function UserManagementContent() {
         onUserDelete={handleUserDelete}
         onUserView={handleUserView}
       />
+
+      {/* Users Tutorial Overlay */}
+      {isTutorialOpen && (
+        <Suspense fallback={null}>
+          <UsersTutorial
+            isOpen={isTutorialOpen}
+            steps={userManagementTutorialSteps}
+            onClose={() => setIsTutorialOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
@@ -241,9 +271,9 @@ function UserDetailsModal({ user }: { user: UserData }) {
   const getStatusColor = (status: UserData['status']) => {
     switch (status) {
       case 'active': return 'text-green-600 bg-green-100 dark:text-green-400 dark:bg-green-900/20'
-      case 'inactive': return 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-800/50'
+      case 'inactive': return 'text-muted-foreground bg-muted'
       case 'pending': return 'text-yellow-600 bg-yellow-100 dark:text-yellow-400 dark:bg-yellow-900/20'
-      default: return 'text-gray-600 bg-gray-100 dark:text-gray-300 dark:bg-gray-800/50'
+      default: return 'text-muted-foreground bg-muted'
     }
   }
 

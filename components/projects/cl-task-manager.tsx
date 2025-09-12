@@ -332,7 +332,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
       case 'high': return 'bg-orange-500 text-white'
       case 'medium': return 'bg-yellow-500 text-white'
       case 'low': return 'bg-green-500 text-white'
-      default: return 'bg-gray-500 text-white'
+      default: return 'bg-muted-foreground text-white'
     }
   }
 
@@ -1162,7 +1162,7 @@ export function CLTaskManager({ item, onStatusUpdate, readonly = false }: CLTask
         {/* Overlay */}
         {isOpen && (
           <div 
-            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity"
             onClick={onClose}
           />
         )}

@@ -110,13 +110,13 @@ export function InventoryDashboard({
         {[1, 2, 3].map((i) => (
           <Card key={i} className="animate-pulse">
             <CardHeader className="pb-3">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+              <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                <div className="h-8 bg-gray-200 rounded"></div>
-                <div className="h-2 bg-gray-200 rounded"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <div className="h-8 bg-muted rounded animate-pulse"></div>
+                <div className="h-2 bg-muted rounded animate-pulse"></div>
+                <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
               </div>
             </CardContent>
           </Card>
@@ -162,7 +162,7 @@ export function InventoryDashboard({
           <CardContent>
             <div className="space-y-4">
               {/* Enhanced Metrics Display */}
-              <div className="bg-white/50 rounded-xl p-4 border border-emerald-100">
+              <div className="bg-card/50 rounded-xl p-4 border border-emerald-100 dark:border-emerald-800">
                 <div className="text-center mb-3">
                   <div className="text-4xl font-bold text-emerald-700 mb-1">{metrics.lu.total}</div>
                   <div className="text-sm text-emerald-600 font-medium">Productos en Stock</div>

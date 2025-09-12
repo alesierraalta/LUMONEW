@@ -528,7 +528,9 @@
       "creating": "Creating...",
       "updateUser": "Update User",
       "createUser": "Create User",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "role": "Role",
+      "newPassword": "New Password (Optional)"
     },
     "editForm": {
       "editUser": "Edit User",

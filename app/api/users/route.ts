@@ -295,3 +295,196 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
 })
 
 export { protectedPOST as POST }
+
+// Apply CSRF protection to PUT requests
+const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
+  try {
+    // Authenticate user and check permissions
+    const { user: currentUser, error } = await withAuth(request, {
+      requireAuth: true,
+      requiredPermissions: ['users.edit']
+    })
+    
+    if (error) return error
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { id, firstName, lastName, email, role, password } = body
+    
+    // Validate required fields
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'User ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createClient()
+    const adminClient = createAdminClient()
+    
+    // Build update object for public.users table
+    const updates: any = {}
+    
+    if (firstName && lastName) {
+      const sanitizedName = `${firstName.trim()} ${lastName.trim()}`.replace(/[<>"'&]/g, '')
+      if (sanitizedName.length >= 2 && sanitizedName.length <= 100) {
+        updates.name = sanitizedName
+      }
+    }
+    
+    if (email) {
+      const sanitizedEmail = email.trim().toLowerCase()
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      if (!emailRegex.test(sanitizedEmail)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid email format' },
+          { status: 400 }
+        )
+      }
+      updates.email = sanitizedEmail
+    }
+    
+    if (role) {
+      const validRoles = ['user', 'moderator', 'admin', 'Administrador', 'Super Administrador']
+      if (validRoles.includes(role)) {
+        // Only admins can change roles to admin
+        if ((role === 'admin' || role === 'Administrador' || role === 'Super Administrador') && 
+            !isAdmin(currentUser) && !hasPermission(currentUser, 'roles.manage')) {
+          return NextResponse.json(
+            { success: false, error: 'Insufficient permissions to assign admin roles' },
+            { status: 403 }
+          )
+        }
+        updates.role = role
+      }
+    }
+
+    // Handle password update - only for privileged users
+    if (password) {
+      // Check if current user has permission to edit passwords
+      const canEditPasswords = isAdmin(currentUser) || 
+        hasPermission(currentUser, 'manage_users') ||
+        currentUser.user_metadata?.role === 'admin' ||
+        currentUser.user_metadata?.role === 'Administrador' ||
+        currentUser.user_metadata?.role === 'Super Administrador'
+      
+      if (!canEditPasswords) {
+        return NextResponse.json(
+          { success: false, error: 'Insufficient permissions to change passwords' },
+          { status: 403 }
+        )
+      }
+
+      // Validate password strength
+      if (password.length < 6) {
+        return NextResponse.json(
+          { success: false, error: 'Password must be at least 6 characters long' },
+          { status: 400 }
+        )
+      }
+
+      // Update password in Supabase Auth
+      try {
+        const { error: passwordError } = await adminClient.auth.admin.updateUserById(
+          id,
+          { password: password }
+        )
+
+        if (passwordError) {
+          console.error('Error updating password:', passwordError)
+          return NextResponse.json(
+            { success: false, error: 'Failed to update password' },
+            { status: 500 }
+          )
+        }
+      } catch (passwordUpdateError) {
+        console.error('Exception updating password:', passwordUpdateError)
+        return NextResponse.json(
+          { success: false, error: 'Failed to update password' },
+          { status: 500 }
+        )
+      }
+    }
+
+    // Update user metadata in Supabase Auth if needed
+    if (updates.name || updates.role) {
+      const userMetadataUpdates: any = {}
+      if (updates.name) userMetadataUpdates.full_name = updates.name
+      if (updates.role) userMetadataUpdates.role = updates.role
+
+      try {
+        const { error: metadataError } = await adminClient.auth.admin.updateUserById(
+          id,
+          { user_metadata: userMetadataUpdates }
+        )
+
+        if (metadataError) {
+          console.error('Error updating user metadata:', metadataError)
+        }
+      } catch (metadataUpdateError) {
+        console.error('Exception updating user metadata:', metadataUpdateError)
+      }
+    }
+
+    // Update public.users table
+    if (Object.keys(updates).length > 0) {
+      updates.updated_at = new Date().toISOString()
+      
+      const { data: updatedUser, error: updateError } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single()
+
+      if (updateError) {
+        console.error('Error updating user in public.users table:', updateError)
+        return NextResponse.json(
+          { success: false, error: 'Failed to update user profile' },
+          { status: 500 }
+        )
+      }
+
+      // Log the user update for audit purposes
+      console.log(`User updated successfully by ${currentUser.email}:`, {
+        userId: id,
+        updatedFields: Object.keys(updates),
+        updatedBy: currentUser.id,
+        passwordChanged: !!password
+      })
+
+      return NextResponse.json({
+        success: true,
+        data: updatedUser,
+        message: password ? 'User profile and password updated successfully' : 'User profile updated successfully'
+      })
+    }
+
+    // If only password was updated
+    if (password) {
+      return NextResponse.json({
+        success: true,
+        message: 'Password updated successfully'
+      })
+    }
+
+    return NextResponse.json({
+      success: false,
+      error: 'No valid fields provided for update'
+    }, { status: 400 })
+
+  } catch (error) {
+    console.error('Error in PUT /api/users:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+})
+
+export { protectedPUT as PUT }

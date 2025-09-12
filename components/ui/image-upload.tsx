@@ -150,7 +150,7 @@ export function ImageUpload({
               alt="Preview"
               className="w-full h-48 object-cover rounded-lg"
             />
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center">
+            <div className="absolute inset-0 bg-transparent group-hover:bg-black/20 dark:group-hover:bg-white/20 transition-colors rounded-lg flex items-center justify-center">
               <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                 <button
                   onClick={(e) => {
@@ -188,7 +188,7 @@ export function ImageUpload({
             <div className="flex flex-col items-center gap-4">
               <div className={cn(
                 'p-4 rounded-full transition-colors',
-                isDragOver ? 'bg-blue-100' : 'bg-gray-100 group-hover:bg-gray-200'
+                isDragOver ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-muted group-hover:bg-muted/80'
               )}>
                 <ImageIcon className={cn(
                   'h-8 w-8 transition-colors',

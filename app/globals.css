@@ -470,8 +470,8 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    background: white;
-    border-bottom: 1px solid #e5e7eb;
+    background: hsl(var(--background));
+    border-bottom: 1px solid hsl(var(--border));
   }
   
   .mobile-content {

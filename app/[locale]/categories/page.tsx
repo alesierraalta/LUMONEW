@@ -170,10 +170,10 @@ function CategoriesContent() {
         <div className="animate-pulse space-y-4">
           <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-200 rounded-lg"></div>
+              <div key={i} className="h-32 bg-muted rounded-lg animate-pulse"></div>
             ))}
           </div>
-          <div className="h-96 bg-gray-200 rounded-lg"></div>
+          <div className="h-96 bg-muted rounded-lg animate-pulse"></div>
         </div>
       </div>
     )

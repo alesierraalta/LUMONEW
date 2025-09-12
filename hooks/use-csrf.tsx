@@ -143,9 +143,9 @@ export async function csrfFetch(
   }
   
   // Prepare headers
-  const headers = {
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers
+    ...options.headers as Record<string, string>
   }
   
   if (token) {

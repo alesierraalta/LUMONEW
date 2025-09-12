@@ -133,7 +133,7 @@ export default function CompleteProjectPage({ params }: PageProps) {
         <div className="flex items-center justify-between space-y-2">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Cargando…</h2>
         </div>
-        <div className="animate-pulse h-64 bg-gray-200 rounded-lg" />
+        <div className="animate-pulse h-64 bg-muted rounded-lg" />
       </div>
     )
   }

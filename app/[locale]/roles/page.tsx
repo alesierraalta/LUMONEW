@@ -164,7 +164,7 @@ function RoleManagementContent() {
       <div className="flex items-center justify-center py-12">
         <div className="flex flex-col items-center gap-4">
           <LoadingSpinner size="lg" />
-          <p className="text-gray-600">{t('loadingRoleManagement')}</p>
+          <p className="text-muted-foreground">{t('loadingRoleManagement')}</p>
         </div>
       </div>
     )
@@ -199,12 +199,12 @@ function RoleDetailsModal({
   
   const getRoleColor = (color: string) => {
     const colors = {
-      red: 'text-red-600 bg-red-100 border-red-200',
-      blue: 'text-blue-600 bg-blue-100 border-blue-200',
-      green: 'text-green-600 bg-green-100 border-green-200',
-      yellow: 'text-yellow-600 bg-yellow-100 border-yellow-200',
-      gray: 'text-gray-600 bg-gray-100 border-border',
-      purple: 'text-purple-600 bg-purple-100 border-purple-200'
+      red: 'text-red-600 bg-red-100 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800',
+      blue: 'text-blue-600 bg-blue-100 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-800',
+      green: 'text-green-600 bg-green-100 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800',
+      yellow: 'text-yellow-600 bg-yellow-100 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-900/20 dark:border-yellow-800',
+      gray: 'text-muted-foreground bg-muted border-border',
+      purple: 'text-purple-600 bg-purple-100 border-purple-200 dark:text-purple-400 dark:bg-purple-900/20 dark:border-purple-800'
     }
     return colors[color as keyof typeof colors] || colors.gray
   }
@@ -235,9 +235,9 @@ function RoleDetailsModal({
             )}
           </div>
         </div>
-        <p className="text-lg text-gray-600 mb-4">{role.description}</p>
+        <p className="text-lg text-muted-foreground mb-4">{role.description}</p>
         
-        <div className="flex justify-center gap-6 text-sm text-gray-600">
+        <div className="flex justify-center gap-6 text-sm text-muted-foreground">
           <div className="text-center">
             <div className="font-semibold text-foreground">{role.userCount}</div>
             <div>{t('assignedUsers')}</div>
@@ -255,7 +255,7 @@ function RoleDetailsModal({
           <h3 className="text-lg font-semibold text-foreground mb-3">{t('roleInformation')}</h3>
           <div className="space-y-2">
             <div className="flex justify-between">
-              <span className="text-gray-600">{t('created')}:</span>
+              <span className="text-muted-foreground">{t('created')}:</span>
               <span className="font-medium text-foreground">
                 {role.createdAt ? new Date(role.createdAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
@@ -265,7 +265,7 @@ function RoleDetailsModal({
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">{t('lastUpdate')}:</span>
+              <span className="text-muted-foreground">{t('lastUpdate')}:</span>
               <span className="font-medium text-foreground">
                 {role.updatedAt ? new Date(role.updatedAt).toLocaleDateString('es-ES', {
                   year: 'numeric',
@@ -286,7 +286,7 @@ function RoleDetailsModal({
                 <h4 className="font-medium text-foreground mb-2">{category}</h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {permissions.map((permission) => (
-                    <div key={permission.id} className="flex items-center gap-2 text-sm text-gray-700">
+                    <div key={permission.id} className="flex items-center gap-2 text-sm text-foreground">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       {permission.name}
                     </div>

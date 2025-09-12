@@ -24,6 +24,7 @@ export interface UserEditData {
   lastName: string
   email: string
   role: string
+  password?: string // Optional password field for privileged users
 }
 
 interface UserEditFormProps {
@@ -44,6 +45,8 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
   const [formData, setFormData] = useState<UserEditData>(user || { ...initialUserData })
   const [validationState, setValidationState] = useState<Record<string, boolean>>({})
   const [roles, setRoles] = useState<Role[]>([])
+  const [showPasswordField, setShowPasswordField] = useState(false)
+  const [canEditPasswords, setCanEditPasswords] = useState(false)
   const { addToast } = useToast()
   const { closeModal } = useModal()
   const t = useTranslations('users.editForm')
@@ -52,14 +55,25 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
 
   const isEditing = Boolean(user?.id)
   const isFormValid = Object.values(validationState).every(Boolean) && 
-    formData.firstName && formData.lastName && formData.email && formData.role
+    formData.firstName && formData.lastName && formData.email && formData.role &&
+    (!showPasswordField || (showPasswordField && formData.password))
 
-  // Load roles from the database
+  // Load roles from the database and check permissions
   useEffect(() => {
     const loadRoles = async () => {
       try {
         const rolesData = await roleService.getAll()
         setRoles(rolesData || [])
+        
+        // Check if current user has permission to edit passwords
+        // This would typically come from your auth context or user session
+        // For now, we'll assume admins and users with manage_users permission can edit passwords
+        const currentUserRole = localStorage.getItem('userRole') || 'user'
+        const hasPasswordEditPermission = currentUserRole === 'admin' || 
+          currentUserRole === 'Administrador' || 
+          currentUserRole === 'Super Administrador'
+        
+        setCanEditPasswords(hasPasswordEditPermission)
       } catch (error) {
         console.error('Error loading roles:', error)
         addToast({
@@ -131,6 +145,18 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
     }
   }
 
+  // Password validation
+  const passwordValidation = {
+    required: showPasswordField,
+    minLength: 6,
+    custom: (value: string) => {
+      if (showPasswordField && (!value || value.length < 6)) {
+        return 'La contraseña debe tener al menos 6 caracteres'
+      }
+      return null
+    }
+  }
+
   return (
     <div className="max-h-[80vh] overflow-y-auto custom-scrollbar">
       <div className="p-6">
@@ -186,6 +212,43 @@ export function UserEditForm({ user, onSubmit, onCancel, isLoading = false }: Us
               validation={emailValidation}
               disabled={isLoading}
             />
+
+            {/* Password Management Section */}
+            {canEditPasswords && (
+              <div className="space-y-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">
+                    Gestión de Contraseña
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowPasswordField(!showPasswordField)
+                      if (showPasswordField) {
+                        setFormData(prev => ({ ...prev, password: '' }))
+                      }
+                    }}
+                    className="text-sm text-primary hover:text-primary/80 transition-colors"
+                    disabled={isLoading}
+                  >
+                    {showPasswordField ? 'Cancelar cambio' : 'Cambiar contraseña'}
+                  </button>
+                </div>
+                
+                {showPasswordField && (
+                  <FloatingInput
+                    label="Nueva Contraseña *"
+                    type="password"
+                    value={formData.password || ''}
+                    onChange={handleInputChange('password')}
+                    onValidation={handleValidation('password')}
+                    validation={passwordValidation}
+                    disabled={isLoading}
+                    placeholder="Ingresa la nueva contraseña"
+                  />
+                )}
+              </div>
+            )}
 
             {/* Role Selection */}
             <div className="space-y-2">

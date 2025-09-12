@@ -1,20 +1,25 @@
 'use client'
 
 import * as React from 'react'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { FloatingInput } from '@/components/ui/floating-input'
 import { LoadingButton } from '@/components/ui/loading'
 import { ToastProvider, useToast } from '@/components/ui/toast'
 import { useTranslations } from 'next-intl'
-import { useCSRF } from '@/hooks/use-csrf.tsx'
+import { useCSRF } from '@/hooks/use-csrf'
 import {
   User,
   Mail,
   Save,
   ArrowLeft,
-  Shield
+  Shield,
+  HelpCircle
 } from 'lucide-react'
+
+// Dynamic import for tutorial overlay
+const UsersTutorial = lazy(() => import('@/components/users/users-tutorial').then(mod => ({ default: mod.UsersTutorial })))
+const { userCreationTutorialSteps } = require('@/components/users/users-tutorial')
 
 export interface UserData {
   name: string
@@ -44,6 +49,7 @@ function CreateUserContent() {
   const [roles, setRoles] = useState<Role[]>([])
   const [isLoadingRoles, setIsLoadingRoles] = useState(true)
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false)
   
   const { addToast } = useToast()
   const router = useRouter()
@@ -273,7 +279,7 @@ function CreateUserContent() {
               >
                 <ArrowLeft className="h-5 w-5 text-muted-foreground" />
               </button>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-3" data-tutorial="create-user-header">
                 <div className="p-3 bg-primary/10 rounded-xl">
                   <User className="h-8 w-8 text-primary" />
                 </div>
@@ -281,6 +287,15 @@ function CreateUserContent() {
                   <h1 className="text-3xl font-bold text-foreground">Crear Nuevo Usuario</h1>
                   <p className="text-muted-foreground">Completa la información para crear un nuevo usuario</p>
                 </div>
+              </div>
+              <div className="ml-auto">
+                <button
+                  onClick={() => setIsTutorialOpen(true)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                  aria-label="Abrir tutorial de creación de usuario"
+                >
+                  <HelpCircle className="h-5 w-5 text-muted-foreground" />
+                </button>
               </div>
             </div>
           </div>
@@ -290,51 +305,57 @@ function CreateUserContent() {
               {/* Main Form */}
               <div className="lg:col-span-2 space-y-8">
                 {/* User Information */}
-                <div className="bg-card rounded-xl border border-border p-6">
+                <div className="bg-card rounded-xl border border-border p-6" data-tutorial="user-info-section">
                   <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
                     <User className="h-5 w-5 text-muted-foreground" />
                     Información del Usuario
                   </h2>
                   
                   <div className="space-y-6">
-                    <FloatingInput
-                      label="Nombre Completo *"
-                      type="text"
-                      value={formData.name}
-                      onChange={handleInputChange('name')}
-                      onValidation={handleValidation('name')}
-                      validation={nameValidation}
-                      disabled={isLoading}
-                    />
+                    <div data-tutorial="name-field">
+                      <FloatingInput
+                        label="Nombre Completo *"
+                        type="text"
+                        value={formData.name}
+                        onChange={handleInputChange('name')}
+                        onValidation={handleValidation('name')}
+                        validation={nameValidation}
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                    <FloatingInput
-                      label="Correo Electrónico *"
-                      type="email"
-                      value={formData.email}
-                      onChange={handleInputChange('email')}
-                      onValidation={handleValidation('email')}
-                      validation={emailValidation}
-                      showValidation={true}
-                      realTimeValidation={true}
-                      disabled={isLoading}
-                    />
+                    <div data-tutorial="email-field">
+                      <FloatingInput
+                        label="Correo Electrónico *"
+                        type="email"
+                        value={formData.email}
+                        onChange={handleInputChange('email')}
+                        onValidation={handleValidation('email')}
+                        validation={emailValidation}
+                        showValidation={true}
+                        realTimeValidation={true}
+                        disabled={isLoading}
+                      />
+                    </div>
 
-                    <FloatingInput
-                      label="Contraseña *"
-                      type="password"
-                      value={formData.password}
-                      onChange={handleInputChange('password')}
-                      onValidation={handleValidation('password')}
-                      validation={passwordValidation}
-                      disabled={isLoading}
-                    />
+                    <div data-tutorial="password-field">
+                      <FloatingInput
+                        label="Contraseña *"
+                        type="password"
+                        value={formData.password}
+                        onChange={handleInputChange('password')}
+                        onValidation={handleValidation('password')}
+                        validation={passwordValidation}
+                        disabled={isLoading}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Role Selection Sidebar */}
               <div className="space-y-6">
-                <div className="bg-card rounded-xl border border-border p-6 overflow-hidden">
+                <div className="bg-card rounded-xl border border-border p-6 overflow-hidden" data-tutorial="role-section">
                   <h2 className="text-lg font-semibold text-foreground mb-6 flex items-center gap-2">
                     <Shield className="h-5 w-5 text-muted-foreground" />
                     Asignar Rol *
@@ -377,7 +398,7 @@ function CreateUserContent() {
                   )}
 
                   {selectedRole && (
-                    <div className="mt-6 p-4 bg-muted/50 rounded-lg overflow-hidden">
+                    <div className="mt-6 p-4 bg-muted/50 rounded-lg overflow-hidden" data-tutorial="role-permissions">
                       <h3 className="font-medium text-foreground mb-2">Permisos del Rol</h3>
                       <div className="space-y-1 max-h-32 overflow-y-auto custom-scrollbar">
                         {selectedRole.permissions.map((permission) => (
@@ -400,6 +421,7 @@ function CreateUserContent() {
                       loadingText={'Creando Usuario...'}
                       disabled={!isFormValid || isLoadingRoles}
                       className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      data-tutorial="submit-btn"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Crear Usuario
@@ -410,6 +432,7 @@ function CreateUserContent() {
                       onClick={handleCancel}
                       disabled={isLoading}
                       className="w-full px-4 py-2 border border-input text-foreground rounded-lg hover:bg-muted/50 transition-colors disabled:opacity-50"
+                      data-tutorial="cancel-btn"
                     >
                       Cancelar
                     </button>
@@ -418,6 +441,17 @@ function CreateUserContent() {
               </div>
             </div>
           </form>
+
+          {/* Users Tutorial Overlay */}
+          {isTutorialOpen && (
+            <Suspense fallback={null}>
+              <UsersTutorial
+                isOpen={isTutorialOpen}
+                steps={userCreationTutorialSteps}
+                onClose={() => setIsTutorialOpen(false)}
+              />
+            </Suspense>
+          )}
         </div>
       </div>
     </div>

@@ -128,7 +128,7 @@ export function UserGrid({
     const [showActions, setShowActions] = useState(false)
 
     return (
-      <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-all duration-200 group">
+      <div className="bg-card rounded-xl border border-border p-6 hover:shadow-lg transition-all duration-200 group" data-tutorial="user-card">
         {/* User Avatar and Basic Info */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-4">
@@ -149,7 +149,7 @@ export function UserGrid({
               <div className={cn(
                 'absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-background',
                 user.status === 'active' ? 'bg-green-500' :
-                user.status === 'pending' ? 'bg-yellow-500' : 'bg-gray-400'
+                user.status === 'pending' ? 'bg-yellow-500' : 'bg-muted-foreground'
               )} />
             </div>
             
@@ -162,7 +162,7 @@ export function UserGrid({
             </div>
           </div>
 
-          <div className="relative">
+          <div className="relative" data-tutorial="user-actions">
             <button
               onClick={() => setShowActions(!showActions)}
               className="p-2 rounded-lg hover:bg-accent transition-colors opacity-0 group-hover:opacity-100"
@@ -283,6 +283,7 @@ export function UserGrid({
           <button
             onClick={() => window.location.href = '/users/create'}
             className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-lg transition-colors text-sm"
+            data-tutorial="create-user-btn"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">{t('newUser')}</span>
@@ -420,7 +421,7 @@ export function UserGrid({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-tutorial="users-grid">
             {filteredUsers.map((user) => (
               <UserCard key={user.id} user={user} />
             ))}

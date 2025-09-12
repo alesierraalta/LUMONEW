@@ -66,7 +66,7 @@ export default function AdminSignupPage() {
       })
       
       if (error) {
-        setError(error.message)
+        setError(error)
       } else {
         setSuccess('¡Usuario creado exitosamente!')
         // Limpiar formulario
