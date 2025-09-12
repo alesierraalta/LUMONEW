@@ -71,7 +71,7 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
         }
         setLoading(false)
         clearTimeout(timeoutId)
-      }).catch((err) => {
+      }).catch((err: any) => {
         console.error('Auth initialization error:', err)
         setError('Failed to initialize authentication')
         setLoading(false)
