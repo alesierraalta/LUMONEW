@@ -1,4 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
+import { Logger } from '@/lib/utils/logger'
 
 // Singleton instance to prevent multiple GoTrueClient instances
 let clientInstance: ReturnType<typeof createBrowserClient> | null = null
@@ -13,18 +14,18 @@ export function createClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl) {
-    console.error('❌ NEXT_PUBLIC_SUPABASE_URL is not defined')
+    Logger.error('❌ NEXT_PUBLIC_SUPABASE_URL is not defined')
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable')
   }
 
   if (!supabaseAnonKey) {
-    console.error('❌ NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined')
+    Logger.error('❌ NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined')
     throw new Error('Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable')
   }
 
   // Only log in development to reduce console spam
   if (process.env.NODE_ENV === 'development') {
-    console.log('🔧 Creating Supabase browser client with URL:', supabaseUrl.substring(0, 30) + '...')
+    Logger.log('🔧 Creating Supabase browser client with URL:', supabaseUrl.substring(0, 30) + '...')
   }
 
   try {
@@ -32,12 +33,12 @@ export function createClient() {
     
     // Only log in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('✅ Supabase browser client created successfully')
+      Logger.log('✅ Supabase browser client created successfully')
     }
     
     return clientInstance
   } catch (error) {
-    console.error('❌ Failed to create Supabase browser client:', error)
+    Logger.error('❌ Failed to create Supabase browser client:', error)
     throw error
   }
 }

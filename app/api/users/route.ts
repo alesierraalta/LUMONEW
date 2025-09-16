@@ -6,6 +6,9 @@ import rateLimit from '@/lib/utils/rate-limit'
 import { withCSRFProtection } from '@/lib/security/csrf'
 import validator from 'validator'
 import DOMPurify from 'isomorphic-dompurify'
+import { Logger } from '@/lib/utils/logger'
+import { validatePassword } from '@/lib/validation/password'
+import { handleAPIError, withErrorHandling, validateRequestBody } from '@/lib/utils/api-error-handler'
 
 // Rate limiter for user creation (5 requests per hour per IP)
 const createUserLimiter = rateLimit({
@@ -44,7 +47,7 @@ export async function GET(request: NextRequest) {
       const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers()
       
       if (authError) {
-        console.error('Error fetching users:', authError)
+        Logger.error('Error fetching users:', authError)
         return NextResponse.json(
           { success: false, error: 'Failed to fetch users' },
           { status: 500 }
@@ -69,7 +72,7 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Error in users API:', error)
+    Logger.error('Error in users API:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -205,7 +208,7 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
     })
     
     if (authError) {
-      console.error('Auth user creation error:', authError)
+      Logger.error('Auth user creation error:', authError)
       
       // Handle specific error cases
       if (authError.message?.includes('already registered')) {
@@ -236,13 +239,13 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
         })
       
       if (insertError) {
-        console.error('Error inserting user into public.users table:', insertError)
+        Logger.error('Error inserting user into public.users table:', insertError)
         
         // If we can't insert into users table, clean up the auth user
         try {
           await adminClient.auth.admin.deleteUser(authData.user.id)
         } catch (cleanupError) {
-          console.error('Failed to cleanup auth user after database error:', cleanupError)
+          Logger.error('Failed to cleanup auth user after database error:', cleanupError)
         }
         
         return NextResponse.json(
@@ -251,13 +254,13 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
         )
       }
     } catch (insertError) {
-      console.error('Exception inserting user into public.users table:', insertError)
+      Logger.error('Exception inserting user into public.users table:', insertError)
       
       // Cleanup auth user
       try {
         await adminClient.auth.admin.deleteUser(authData.user.id)
       } catch (cleanupError) {
-        console.error('Failed to cleanup auth user after exception:', cleanupError)
+        Logger.error('Failed to cleanup auth user after exception:', cleanupError)
       }
       
       return NextResponse.json(
@@ -267,7 +270,7 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
     }
     
     // Log the user creation for audit purposes
-    console.log(`User created successfully by admin ${currentUser.email}:`, {
+    Logger.auth('User created successfully', currentUser.id, {
       userId: authData.user.id,
       email: sanitizedEmail,
       role: userRole,
@@ -286,7 +289,7 @@ const protectedPOST = withCSRFProtection(async (request: NextRequest) => {
     })
     
   } catch (error) {
-    console.error('Error in POST /api/users:', error)
+    Logger.error('Error in POST /api/users:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -396,14 +399,14 @@ const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
         )
 
         if (passwordError) {
-          console.error('Error updating password:', passwordError)
+          Logger.error('Error updating password:', passwordError)
           return NextResponse.json(
             { success: false, error: 'Failed to update password' },
             { status: 500 }
           )
         }
       } catch (passwordUpdateError) {
-        console.error('Exception updating password:', passwordUpdateError)
+        Logger.error('Exception updating password:', passwordUpdateError)
         return NextResponse.json(
           { success: false, error: 'Failed to update password' },
           { status: 500 }
@@ -424,10 +427,10 @@ const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
         )
 
         if (metadataError) {
-          console.error('Error updating user metadata:', metadataError)
+          Logger.error('Error updating user metadata:', metadataError)
         }
       } catch (metadataUpdateError) {
-        console.error('Exception updating user metadata:', metadataUpdateError)
+        Logger.error('Exception updating user metadata:', metadataUpdateError)
       }
     }
 
@@ -443,7 +446,7 @@ const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
         .single()
 
       if (updateError) {
-        console.error('Error updating user in public.users table:', updateError)
+        Logger.error('Error updating user in public.users table:', updateError)
         return NextResponse.json(
           { success: false, error: 'Failed to update user profile' },
           { status: 500 }
@@ -451,7 +454,7 @@ const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
       }
 
       // Log the user update for audit purposes
-      console.log(`User updated successfully by ${currentUser.email}:`, {
+      Logger.auth('User updated successfully', currentUser.id, {
         userId: id,
         updatedFields: Object.keys(updates),
         updatedBy: currentUser.id,
@@ -479,7 +482,7 @@ const protectedPUT = withCSRFProtection(async (request: NextRequest) => {
     }, { status: 400 })
 
   } catch (error) {
-    console.error('Error in PUT /api/users:', error)
+    Logger.error('Error in PUT /api/users:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

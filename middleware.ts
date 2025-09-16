@@ -4,6 +4,8 @@ import createMiddleware from 'next-intl/middleware'
 import { routing } from './i18n/routing'
 import { createClient } from '@/lib/supabase/server-with-retry'
 import { validateCSRFToken } from '@/lib/security/csrf'
+import { Logger } from '@/lib/utils/logger'
+import { EnvironmentConfig } from '@/lib/config/environment'
 
 // Create the i18n middleware
 const intlMiddleware = createMiddleware(routing)
@@ -102,7 +104,7 @@ export async function middleware(request: NextRequest) {
 
       // If there's an error getting the session, handle appropriately
       if (error) {
-        console.warn('Middleware auth check error:', error.message)
+        Logger.warn('Middleware auth check error:', error.message)
         
         // Handle API routes differently
         if (pathname.startsWith('/api/')) {
@@ -165,7 +167,7 @@ export async function middleware(request: NextRequest) {
         const isCSRFValid = validateCSRFToken(request)
         
         if (!isCSRFValid) {
-          console.warn('CSRF validation failed for:', {
+          Logger.security('CSRF validation failed for:', {
             method: request.method,
             pathname,
             ip: request.ip || 'unknown',
@@ -189,7 +191,22 @@ export async function middleware(request: NextRequest) {
       response.headers.set('X-Content-Type-Options', 'nosniff')
       response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
       response.headers.set('X-XSS-Protection', '1; mode=block')
-      response.headers.set('Content-Security-Policy', "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://hnbtninlyzpdemyudaqg.supabase.co https://heteecppghdkkzgrbdko.supabase.co")
+      // Enhanced security headers
+      const csp = [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+        "style-src 'self' 'unsafe-inline'",
+        "img-src 'self' data: https:",
+        "font-src 'self' data:",
+        "connect-src 'self' https://hnbtninlyzpdemyudaqg.supabase.co https://heteecppghdkkzgrbdko.supabase.co",
+        "frame-ancestors 'none'",
+        "base-uri 'self'",
+        "form-action 'self'"
+      ].join('; ')
+      
+      response.headers.set('Content-Security-Policy', csp)
+      response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+      response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
       
       // Add user info to headers for API routes (for logging/audit)
       if (pathname.startsWith('/api/')) {
@@ -199,7 +216,7 @@ export async function middleware(request: NextRequest) {
       
       return response
     } catch (error) {
-      console.error('Middleware error:', error)
+      Logger.error('Middleware error:', error)
       
       // Handle API routes differently
       if (pathname.startsWith('/api/')) {
