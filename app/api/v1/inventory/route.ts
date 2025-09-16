@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     )
 
     // Mock data for now - in real implementation, this would call the service
-    const items = []
+    const items: any[] = []
     const totalCount = 0
     
     // Calculate pagination info
