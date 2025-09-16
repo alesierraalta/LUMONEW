@@ -2,7 +2,7 @@
 
 export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/lib/auth/auth-context'
@@ -18,17 +18,17 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [localLoading, setLocalLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { signIn } = useAuth()
+  const { signIn, loading: authLoading, user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setLocalLoading(true)
     setError('')
 
     try {
@@ -37,14 +37,22 @@ export default function LoginPage() {
       if (error) {
         setError(error)
       } else {
+        // Success - the auth context will handle the redirect via ProtectedRoute
         router.push(redirectTo)
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
     } finally {
-      setLoading(false)
+      setLocalLoading(false)
     }
   }
+
+  // Auto-redirect if user is already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      router.push(redirectTo)
+    }
+  }, [user, authLoading, router, redirectTo])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-4 px-4 sm:py-12 sm:px-6 lg:px-8 relative">
@@ -86,7 +94,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                   required
-                  disabled={loading}
+                  disabled={localLoading || authLoading}
                   className="h-10 sm:h-11 text-base"
                 />
               </div>
@@ -101,7 +109,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
-                    disabled={loading}
+                    disabled={localLoading || authLoading}
                     className="h-10 sm:h-11 text-base pr-10"
                   />
                   <Button
@@ -110,7 +118,7 @@ export default function LoginPage() {
                     size="sm"
                     className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
-                    disabled={loading}
+                    disabled={localLoading || authLoading}
                   >
                     {showPassword ? (
                       <EyeOff className="h-4 w-4" />
@@ -124,9 +132,9 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 className="w-full h-10 sm:h-11 text-base font-medium"
-                disabled={loading}
+                disabled={localLoading || authLoading}
               >
-                {loading ? (
+                {(localLoading || authLoading) ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Iniciando sesión...

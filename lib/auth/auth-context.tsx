@@ -170,11 +170,45 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
     try {
       setLoading(true)
       setError(null)
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) {
-        setError(error.message)
-        return { error: error.message }
+      
+      // Create a promise that resolves when auth state changes to signed in
+      const authStatePromise = new Promise<{ error?: string }>((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          reject(new Error('Authentication timeout - please try again'))
+        }, 10000) // 10 second timeout
+        
+        // Listen for auth state changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          (event: any, session: any) => {
+            if (event === 'SIGNED_IN' && session?.user) {
+              clearTimeout(timeout)
+              subscription.unsubscribe()
+              resolve({})
+            } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session?.user)) {
+              clearTimeout(timeout)
+              subscription.unsubscribe()
+              resolve({ error: 'Authentication failed' })
+            }
+          }
+        )
+      })
+      
+      // Start the sign in process
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      
+      if (signInError) {
+        setError(signInError.message)
+        return { error: signInError.message }
       }
+      
+      // Wait for the auth state to actually change
+      const result = await authStatePromise
+      
+      if (result.error) {
+        setError(result.error)
+        return result
+      }
+      
       return {}
     } catch (error: any) {
       const errorMessage = error.message || 'An unexpected error occurred'
