@@ -6,6 +6,7 @@ import { formatCurrency, formatNumber } from '@/lib/utils'
 import { analyticsService } from '@/lib/database'
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
+import { TotalValueModal } from './total-value-modal'
 
 interface DashboardMetrics {
   totalItems: number
@@ -20,6 +21,7 @@ export function MetricsCards() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isTotalValueModalOpen, setIsTotalValueModalOpen] = useState(false)
 
   useEffect(() => {
     async function fetchMetrics() {
@@ -83,7 +85,8 @@ export function MetricsCards() {
       value: formatCurrency(metrics.totalValue),
       description: t('inventoryValue'),
       icon: DollarSign,
-      trend: t('realTimeData')
+      trend: t('realTimeData'),
+      isClickable: true
     },
     {
       title: t('lowStock'),
@@ -105,7 +108,11 @@ export function MetricsCards() {
   return (
     <>
       {metricsData.map((metric, index) => (
-        <Card key={index} className={metric.isAlert ? 'border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20' : ''}>
+        <Card 
+          key={index} 
+          className={`${metric.isAlert ? 'border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20' : ''} ${metric.isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+          onClick={metric.isClickable ? () => setIsTotalValueModalOpen(true) : undefined}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs md:text-sm font-medium">
               {metric.title}
@@ -124,9 +131,18 @@ export function MetricsCards() {
             }`}>
               {metric.trend}
             </p>
+            {metric.isClickable && (
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
+                Click para ver detalles
+              </p>
+            )}
           </CardContent>
         </Card>
       ))}
+      <TotalValueModal 
+        isOpen={isTotalValueModalOpen}
+        onClose={() => setIsTotalValueModalOpen(false)}
+      />
     </>
   )
 }
