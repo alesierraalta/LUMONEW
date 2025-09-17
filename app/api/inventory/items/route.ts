@@ -23,3 +23,38 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    
+    // Validate required fields
+    if (!body.sku || !body.name) {
+      return NextResponse.json(
+        { error: 'SKU and name are required' },
+        { status: 400 }
+      )
+    }
+    
+    // Create new inventory item
+    const newItem = await auditedInventoryService.create({
+      sku: body.sku,
+      name: body.name,
+      category_id: body.category_id || null,
+      location_id: body.location_id || null,
+      unit_price: body.unit_price || 0,
+      quantity: body.quantity || 0,
+      min_stock: body.min_stock || 0,
+      max_stock: body.max_stock || 0,
+      status: body.status || 'active'
+    })
+    
+    return NextResponse.json(newItem, { status: 201 })
+  } catch (error) {
+    console.error('Error creating inventory item:', error)
+    return NextResponse.json(
+      { error: 'Failed to create inventory item' },
+      { status: 500 }
+    )
+  }
+}

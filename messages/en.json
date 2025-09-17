@@ -386,7 +386,9 @@
       "title": "Bulk Create",
       "addRow": "Add Row",
       "create": "Create",
-      "createItems": "Create {count} Items"
+      "createItems": "Create {count} Items",
+      "skuRequired": "SKU is required",
+      "nameRequired": "Name is required"
     },
     "actions": {
       "addStock": "Add stock",

@@ -489,7 +489,9 @@
       "title": "Creación en Lote",
       "addRow": "Agregar Fila",
       "create": "Crear",
-      "createItems": "Crear {count} Items"
+      "createItems": "Crear {count} Items",
+      "skuRequired": "El SKU es obligatorio",
+      "nameRequired": "El nombre es obligatorio"
     }
   },
   "users": {
