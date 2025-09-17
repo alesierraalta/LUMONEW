@@ -106,7 +106,7 @@ export class RateLimiter {
 
   cleanup(): void {
     const now = Date.now()
-    for (const [key, record] of this.requests.entries()) {
+    for (const [key, record] of Array.from(this.requests.entries())) {
       if (now > record.resetTime) {
         this.requests.delete(key)
       }
@@ -130,7 +130,7 @@ export async function rateLimitMiddleware(request: NextRequest): Promise<NextRes
       { 
         status: 429,
         headers: {
-          'X-RateLimit-Limit': rateLimiter.maxRequests.toString(),
+          'X-RateLimit-Limit': '100',
           'X-RateLimit-Remaining': result.remaining.toString(),
           'X-RateLimit-Reset': result.resetTime.toString()
         }

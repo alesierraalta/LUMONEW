@@ -184,7 +184,16 @@ export function InventoryTable({ filters }: InventoryTableProps) {
         throw new Error('Failed to fetch inventory items')
       }
       const data = await response.json()
-      setItems(data || [])
+      
+      // Handle both old format (array) and new format (pagination object)
+      if (Array.isArray(data)) {
+        setItems(data)
+      } else if (data && data.data && Array.isArray(data.data)) {
+        // New pagination format
+        setItems(data.data)
+      } else {
+        setItems([])
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('errorLoadingInventory'))
     } finally {

@@ -323,12 +323,17 @@ export function BulkOperations({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" showCloseButton={false}>
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto" showCloseButton={false} aria-describedby="bulk-operations-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {getOperationIcon(operationType)}
             {t('title')}
           </DialogTitle>
+          <DialogDescription id="bulk-operations-description">
+            {operationType === 'update' && `Perform bulk updates on ${selectedItems.length} selected items`}
+            {operationType === 'delete' && `Delete ${selectedItems.length} selected items permanently`}
+            {operationType === 'archive' && `Archive ${selectedItems.length} selected items`}
+          </DialogDescription>
           <DialogDescription>
             {t('description', { count: selectedItems.length })}
           </DialogDescription>

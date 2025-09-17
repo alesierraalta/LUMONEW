@@ -634,7 +634,7 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-7xl max-h-[95vh] overflow-hidden flex flex-col" aria-describedby="audit-history-description">
         <DialogHeader className="pb-4 border-b border-border">
           <DialogTitle className="flex items-center gap-3 text-xl">
             <div className="p-2 rounded-lg bg-info-soft">
@@ -645,6 +645,9 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
               <p className="text-sm text-muted-foreground font-normal">Sistema completo de seguimiento y trazabilidad</p>
             </div>
           </DialogTitle>
+          <DialogDescription id="audit-history-description">
+            View detailed audit logs of all system operations including inventory changes, user actions, and data modifications.
+          </DialogDescription>
         </DialogHeader>
 
         {/* Estadísticas rápidas */}

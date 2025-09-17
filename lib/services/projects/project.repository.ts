@@ -127,9 +127,9 @@ export class ProjectRepository {
     if (updates.expectedEndDate) updateData.expected_end_date = new Date(updates.expectedEndDate).toISOString()
     
     // Handle progress updates
-    if (updates.totalItems !== undefined) updateData.total_items = updates.totalItems
-    if (updates.completedItems !== undefined) updateData.completed_items = updates.completedItems
-    if (updates.progress !== undefined) updateData.progress = updates.progress
+    if ((updates as any).totalItems !== undefined) updateData.total_items = (updates as any).totalItems
+    if ((updates as any).completedItems !== undefined) updateData.completed_items = (updates as any).completedItems
+    if ((updates as any).progress !== undefined) updateData.progress = (updates as any).progress
 
     const { data, error } = await supabase
       .from(this.projectsTable)
@@ -320,6 +320,10 @@ export class ProjectRepository {
       completedProjects: projectCounts.completed || 0,
       onHoldProjects: projectCounts.on_hold || 0,
       cancelledProjects: projectCounts.cancelled || 0,
+      onTimeProjects: 0,
+      delayedProjects: 0,
+      averageProjectDuration: 0,
+      recentActivities: [],
       luItems: itemMetrics.lu || { total: 0, completed: 0, pending: 0 },
       clItems: itemMetrics.cl || { total: 0, completed: 0, pending: 0 },
       impItems: itemMetrics.imp || { total: 0, completed: 0, pending: 0 }

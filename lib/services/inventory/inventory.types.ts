@@ -10,7 +10,7 @@ export interface InventoryFilters extends FilterOptions {
     min: number
     max: number
   }
-  stockStatus?: 'in_stock' | 'low_stock' | 'out_of_stock'
+  stockStatus?: 'good_stock' | 'low_stock' | 'out_of_stock'
   hasImages?: boolean
   autoReorder?: boolean
 }

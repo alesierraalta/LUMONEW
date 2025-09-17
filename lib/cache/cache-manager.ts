@@ -146,7 +146,7 @@ export class CacheManager<T = any> {
   invalidateByTags(tags: string[]): number {
     let invalidated = 0
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (entry.tags.some(tag => tags.includes(tag))) {
         this.delete(key)
         invalidated++
@@ -162,7 +162,7 @@ export class CacheManager<T = any> {
   invalidateByPattern(pattern: RegExp): number {
     let invalidated = 0
     
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (pattern.test(key)) {
         this.delete(key)
         invalidated++
@@ -198,7 +198,7 @@ export class CacheManager<T = any> {
       .slice(0, 10)
 
     const tagDistribution: Record<string, number> = {}
-    for (const entry of this.cache.values()) {
+    for (const entry of Array.from(this.cache.values())) {
       for (const tag of entry.tags) {
         tagDistribution[tag] = (tagDistribution[tag] || 0) + 1
       }
@@ -339,7 +339,7 @@ export class CacheManager<T = any> {
     let cleaned = 0
     const now = Date.now()
     
-    for (const [key, entry] of this.cache.entries()) {
+    for (const [key, entry] of Array.from(this.cache.entries())) {
       if (now - entry.timestamp > entry.ttl) {
         this.delete(key)
         cleaned++

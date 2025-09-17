@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { inventoryService } from '../services/inventory/inventory.service'
-import type { InventoryItem, InventoryFormData, InventoryFilters } from '../types'
+import type { InventoryItem, InventoryFormData, FilterOptions } from '../types'
 
 interface InventoryState {
   // Data
   items: InventoryItem[]
   selectedItems: string[]
-  filters: InventoryFilters
+  filters: FilterOptions
   loading: boolean
   error: string | null
   
@@ -22,7 +22,7 @@ interface InventoryState {
   cacheExpiry: number // in milliseconds
   
   // Actions
-  fetchItems: (filters?: InventoryFilters, forceRefresh?: boolean) => Promise<void>
+  fetchItems: (filters?: FilterOptions, forceRefresh?: boolean) => Promise<void>
   fetchItem: (id: string) => Promise<InventoryItem | null>
   createItem: (item: InventoryFormData) => Promise<InventoryItem>
   updateItem: (id: string, updates: Partial<InventoryFormData>) => Promise<InventoryItem>
@@ -31,7 +31,7 @@ interface InventoryState {
   bulkDelete: (ids: string[]) => Promise<void>
   
   // UI State
-  setFilters: (filters: Partial<InventoryFilters>) => void
+  setFilters: (filters: Partial<FilterOptions>) => void
   setSelectedItems: (ids: string[]) => void
   toggleItemSelection: (id: string) => void
   clearSelection: () => void

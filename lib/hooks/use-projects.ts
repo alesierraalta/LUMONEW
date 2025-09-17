@@ -1,28 +1,28 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectService } from '../services/projects/project.service'
-import type { Project, ProjectFormData, ProjectItem, ProjectItemFormData, ProjectFilters } from '../types'
+import type { Project, ProjectFormData, ProjectItem, ProjectItemFormData, ProjectFilterOptions } from '../types'
 
 // Query keys for consistent caching
 export const projectKeys = {
   all: ['projects'] as const,
   lists: () => [...projectKeys.all, 'list'] as const,
-  list: (filters: ProjectFilters) => [...projectKeys.lists(), filters] as const,
+  list: (filters: ProjectFilterOptions) => [...projectKeys.lists(), filters] as const,
   details: () => [...projectKeys.all, 'detail'] as const,
   detail: (id: string) => [...projectKeys.details(), id] as const,
   items: (projectId: string) => [...projectKeys.all, 'items', projectId] as const,
   metrics: () => [...projectKeys.all, 'metrics'] as const,
-  search: (query: string, filters?: ProjectFilters) => [...projectKeys.all, 'search', query, filters] as const
+  search: (query: string, filters?: ProjectFilterOptions) => [...projectKeys.all, 'search', query, filters] as const
 }
 
 /**
  * Hook to fetch all projects with caching
  */
-export function useProjects(filters: ProjectFilters = {}) {
+export function useProjects(filters: ProjectFilterOptions = {}) {
   return useQuery({
     queryKey: projectKeys.list(filters),
     queryFn: () => projectService.getAll(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
@@ -38,7 +38,7 @@ export function useProject(id: string) {
     queryFn: () => projectService.getById(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false
   })
 }
@@ -52,7 +52,7 @@ export function useProjectItems(projectId: string) {
     queryFn: () => projectService.getProjectItems(projectId),
     enabled: !!projectId,
     staleTime: 3 * 60 * 1000, // 3 minutes (more frequent for project items)
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true
   })
 }
@@ -60,13 +60,13 @@ export function useProjectItems(projectId: string) {
 /**
  * Hook to search projects
  */
-export function useProjectSearch(query: string, filters: ProjectFilters = {}) {
+export function useProjectSearch(query: string, filters: ProjectFilterOptions = {}) {
   return useQuery({
     queryKey: projectKeys.search(query, filters),
     queryFn: () => projectService.search(query, filters),
     enabled: !!query && query.length >= 2,
     staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     retry: 1
   })
 }
@@ -79,7 +79,7 @@ export function useProjectMetrics() {
     queryKey: projectKeys.metrics(),
     queryFn: () => projectService.getMetrics(),
     staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false
   })
 }

@@ -81,21 +81,21 @@ export function OptimizedInventoryList() {
   // Memoized data for performance
   const displayItems = useMemo(() => {
     if (searchQuery && searchResults) {
-      return searchResults.items || []
+      return (searchResults as any)?.items || []
     }
     return inventoryData || items
   }, [searchQuery, searchResults, inventoryData, items])
 
   const selectedItemsData = useMemo(() => {
-    return displayItems.filter(item => selectedItems.includes(item.id))
+    return displayItems.filter((item: InventoryItem) => selectedItems.includes(item.id))
   }, [displayItems, selectedItems])
 
   const lowStockItems = useMemo(() => {
-    return displayItems.filter(item => item.currentStock <= item.minimumLevel)
+    return displayItems.filter((item: InventoryItem) => item.currentStock <= item.minimumLevel)
   }, [displayItems])
 
   const outOfStockItems = useMemo(() => {
-    return displayItems.filter(item => item.currentStock === 0)
+    return displayItems.filter((item: InventoryItem) => item.currentStock === 0)
   }, [displayItems])
 
   // Optimized callbacks
@@ -120,7 +120,7 @@ export function OptimizedInventoryList() {
     if (selectedItems.length === displayItems.length) {
       clearSelection()
     } else {
-      setSelectedItems(displayItems.map(item => item.id))
+      setSelectedItems(displayItems.map((item: InventoryItem) => item.id))
     }
   }, [selectedItems.length, displayItems, clearSelection, setSelectedItems])
 
@@ -164,7 +164,7 @@ export function OptimizedInventoryList() {
     if (confirm(`Are you sure you want to delete ${selectedItems.length} items?`)) {
       try {
         // This would use a bulk delete mutation
-        await Promise.all(selectedItems.map(id => deleteItemMutation.mutateAsync(id)))
+        await Promise.all(selectedItems.map((id: string) => deleteItemMutation.mutateAsync(id)))
         clearSelection()
         refetchInventory()
       } catch (error) {
@@ -337,7 +337,7 @@ export function OptimizedInventoryList() {
 
       {/* Inventory Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {displayItems.map((item) => (
+        {displayItems.map((item: InventoryItem) => (
           <Card 
             key={item.id} 
             className={`cursor-pointer transition-all hover:shadow-md ${

@@ -149,7 +149,7 @@ export class QueryOptimizer {
     }
 
     const regex = new RegExp(pattern)
-    for (const [key] of this.queryCache) {
+    for (const [key] of Array.from(this.queryCache)) {
       if (regex.test(key)) {
         this.queryCache.delete(key)
       }
@@ -358,7 +358,7 @@ export class QueryOptimizer {
       })
     }
     
-    return [...new Set(dependencies)] // Remove duplicates
+    return Array.from(new Set(dependencies)) // Remove duplicates
   }
 
   /**

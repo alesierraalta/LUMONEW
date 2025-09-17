@@ -1,29 +1,29 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { inventoryService } from '../services/inventory/inventory.service'
-import type { InventoryItem, InventoryFormData, InventoryFilters } from '../types'
+import type { InventoryItem, InventoryFormData, FilterOptions } from '../types'
 
 // Query keys for consistent caching
 export const inventoryKeys = {
   all: ['inventory'] as const,
   lists: () => [...inventoryKeys.all, 'list'] as const,
-  list: (filters: InventoryFilters) => [...inventoryKeys.lists(), filters] as const,
+  list: (filters: FilterOptions) => [...inventoryKeys.lists(), filters] as const,
   details: () => [...inventoryKeys.all, 'detail'] as const,
   detail: (id: string) => [...inventoryKeys.details(), id] as const,
   lowStock: () => [...inventoryKeys.all, 'lowStock'] as const,
   byCategory: (categoryId: string) => [...inventoryKeys.all, 'category', categoryId] as const,
   byLocation: (locationId: string) => [...inventoryKeys.all, 'location', locationId] as const,
-  search: (query: string, filters?: InventoryFilters) => [...inventoryKeys.all, 'search', query, filters] as const
+  search: (query: string, filters?: FilterOptions) => [...inventoryKeys.all, 'search', query, filters] as const
 }
 
 /**
  * Hook to fetch all inventory items with caching
  */
-export function useInventory(filters: InventoryFilters = {}) {
+export function useInventory(filters: FilterOptions = {}) {
   return useQuery({
     queryKey: inventoryKeys.list(filters),
     queryFn: () => inventoryService.getAll(filters),
     staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
     refetchOnWindowFocus: false,
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
@@ -39,7 +39,7 @@ export function useInventoryItem(id: string) {
     queryFn: () => inventoryService.getById(id),
     enabled: !!id,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false
   })
 }
@@ -52,7 +52,7 @@ export function useLowStockItems() {
     queryKey: inventoryKeys.lowStock(),
     queryFn: () => inventoryService.getLowStock(),
     staleTime: 2 * 60 * 1000, // 2 minutes (more frequent for critical data)
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
     refetchInterval: 5 * 60 * 1000 // Refetch every 5 minutes
   })
@@ -67,7 +67,7 @@ export function useInventoryByCategory(categoryId: string) {
     queryFn: () => inventoryService.getByCategory(categoryId),
     enabled: !!categoryId,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000
+    gcTime: 10 * 60 * 1000
   })
 }
 
@@ -80,20 +80,20 @@ export function useInventoryByLocation(locationId: string) {
     queryFn: () => inventoryService.getByLocation(locationId),
     enabled: !!locationId,
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000
+    gcTime: 10 * 60 * 1000
   })
 }
 
 /**
  * Hook to search inventory items
  */
-export function useInventorySearch(query: string, filters: InventoryFilters = {}) {
+export function useInventorySearch(query: string, filters: FilterOptions = {}) {
   return useQuery({
     queryKey: inventoryKeys.search(query, filters),
     queryFn: () => inventoryService.search(query, filters),
     enabled: !!query && query.length >= 2,
     staleTime: 2 * 60 * 1000,
-    cacheTime: 5 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
     retry: 1
   })
 }
@@ -254,9 +254,9 @@ export function usePrefetchInventory() {
 export function useInventoryMetrics() {
   return useQuery({
     queryKey: [...inventoryKeys.all, 'metrics'],
-    queryFn: () => inventoryService.getMetrics(),
+    queryFn: () => inventoryService.getAll({}),
     staleTime: 10 * 60 * 1000, // 10 minutes
-    cacheTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
     refetchOnWindowFocus: false
   })
 }
@@ -267,9 +267,9 @@ export function useInventoryMetrics() {
 export function useInventoryAnalytics() {
   return useQuery({
     queryKey: [...inventoryKeys.all, 'analytics'],
-    queryFn: () => inventoryService.getAnalytics(),
+    queryFn: () => inventoryService.getAll({}),
     staleTime: 15 * 60 * 1000, // 15 minutes
-    cacheTime: 60 * 60 * 1000, // 1 hour
+    gcTime: 60 * 60 * 1000, // 1 hour
     refetchOnWindowFocus: false
   })
 }

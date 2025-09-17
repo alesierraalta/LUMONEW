@@ -143,12 +143,15 @@ export function QuickStockOperations({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="quick-stock-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
             Ajuste Rápido de Stock
           </DialogTitle>
+          <DialogDescription id="quick-stock-description">
+            Quickly add or subtract stock quantities for inventory items with audit tracking.
+          </DialogDescription>
           <DialogDescription>
             Sumar o restar stock rápidamente para: <strong>{item.name}</strong>
           </DialogDescription>

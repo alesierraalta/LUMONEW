@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
 import { projectService } from '../services/projects/project.service'
-import type { Project, ProjectFormData, ProjectItem, ProjectItemFormData, ProjectFilters } from '../types'
+import type { Project, ProjectFormData, ProjectItem, ProjectItemFormData, ProjectFilterOptions } from '../types'
 
 interface ProjectsState {
   // Data
@@ -9,7 +9,7 @@ interface ProjectsState {
   selectedProjects: string[]
   currentProject: Project | null
   projectItems: ProjectItem[]
-  filters: ProjectFilters
+  filters: ProjectFilterOptions
   loading: boolean
   error: string | null
   
@@ -24,7 +24,7 @@ interface ProjectsState {
   cacheExpiry: number // in milliseconds
   
   // Actions
-  fetchProjects: (filters?: ProjectFilters, forceRefresh?: boolean) => Promise<void>
+  fetchProjects: (filters?: ProjectFilterOptions, forceRefresh?: boolean) => Promise<void>
   fetchProject: (id: string) => Promise<Project | null>
   createProject: (projectData: ProjectFormData) => Promise<Project>
   updateProject: (id: string, updates: Partial<ProjectFormData>) => Promise<Project>
@@ -37,7 +37,7 @@ interface ProjectsState {
   deleteProjectItem: (itemId: string) => Promise<void>
   
   // UI State
-  setFilters: (filters: Partial<ProjectFilters>) => void
+  setFilters: (filters: Partial<ProjectFilterOptions>) => void
   setSelectedProjects: (ids: string[]) => void
   toggleProjectSelection: (id: string) => void
   clearSelection: () => void

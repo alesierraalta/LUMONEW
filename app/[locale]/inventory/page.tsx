@@ -50,7 +50,18 @@ function InventoryContent() {
       if (!inventoryResponse.ok) {
         throw new Error('Failed to fetch inventory items')
       }
-      const inventory = await inventoryResponse.json()
+      const inventoryResponseData = await inventoryResponse.json()
+      
+      // Handle both old format (array) and new format (pagination object)
+      let inventory
+      if (Array.isArray(inventoryResponseData)) {
+        inventory = inventoryResponseData
+      } else if (inventoryResponseData && inventoryResponseData.data && Array.isArray(inventoryResponseData.data)) {
+        // New pagination format
+        inventory = inventoryResponseData.data
+      } else {
+        inventory = []
+      }
       
       // Load categories for context
       const categoriesResponse = await fetch('/api/categories/items')

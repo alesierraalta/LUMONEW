@@ -198,9 +198,7 @@ export class ProjectService implements IProjectService {
       const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
 
       await this.repository.update(projectId, {
-        totalItems,
-        completedItems,
-        progress
+        ...({ totalItems, completedItems, progress } as any)
       })
     } catch (error) {
       console.error(`Error updating project progress ${projectId}:`, error)
