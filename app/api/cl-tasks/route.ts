@@ -67,8 +67,8 @@ export async function POST(request: NextRequest) {
           .select('auth_user_id')
           .eq('id', createdBy)
           .single()
-        if (publicUser?.auth_user_id) {
-          createdByAuthId = publicUser.auth_user_id as string
+        if ((publicUser as any)?.auth_user_id) {
+          createdByAuthId = (publicUser as any).auth_user_id as string
         } else {
           // Fallback to first auth user
           const { data: authUsers } = await supabaseAdmin.auth.admin.listUsers()
@@ -98,8 +98,8 @@ export async function POST(request: NextRequest) {
             .select('auth_user_id')
             .eq('id', assignedToAuthId)
             .single()
-          if (publicAssignee?.auth_user_id) {
-            assignedToAuthId = publicAssignee.auth_user_id as string
+          if ((publicAssignee as any)?.auth_user_id) {
+            assignedToAuthId = (publicAssignee as any).auth_user_id as string
           } else {
             assignedToAuthId = undefined
           }

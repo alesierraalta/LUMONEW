@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     // Parse query parameters
     const search = searchParams.get('search')
     
-    let data = await locationService.getAll()
+    let data = await locationService.getAll() as any[]
     
     // Get inventory data to calculate item counts per location
     const inventory = await inventoryService.getAll()

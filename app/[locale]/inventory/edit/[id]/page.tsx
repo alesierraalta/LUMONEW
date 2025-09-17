@@ -61,7 +61,7 @@ function EditInventoryItemContent() {
         auditedInventoryService.getById(itemId),
         auditedCategoryService.getAll(),
         auditedLocationService.getAll()
-      ])
+      ]) as [any, any[], any[]]
 
       if (!itemData) {
         addToast({

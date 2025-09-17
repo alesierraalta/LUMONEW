@@ -32,7 +32,7 @@ export class UserSyncService {
         updated_at: new Date().toISOString()
       }
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('users')
         .upsert(userData, { 
           onConflict: 'id',
@@ -78,7 +78,7 @@ export class UserSyncService {
         return { synced: 0, errors: 1 }
       }
 
-      const existingUserIds = new Set(existingUsers?.map(u => u.id) || [])
+      const existingUserIds = new Set((existingUsers as any[])?.map((u: any) => u.id) || [])
       const missingUsers = authUsers.users.filter(user => !existingUserIds.has(user.id))
 
       console.log(`Found ${missingUsers.length} users to sync`)

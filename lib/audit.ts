@@ -118,13 +118,13 @@ export class AuditService {
         return getServiceRoleClient()
       } catch (error) {
         console.warn('Could not create service client for audit operations:', error)
-        return supabase
+        return supabase as any
       }
     }
     
     // For client-side operations, use the regular browser client
     // Note: This means audit operations from client-side will use user permissions
-    return supabase
+    return supabase as any
   }
 
   // Helper method to generate enhanced action descriptions

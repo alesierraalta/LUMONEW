@@ -25,7 +25,7 @@ function getAuditClient() {
 // Enhanced database operations with automatic audit logging
 export const auditedUserService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
@@ -35,7 +35,7 @@ export const auditedUserService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .select('*')
       .eq('id', id)
@@ -47,7 +47,7 @@ export const auditedUserService = {
 
   async create(user: { email: string; name: string; role: string; status?: string }) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('users')
         .insert([user])
         .select()
@@ -59,7 +59,7 @@ export const auditedUserService = {
       await auditService.logCreate('users', data.id, data, {
         action_type: 'user_created',
         reason: 'New user registration'
-      }, getAuditClient())
+      }, getAuditClient() as any)
       
       return data
     } catch (error) {
@@ -73,7 +73,7 @@ export const auditedUserService = {
           action_type: 'failed_user_creation',
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient() as any
       })
       throw error
     }
@@ -84,7 +84,7 @@ export const auditedUserService = {
       // Get old values first
       const oldData = await this.getById(id)
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('users')
         .update(updates)
         .eq('id', id)
@@ -97,7 +97,7 @@ export const auditedUserService = {
       await auditService.logUpdate('users', id, oldData, data, {
         action_type: 'user_updated',
         reason: 'User information modified'
-      }, getAuditClient())
+      }, getAuditClient() as any)
       
       return data
     } catch (error) {
@@ -120,7 +120,7 @@ export const auditedUserService = {
       // Get data before deletion
       const oldData = await this.getById(id)
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('users')
         .delete()
         .eq('id', id)
@@ -150,7 +150,7 @@ export const auditedUserService = {
 // Enhanced category service with audit logging
 export const auditedCategoryService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .select('*')
       .order('name')
@@ -160,7 +160,7 @@ export const auditedCategoryService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .select('*')
       .eq('id', id)
@@ -172,7 +172,7 @@ export const auditedCategoryService = {
 
   async create(category: { name: string; description?: string; color: string }) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('categories')
         .insert([category])
         .select()
@@ -205,7 +205,7 @@ export const auditedCategoryService = {
     try {
       const oldData = await this.getById(id)
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('categories')
         .update(updates)
         .eq('id', id)
@@ -239,7 +239,7 @@ export const auditedCategoryService = {
     try {
       const oldData = await this.getById(id)
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('categories')
         .delete()
         .eq('id', id)
@@ -268,7 +268,7 @@ export const auditedCategoryService = {
 // Enhanced inventory service with comprehensive audit logging
 export const auditedInventoryService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -282,7 +282,7 @@ export const auditedInventoryService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -308,7 +308,7 @@ export const auditedInventoryService = {
     status?: string
   }) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('inventory')
         .insert([item])
         .select(`
@@ -325,7 +325,7 @@ export const auditedInventoryService = {
         action_type: 'inventory_item_created',
         reason: 'New inventory item added',
         notes: `Item: ${item.name} (SKU: ${item.sku})`
-      }, getAuditClient()).catch(error => {
+      }, getAuditClient() as any).catch(error => {
         console.warn('Audit logging failed for inventory creation:', error)
       })
       
@@ -340,7 +340,7 @@ export const auditedInventoryService = {
           action_type: 'failed_inventory_creation',
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient() as any
       })
       throw error
     }
@@ -360,7 +360,7 @@ export const auditedInventoryService = {
     try {
       const oldData = await this.getById(id)
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('inventory')
         .update(updates)
         .eq('id', id)
@@ -391,7 +391,7 @@ export const auditedInventoryService = {
       }
 
       // Log the update (non-blocking to prevent audit failures from affecting main operation)
-      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient()).catch(error => {
+      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient() as any).catch(error => {
         console.warn('Audit logging failed for inventory update:', error)
       })
       
@@ -406,7 +406,7 @@ export const auditedInventoryService = {
           action_type: 'failed_inventory_update',
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient() as any
       })
       throw error
     }
@@ -416,7 +416,7 @@ export const auditedInventoryService = {
     try {
       const oldData = await this.getById(id)
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('inventory')
         .delete()
         .eq('id', id)
@@ -428,7 +428,7 @@ export const auditedInventoryService = {
         action_type: 'inventory_item_deleted',
         reason: 'Inventory item removed from system',
         notes: `Deleted item: ${oldData.name} (SKU: ${oldData.sku})`
-      }, getAuditClient()).catch(error => {
+      }, getAuditClient() as any).catch(error => {
         console.warn('Audit logging failed for inventory deletion:', error)
       })
     } catch (error) {
@@ -440,7 +440,7 @@ export const auditedInventoryService = {
           action_type: 'failed_inventory_deletion',
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient() as any
       })
       throw error
     }
@@ -521,7 +521,7 @@ export const auditedInventoryService = {
 // Enhanced location service with audit logging
 export const auditedLocationService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .select('*')
       .order('name')
@@ -531,7 +531,7 @@ export const auditedLocationService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .select('*')
       .eq('id', id)
@@ -543,7 +543,7 @@ export const auditedLocationService = {
 
   async create(location: { name: string; address?: string }) {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('locations')
         .insert([location])
         .select()
@@ -576,7 +576,7 @@ export const auditedLocationService = {
     try {
       const oldData = await this.getById(id)
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('locations')
         .update(updates)
         .eq('id', id)
@@ -610,7 +610,7 @@ export const auditedLocationService = {
     try {
       const oldData = await this.getById(id)
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('locations')
         .delete()
         .eq('id', id)

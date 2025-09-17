@@ -92,15 +92,15 @@ export async function POST(request: NextRequest) {
           .select('created_by')
           .eq('id', projectId)
           .single()
-        console.log('[workflow-items][POST] Project lookup result:', { hasProject: !!projectRow, created_by: projectRow?.created_by })
-        if (projectRow?.created_by) {
+        console.log('[workflow-items][POST] Project lookup result:', { hasProject: !!projectRow, created_by: (projectRow as any)?.created_by })
+        if ((projectRow as any)?.created_by) {
           const { data: mappedUser } = await supabaseAdmin
             .from('users')
             .select('id')
-            .eq('auth_user_id', projectRow.created_by)
+            .eq('auth_user_id', (projectRow as any).created_by)
             .single()
-          if (mappedUser?.id) {
-            effectiveCreatedBy = mappedUser.id
+          if ((mappedUser as any)?.id) {
+            effectiveCreatedBy = (mappedUser as any).id
             console.log('[workflow-items][POST] Mapped createdBy from auth_user_id to public.users:', effectiveCreatedBy)
           }
         }
@@ -118,8 +118,8 @@ export async function POST(request: NextRequest) {
           .limit(1)
           .single()
 
-        if (firstUser?.id) {
-          effectiveCreatedBy = firstUser.id
+        if ((firstUser as any)?.id) {
+          effectiveCreatedBy = (firstUser as any).id
           console.log('[workflow-items][POST] Fallback to first public user:', effectiveCreatedBy)
         } else {
           // Try to sync from Supabase Auth when users table has no rows
@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
       created_by: effectiveCreatedBy,
     })
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('workflow_items')
       .insert([
         {
@@ -221,7 +221,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const supabaseAdmin = getServiceRoleClient()
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from('workflow_items')
       .update({
         ...updates,

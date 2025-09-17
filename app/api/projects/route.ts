@@ -101,8 +101,8 @@ export async function POST(request: NextRequest) {
           .select('id')
           .limit(1)
           .single()
-        if (firstUser?.id) {
-          effectiveCreatedBy = firstUser.id
+        if ((firstUser as any)?.id) {
+          effectiveCreatedBy = (firstUser as any).id
         }
       } catch {}
 
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       created_by: effectiveCreatedBy
     })
 
-    console.log('✅ Project created successfully:', project.id)
+    console.log('✅ Project created successfully:', (project as any).id)
     return NextResponse.json({ success: true, data: project })
   } catch (error) {
     console.error('❌ Error creating project:', error)
@@ -191,7 +191,7 @@ export async function PUT(request: NextRequest) {
     console.log('Processed updates:', JSON.stringify(processedUpdates, null, 2))
 
     const project = await projectService.update(id, processedUpdates)
-    console.log('Project updated successfully:', project.id)
+    console.log('Project updated successfully:', (project as any).id)
     return NextResponse.json({ success: true, data: project })
   } catch (error) {
     console.error('Error updating project:', error)

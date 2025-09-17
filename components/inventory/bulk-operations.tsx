@@ -116,7 +116,7 @@ export function BulkOperations({
 
   // Forms for different operation types
   const updateForm = useForm<BulkUpdateFormData>({
-    resolver: zodResolver(bulkUpdateSchema),
+    resolver: zodResolver(bulkUpdateSchema) as any,
     defaultValues: {
       operationType: 'price_update',
       priceAdjustment: {

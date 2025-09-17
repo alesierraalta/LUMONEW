@@ -47,7 +47,7 @@ function RoleManagementContent() {
         onSubmit={async (roleData) => {
           try {
             setIsLoading(true)
-            const newRole = await roleService.create(roleData)
+            const newRole = await roleService.create(roleData) as any
             setRoles(prev => [...prev, newRole])
             addToast({
               type: 'success',
@@ -79,7 +79,7 @@ function RoleManagementContent() {
         onSubmit={async (roleData) => {
           try {
             setIsLoading(true)
-            const updatedRole = await roleService.update(role.id!, roleData)
+            const updatedRole = await roleService.update(role.id!, roleData) as any
             setRoles(prev => prev.map(r => r.id === role.id ? updatedRole : r))
             addToast({
               type: 'success',

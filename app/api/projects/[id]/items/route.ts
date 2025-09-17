@@ -62,14 +62,14 @@ export async function POST(
         // Optimized: Get only project-specific items instead of all items for better performance
         const existingItems = await projectItemService.getAll(params.id)
         const sample = Array.isArray(existingItems) && existingItems.length > 0 ? existingItems[0] : null
-        if (sample?.created_by) {
-          effectiveCreatedBy = sample.created_by
+        if ((sample as any)?.created_by) {
+          effectiveCreatedBy = (sample as any).created_by
           console.warn('createdBy fallback used. Using existing project item creator id:', effectiveCreatedBy)
         } else {
           // As a secondary fallback, get only first user instead of all users
           const users = await userService.getAll()
-          if (Array.isArray(users) && users.length > 0 && users[0]?.id) {
-            effectiveCreatedBy = users[0].id
+          if (Array.isArray(users) && users.length > 0 && (users[0] as any)?.id) {
+            effectiveCreatedBy = (users[0] as any).id
             console.warn('createdBy fallback used. Using first custom user id:', effectiveCreatedBy)
           }
         }

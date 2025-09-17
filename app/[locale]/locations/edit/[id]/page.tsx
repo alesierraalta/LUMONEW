@@ -42,7 +42,7 @@ function EditLocationContent() {
     try {
       setIsLoading(true)
       
-      const locationData = await auditedLocationService.getById(locationId)
+      const locationData = await auditedLocationService.getById(locationId) as any
 
       if (!locationData) {
         addToast({

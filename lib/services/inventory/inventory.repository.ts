@@ -87,7 +87,7 @@ export class InventoryRepository {
       updated_at: new Date().toISOString()
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from(this.tableName)
       .insert([insertData])
       .select(`

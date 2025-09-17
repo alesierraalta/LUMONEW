@@ -112,9 +112,9 @@ export async function POST(request: NextRequest) {
 
     // Transform back to frontend format
     const transformedTransaction = {
-      id: newTransaction.id,
-      type: newTransaction.type,
-      lineItems: newTransaction.transaction_items?.map((item: any) => ({
+      id: (newTransaction as any).id,
+      type: (newTransaction as any).type,
+      lineItems: (newTransaction as any).transaction_items?.map((item: any) => ({
         id: item.id,
         product: {
           id: item.product_id,
@@ -129,14 +129,14 @@ export async function POST(request: NextRequest) {
         totalPrice: item.total_price,
         notes: item.notes
       })) || [],
-      subtotal: newTransaction.subtotal,
-      tax: newTransaction.tax,
-      taxRate: newTransaction.tax_rate,
-      total: newTransaction.total,
-      notes: newTransaction.notes,
-      createdAt: new Date(newTransaction.created_at),
-      createdBy: newTransaction.created_by,
-      status: newTransaction.status
+      subtotal: (newTransaction as any).subtotal,
+      tax: (newTransaction as any).tax,
+      taxRate: (newTransaction as any).tax_rate,
+      total: (newTransaction as any).total,
+      notes: (newTransaction as any).notes,
+      createdAt: new Date((newTransaction as any).created_at),
+      createdBy: (newTransaction as any).created_by,
+      status: (newTransaction as any).status
     }
 
     return NextResponse.json({

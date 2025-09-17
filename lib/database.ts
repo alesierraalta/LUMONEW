@@ -6,7 +6,7 @@ const supabase = createClient()
 // User operations
 export const userService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .select('*')
       .order('created_at', { ascending: false })
@@ -16,7 +16,7 @@ export const userService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .select('*')
       .eq('id', id)
@@ -27,7 +27,7 @@ export const userService = {
   },
 
   async create(user: { email: string; name: string; role: string; status?: string }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .insert([user])
       .select()
@@ -38,7 +38,7 @@ export const userService = {
   },
 
   async update(id: string, updates: Partial<{ email: string; name: string; role: string; status: string; is_active: boolean }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('users')
       .update(updates)
       .eq('id', id)
@@ -50,7 +50,7 @@ export const userService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('users')
       .delete()
       .eq('id', id)
@@ -62,7 +62,7 @@ export const userService = {
 // Role operations
 export const roleService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('roles')
       .select('*')
       .order('name')
@@ -72,7 +72,7 @@ export const roleService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('roles')
       .select('*')
       .eq('id', id)
@@ -83,7 +83,7 @@ export const roleService = {
   },
 
   async create(role: { name: string; description?: string; permissions: string[] }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('roles')
       .insert([role])
       .select()
@@ -94,7 +94,7 @@ export const roleService = {
   },
 
   async update(id: string, updates: Partial<{ name: string; description: string; permissions: string[] }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('roles')
       .update(updates)
       .eq('id', id)
@@ -106,7 +106,7 @@ export const roleService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('roles')
       .delete()
       .eq('id', id)
@@ -118,7 +118,7 @@ export const roleService = {
 // Category operations
 export const categoryService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .select('*')
       .order('name')
@@ -128,7 +128,7 @@ export const categoryService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .select('*')
       .eq('id', id)
@@ -139,7 +139,7 @@ export const categoryService = {
   },
 
   async create(category: { name: string; description?: string; color: string }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .insert([category])
       .select()
@@ -150,7 +150,7 @@ export const categoryService = {
   },
 
   async update(id: string, updates: Partial<{ name: string; description: string; color: string }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('categories')
       .update(updates)
       .eq('id', id)
@@ -162,7 +162,7 @@ export const categoryService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('categories')
       .delete()
       .eq('id', id)
@@ -174,7 +174,7 @@ export const categoryService = {
 // Location operations
 export const locationService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .select('*')
       .order('name')
@@ -184,7 +184,7 @@ export const locationService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .select('*')
       .eq('id', id)
@@ -195,7 +195,7 @@ export const locationService = {
   },
 
   async create(location: { name: string; address?: string }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .insert([location])
       .select()
@@ -206,7 +206,7 @@ export const locationService = {
   },
 
   async update(id: string, updates: Partial<{ name: string; address: string }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('locations')
       .update(updates)
       .eq('id', id)
@@ -218,7 +218,7 @@ export const locationService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('locations')
       .delete()
       .eq('id', id)
@@ -230,7 +230,7 @@ export const locationService = {
 // Inventory operations
 export const inventoryService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -244,7 +244,7 @@ export const inventoryService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -270,7 +270,7 @@ export const inventoryService = {
     unit_of_measure?: string
     status?: string
   }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .insert([item])
       .select(`
@@ -296,7 +296,7 @@ export const inventoryService = {
     unit_of_measure: string
     status: string
   }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .update(updates)
       .eq('id', id)
@@ -312,7 +312,7 @@ export const inventoryService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('inventory')
       .delete()
       .eq('id', id)
@@ -323,7 +323,7 @@ export const inventoryService = {
   async getLowStock() {
     // Use a more efficient approach: fetch all active inventory and filter client-side
     // This avoids the PostgREST column comparison limitation
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -339,7 +339,7 @@ export const inventoryService = {
   },
 
   async getByCategory(categoryId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -354,7 +354,7 @@ export const inventoryService = {
   },
 
   async getByLocation(locationId: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         *,
@@ -372,7 +372,7 @@ export const inventoryService = {
 // Audit log operations
 export const auditService = {
   async getAll(limit = 50) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('audit_logs')
       .select(`
         *,
@@ -393,7 +393,7 @@ export const auditService = {
     old_values?: any
     new_values?: any
   }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('audit_logs')
       .insert([log])
       .select()
@@ -404,7 +404,7 @@ export const auditService = {
   },
 
   async getByUser(userId: string, limit = 20) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('audit_logs')
       .select(`
         *,
@@ -419,7 +419,7 @@ export const auditService = {
   },
 
   async getByTable(tableName: string, limit = 20) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('audit_logs')
       .select(`
         *,
@@ -438,13 +438,13 @@ export const auditService = {
 export const analyticsService = {
   async getDashboardMetrics() {
     // Get total inventory count
-    const { count: totalItems } = await supabase
+    const { count: totalItems } = await (supabase as any)
       .from('inventory')
       .select('*', { count: 'exact', head: true })
       .eq('status', 'active')
 
     // Get low stock items count
-    const { data: lowStockItems } = await supabase
+    const { data: lowStockItems } = await (supabase as any)
       .from('inventory')
       .select('quantity, min_stock')
       .eq('status', 'active')
@@ -452,7 +452,7 @@ export const analyticsService = {
     const lowStockCount = lowStockItems?.filter((item: any) => item.quantity <= item.min_stock).length || 0
 
     // Get total value
-    const { data: inventoryValues } = await supabase
+    const { data: inventoryValues } = await (supabase as any)
       .from('inventory')
       .select('quantity, unit_price')
       .eq('status', 'active')
@@ -460,12 +460,12 @@ export const analyticsService = {
     const totalValue = inventoryValues?.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0) || 0
 
     // Get categories count
-    const { count: categoriesCount } = await supabase
+    const { count: categoriesCount } = await (supabase as any)
       .from('categories')
       .select('*', { count: 'exact', head: true })
 
     // Get locations count
-    const { count: locationsCount } = await supabase
+    const { count: locationsCount } = await (supabase as any)
       .from('locations')
       .select('*', { count: 'exact', head: true })
 
@@ -479,7 +479,7 @@ export const analyticsService = {
   },
 
   async getInventoryByCategory() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('inventory')
       .select(`
         quantity,
@@ -511,7 +511,7 @@ export const analyticsService = {
   async getInventoryTurnoverByCategory() {
     try {
       // Get inventory data with categories and calculate turnover
-      const { data: inventoryData, error } = await supabase
+      const { data: inventoryData, error } = await (supabase as any)
         .from('inventory')
         .select(`
           id,
@@ -525,7 +525,7 @@ export const analyticsService = {
       if (error) throw error
 
       // Get transaction data for turnover calculation
-      const { data: transactionData } = await supabase
+      const { data: transactionData } = await (supabase as any)
         .from('transaction_items')
         .select(`
           quantity,
@@ -590,7 +590,7 @@ export const analyticsService = {
 
   async getABCAnalysis() {
     try {
-      const { data: inventoryData, error } = await supabase
+      const { data: inventoryData, error } = await (supabase as any)
         .from('inventory')
         .select('id, name, quantity, unit_price')
         .eq('status', 'active')
@@ -664,7 +664,7 @@ export const analyticsService = {
       const endDate = new Date()
       const startDate = new Date(endDate.getTime() - (8 * 7 * 24 * 60 * 60 * 1000))
 
-      const { data: salesData, error } = await supabase
+      const { data: salesData, error } = await (supabase as any)
         .from('transactions')
         .select(`
           id,
@@ -723,7 +723,7 @@ export const analyticsService = {
 
   async getTopPerformingProducts() {
     try {
-      const { data: productSales, error } = await supabase
+      const { data: productSales, error } = await (supabase as any)
         .from('transaction_items')
         .select(`
           product_name,
@@ -776,7 +776,7 @@ export const analyticsService = {
 
   async getProfitMarginByCategory() {
     try {
-      const { data: categoryData, error } = await supabase
+      const { data: categoryData, error } = await (supabase as any)
         .from('inventory')
         .select(`
           unit_price,
@@ -829,7 +829,7 @@ export const analyticsService = {
       const endDate = new Date()
       const start = new Date(endDate.getFullYear(), endDate.getMonth() - (months - 1), 1)
 
-      const { data: txs, error } = await supabase
+      const { data: txs, error } = await (supabase as any)
         .from('transactions')
         .select('id, type, total, created_at, status')
         .gte('created_at', start.toISOString())
@@ -888,7 +888,7 @@ export const analyticsService = {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
       const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999)
 
-      const { data: purchaseItems } = await supabase
+      const { data: purchaseItems } = await (supabase as any)
         .from('transaction_items')
         .select(
           `product_id, quantity, unit_price, transaction_id,
@@ -904,7 +904,7 @@ export const analyticsService = {
 
       let inventoryIndex: Record<string, { category: string }> = {}
       if (productIds.length > 0) {
-        const { data: inv } = await supabase
+        const { data: inv } = await (supabase as any)
           .from('inventory')
           .select('id, categories ( name )')
           .in('id', productIds)
@@ -1085,7 +1085,7 @@ export const analyticsService = {
 // Transaction operations
 export const transactionService = {
   async getAll(limit = 50) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .select(`
         *,
@@ -1108,7 +1108,7 @@ export const transactionService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .select(`
         *,
@@ -1152,7 +1152,7 @@ export const transactionService = {
     const { line_items, ...transactionData } = transaction
     
     // Start a transaction
-    const { data: newTransaction, error: transactionError } = await supabase
+    const { data: newTransaction, error: transactionError } = await (supabase as any)
       .from('transactions')
       .insert([{
         ...transactionData,
@@ -1169,7 +1169,7 @@ export const transactionService = {
       transaction_id: newTransaction.id
     }))
     
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await (supabase as any)
       .from('transaction_items')
       .insert(lineItemsWithTransactionId)
     
@@ -1188,7 +1188,7 @@ export const transactionService = {
     notes: string
     status: 'completed' | 'pending' | 'cancelled'
   }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .update(updates)
       .eq('id', id)
@@ -1201,7 +1201,7 @@ export const transactionService = {
 
   async delete(id: string) {
     // Delete transaction items first (due to foreign key constraint)
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await (supabase as any)
       .from('transaction_items')
       .delete()
       .eq('transaction_id', id)
@@ -1209,7 +1209,7 @@ export const transactionService = {
     if (itemsError) throw itemsError
     
     // Delete the transaction
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('transactions')
       .delete()
       .eq('id', id)
@@ -1218,7 +1218,7 @@ export const transactionService = {
   },
 
   async getByDateRange(startDate: Date, endDate: Date) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .select(`
         *,
@@ -1242,7 +1242,7 @@ export const transactionService = {
   },
 
   async getByType(type: 'sale' | 'stock_addition', limit = 50) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .select(`
         *,
@@ -1266,7 +1266,7 @@ export const transactionService = {
   },
 
   async getByUser(userId: string, limit = 50) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('transactions')
       .select(`
         *,
@@ -1291,7 +1291,7 @@ export const transactionService = {
 
   async deleteAll() {
     // Delete all transaction items first (due to foreign key constraint)
-    const { error: itemsError } = await supabase
+    const { error: itemsError } = await (supabase as any)
       .from('transaction_items')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
@@ -1299,7 +1299,7 @@ export const transactionService = {
     if (itemsError) throw itemsError
     
     // Delete all transactions
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('transactions')
       .delete()
       .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all records
@@ -1315,7 +1315,7 @@ export const transactionService = {
 // Project operations
 export const projectService = {
   async getAll() {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .select(`
         *,
@@ -1334,7 +1334,7 @@ export const projectService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .select(`
         *,
@@ -1366,7 +1366,7 @@ export const projectService = {
     expected_end_date?: Date
     created_by: string
   }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .insert([{
         ...project,
@@ -1393,7 +1393,7 @@ export const projectService = {
     total_items: number
     completed_items: number
   }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .update(updates)
       .eq('id', id)
@@ -1408,7 +1408,7 @@ export const projectService = {
     // Before deleting the project, return LU items back to inventory
     // and remove related project items to maintain referential integrity.
     // 1) Fetch LU project items for this project
-    const { data: luItems } = await supabase
+    const { data: luItems } = await (supabase as any)
       .from('project_items')
       .select('id, product_type, description, quantity')
       .eq('project_id', id)
@@ -1421,7 +1421,7 @@ export const projectService = {
             const match = description.match(/^SKU:\s*(.+)$/)
             const sku = match ? match[1].trim() : null
             if (sku && typeof item.quantity === 'number' && item.quantity > 0) {
-              const { data: inv } = await supabase
+              const { data: inv } = await (supabase as any)
                 .from('inventory')
                 .select('id, quantity')
                 .eq('sku', sku)
@@ -1441,14 +1441,14 @@ export const projectService = {
     }
 
     // 2) Delete project items explicitly
-    const { error: piError } = await supabase
+    const { error: piError } = await (supabase as any)
       .from('project_items')
       .delete()
       .eq('project_id', id)
     if (piError) throw piError
 
     // 3) Delete the project
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('projects')
       .delete()
       .eq('id', id)
@@ -1457,7 +1457,7 @@ export const projectService = {
 
   async updateProgress(id: string) {
     // Get project items count
-    const { data: items, error: itemsError } = await supabase
+    const { data: items, error: itemsError } = await (supabase as any)
       .from('project_items')
       .select('id, is_completed')
       .eq('project_id', id)
@@ -1469,7 +1469,7 @@ export const projectService = {
     const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0
     
     // Update project progress
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('projects')
       .update({
         total_items: totalItems,
@@ -1522,10 +1522,10 @@ export const projectService = {
 
     if (existingItem) {
       // Update existing item: increase quantity and recalculate total
-      const newQuantity = existingItem.quantity + quantity
+      const newQuantity = (existingItem as any).quantity + quantity
       const newTotal = resolvedUnitPrice * newQuantity
       
-      console.log(`🔄 Attempting to consolidate ${quantity} units into existing item (${existingItem.quantity} -> ${newQuantity})`)
+      console.log(`🔄 Attempting to consolidate ${quantity} units into existing item (${(existingItem as any).quantity} -> ${newQuantity})`)
       
       // Map to database column names - project_items table doesn't have notes field
       const updateData: any = {
@@ -1536,10 +1536,10 @@ export const projectService = {
       
       console.log('🔧 Update data:', updateData)
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('project_items')
         .update(updateData)
-        .eq('id', existingItem.id)
+        .eq('id', (existingItem as any).id)
         .select()
         .single()
       
@@ -1602,7 +1602,7 @@ export const projectItemService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_items')
       .select(`
         *,
@@ -1666,7 +1666,7 @@ export const projectItemService = {
       created_by: item.created_by
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_items')
       .insert([insertRecord])
       .select()
@@ -1707,7 +1707,7 @@ export const projectItemService = {
     actual_delivery: Date
     notes: string
   }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_items')
       .update(updates)
       .eq('id', id)
@@ -1720,7 +1720,7 @@ export const projectItemService = {
 
   async updateStatus(id: string, newStatus: string, userId: string, userName: string, notes?: string, costIncurred?: number) {
     // Get current item
-    const { data: item, error: itemError } = await supabase
+    const { data: item, error: itemError } = await (supabase as any)
       .from('project_items')
       .select('current_status, project_id, product_type')
       .eq('id', id)
@@ -1732,7 +1732,7 @@ export const projectItemService = {
     const isCompleted = newStatus === 'completed'
     
     // Update item status
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_items')
       .update({
         current_status: newStatus,
@@ -1773,7 +1773,7 @@ export const projectItemService = {
     estimated_cost?: number
     actual_cost?: number
   }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_status_history')
       .insert([{
         project_item_id: history.project_item_id,
@@ -1794,7 +1794,7 @@ export const projectItemService = {
 
   async delete(id: string) {
     // Get item details before deletion for restock logic and project progress
-    const { data: item } = await supabase
+    const { data: item } = await (supabase as any)
       .from('project_items')
       .select('id, project_id, product_type, description, quantity')
       .eq('id', id)
@@ -1807,7 +1807,7 @@ export const projectItemService = {
         const match = description.match(/^SKU:\s*(.+)$/)
         const sku = match ? match[1].trim() : null
         if (sku && typeof item.quantity === 'number' && item.quantity > 0) {
-          const { data: inv } = await supabase
+          const { data: inv } = await (supabase as any)
             .from('inventory')
             .select('id, quantity')
             .eq('sku', sku)
@@ -1824,7 +1824,7 @@ export const projectItemService = {
     }
 
     // Proceed to delete the project item
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('project_items')
       .delete()
       .eq('id', id)
@@ -1869,7 +1869,7 @@ export const projectAttachmentService = {
     uploaded_by: string
     uploaded_by_name: string
   }) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_attachments')
       .insert([{
         ...attachment,
@@ -1883,7 +1883,7 @@ export const projectAttachmentService = {
   },
 
   async delete(id: string) {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('project_attachments')
       .delete()
       .eq('id', id)
@@ -1896,7 +1896,7 @@ export const projectAttachmentService = {
 export const projectAnalyticsService = {
   async getProjectMetrics() {
     // Get project counts by status
-    const { data: projects } = await supabase
+    const { data: projects } = await (supabase as any)
       .from('projects')
       .select('status')
     
@@ -1906,7 +1906,7 @@ export const projectAnalyticsService = {
     }, {}) || {}
     
     // Get item counts by type and status
-    const { data: items } = await supabase
+    const { data: items } = await (supabase as any)
       .from('project_items')
       .select('product_type, current_status, is_completed')
     
@@ -1939,7 +1939,7 @@ export const projectAnalyticsService = {
   },
 
   async getRecentActivity(limit = 10) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('project_status_history')
       .select(`
         *,
@@ -1976,7 +1976,7 @@ export const workflowItemService = {
   },
 
   async getById(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('workflow_items')
       .select('*')
       .eq('id', id)
@@ -1997,7 +1997,7 @@ export const workflowItemService = {
     // Generate a unique ID for the workflow item
     const workflowId = `${item.product_type.toLowerCase()}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
     
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('workflow_items')
       .insert([{
         id: workflowId,
@@ -2022,7 +2022,7 @@ export const workflowItemService = {
     step_data: Record<string, any>
     product_name: string
   }>) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('workflow_items')
       .update({
         ...updates,
@@ -2037,7 +2037,7 @@ export const workflowItemService = {
   },
 
   async delete(id: string) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('workflow_items')
       .delete()
       .eq('id', id)
