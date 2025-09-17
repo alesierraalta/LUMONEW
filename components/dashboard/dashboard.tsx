@@ -17,6 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { analyticsService, inventoryService } from '@/lib/database'
 import { auditService } from '@/lib/audit'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
+import { useTheme } from 'next-themes'
+import { cn } from '@/lib/utils'
 
 interface DashboardData {
   lowStockItems: any[]
@@ -28,6 +31,7 @@ interface DashboardData {
 
 export function Dashboard() {
   const t = useTranslations('dashboard')
+  const { theme } = useTheme()
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   
@@ -94,7 +98,21 @@ export function Dashboard() {
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">{t('businessIntelligenceDashboard')}</h2>
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center justify-center">
+            <Image 
+              src="/logo.png" 
+              alt="LUMO Logo" 
+              width={440} 
+              height={240} 
+              className={cn(
+                "h-30 w-30 object-contain",
+                (theme === 'dark' || theme === 'black') && "invert"
+              )}
+            />
+          </div>
+          <h2 className="text-3xl font-bold tracking-tight">{t('businessIntelligenceDashboard')}</h2>
+        </div>
         <QuickActions />
       </div>
       

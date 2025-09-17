@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import Link from 'next/link'
 import { Eye, EyeOff, Loader2, ArrowLeft, Shield, UserPlus } from 'lucide-react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 
 export default function AdminSignupPage() {
@@ -90,6 +91,15 @@ export default function AdminSignupPage() {
         <div className="max-w-md w-full space-y-8">
           <Card>
             <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <Image 
+                  src="/logo.png" 
+                  alt="LUMO Logo" 
+                  width={48} 
+                  height={48} 
+                  className="h-12 w-12 object-contain dark:invert"
+                />
+              </div>
               <Shield className="mx-auto h-12 w-12 text-red-500" />
               <CardTitle className="text-2xl font-bold text-foreground">
                 Acceso Restringido
@@ -122,6 +132,15 @@ export default function AdminSignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="LUMO Logo" 
+              width={80} 
+              height={80} 
+              className="h-16 w-16 sm:h-20 sm:w-20 object-contain dark:invert"
+            />
+          </div>
           <UserPlus className="mx-auto h-12 w-12 text-blue-600" />
           <h2 className="mt-6 text-3xl font-extrabold text-foreground">
             Crear Usuario

@@ -4,7 +4,9 @@ import { useState, useMemo, useCallback, memo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTranslations, useLocale } from 'next-intl'
-import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X, Package as PackageIcon } from 'lucide-react'
+import { ChevronLeft, ChevronRight, ChevronDown, ChevronUp, X } from 'lucide-react'
+import Image from 'next/image'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NavigationItem, createNavigationConfig, getNavigationIcons } from '@/lib/navigation-config'
@@ -123,6 +125,7 @@ interface SidebarProps {
 
 export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
   const [collapsed, setCollapsed] = useState(false)
+  const { theme } = useTheme()
   const [expandedSections, setExpandedSections] = useState<string[]>(['Inventario'])
   const [navigation, setNavigation] = useState<NavigationItem[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -203,22 +206,29 @@ export const Sidebar = memo(({ onMobileClose }: SidebarProps = {}) => {
 
   // Memoize header content
   const headerContent = useMemo(() => (
-    <div className="flex items-center justify-between p-4 border-b border-border">
-      <div className={cn(
-        "flex items-center space-x-2 transition-all duration-200",
-        collapsed && "justify-center"
-      )}>
-        <div className="h-8 w-8 flex items-center justify-center">
-          <PackageIcon className="h-6 w-6 text-primary" />
+    <div className="relative p-4 border-b border-border">
+      {/* Logo que cubre toda la zona del header */}
+      <div className="flex items-center justify-center w-full">
+        <div className={cn(
+          "flex items-center justify-center transition-all duration-200",
+          collapsed ? "h-16 w-16" : "h-20 w-full max-w-48"
+        )}>
+          <Image 
+            src="/logo.png" 
+            alt="LUMO Logo" 
+            width={collapsed ? 64 : 192} 
+            height={collapsed ? 64 : 80} 
+            className={cn(
+              "object-contain",
+              collapsed ? "h-16 w-16" : "h-20 w-full",
+              (theme === 'dark' || theme === 'black') && "invert"
+            )}
+          />
         </div>
-        {!collapsed && (
-          <span className="text-xl font-bold text-foreground transition-opacity duration-200">
-            LUMO
-          </span>
-        )}
       </div>
       
-      <div className="flex items-center space-x-2">
+      {/* Controles del sidebar posicionados absolutamente */}
+      <div className="absolute top-2 right-2 flex items-center space-x-1">
         {/* Mobile Close Button - Only show when onMobileClose is provided */}
         {onMobileClose && (
           <Button

@@ -7,7 +7,9 @@ import { ToastProvider } from '@/components/ui/toast'
 import { ModalProvider } from '@/components/ui/modal'
 import { ProtectedRoute } from '@/components/auth/protected-route'
 import { Button } from '@/components/ui/button'
-import { Menu, X, Package as PackageIcon } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
+import Image from 'next/image'
+import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { ConnectionIndicator } from '@/components/ui/connection-status'
 
@@ -18,6 +20,7 @@ interface ProtectedLayoutProps {
 
 export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayoutProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const { theme } = useTheme()
 
   const handleToggleMobileSidebar = () => {
     setIsMobileSidebarOpen(!isMobileSidebarOpen)
@@ -65,7 +68,16 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
                   </Button>
                   <div className="flex items-center space-x-1">
                     <div className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 flex items-center justify-center">
-                      <PackageIcon className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 text-primary" />
+                      <Image 
+                        src="/logo.png" 
+                        alt="LUMO Logo" 
+                        width={24} 
+                        height={24} 
+                        className={cn(
+                          "h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 object-contain",
+                          (theme === 'dark' || theme === 'black') && "invert"
+                        )}
+                      />
                     </div>
                     <span className="text-xs xs:text-sm sm:text-base font-bold text-foreground">
                       LUMO

@@ -273,7 +273,7 @@ export function AuditHistory({ open, onOpenChange }: AuditHistoryProps) {
   const [operationFilter, setOperationFilter] = useState<string>('')
   const [tableFilter, setTableFilter] = useState<string>('')
   const [dateFilter, setDateFilter] = useState<string>('all')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(true)
 
   // Cargar logs de auditoría
   const loadAuditLogs = async () => {

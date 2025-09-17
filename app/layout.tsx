@@ -7,6 +7,11 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'LUMO - Sistema de Gestión de Inventario',
   description: 'Sistema moderno de gestión de inventario construido con Next.js y Supabase',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 }
 
 export const viewport = {

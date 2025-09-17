@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AlertTriangle, ArrowLeft, Home } from 'lucide-react'
+import Image from 'next/image'
 
 export default function UnauthorizedPage() {
   const router = useRouter()
@@ -30,6 +31,15 @@ export default function UnauthorizedPage() {
     <div className="min-h-screen flex items-center justify-center bg-background py-12 px-4 sm:px-6 lg:px-8">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="LUMO Logo" 
+              width={48} 
+              height={48} 
+              className="h-12 w-12 object-contain dark:invert"
+            />
+          </div>
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
             <AlertTriangle className="h-6 w-6 text-red-600" />
           </div>

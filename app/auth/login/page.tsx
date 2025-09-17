@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { ConnectionIndicator } from '@/components/ui/connection-status'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -62,6 +63,15 @@ export default function LoginPage() {
       </div>
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <Image 
+              src="/logo.png" 
+              alt="LUMO Logo" 
+              width={80} 
+              height={80} 
+              className="h-16 w-16 sm:h-20 sm:w-20 object-contain dark:invert"
+            />
+          </div>
           <h2 className="mt-4 sm:mt-6 text-2xl sm:text-3xl font-extrabold text-foreground">
             Iniciar Sesión
           </h2>
