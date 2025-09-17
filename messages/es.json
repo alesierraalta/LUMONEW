@@ -297,13 +297,89 @@
     "export": "Exportar",
     "importComingSoon": "Funcionalidad de importación próximamente",
     "exportComingSoon": "Funcionalidad de exportación próximamente",
+    "csvImport": {
+      "title": "Importar Inventario desde CSV",
+      "description": "Carga productos desde un archivo CSV de forma inteligente",
+      "upload": {
+        "title": "Cargar Archivo",
+        "description": "Selecciona o arrastra tu archivo CSV aquí",
+        "supportedFormats": "Formatos Soportados",
+        "formats": "CSV, Excel (.xlsx, .xls)",
+        "maxSize": "Tamaño máximo: 10MB",
+        "selectFile": "Seleccionar Archivo",
+        "dragDrop": "Arrastra y suelta tu archivo aquí",
+        "or": "o",
+        "tips": {
+          "title": "Consejos para el archivo CSV",
+          "headers": "Asegúrate de que tu archivo tenga encabezados en la primera fila",
+          "encoding": "Usa codificación UTF-8 para caracteres especiales",
+          "separator": "El separador puede ser coma (,), punto y coma (;) o tabulación",
+          "required": "Campos requeridos: nombre, SKU, categoría, ubicación, cantidad, precio"
+        }
+      },
+      "mapping": {
+        "title": "Mapeo de Columnas",
+        "description": "Asocia las columnas de tu archivo con los campos del inventario",
+        "autoMapping": "Mapeo Automático",
+        "manualMapping": "Mapeo Manual",
+        "column": "Columna CSV",
+        "field": "Campo del Inventario",
+        "confidence": "Confianza",
+        "required": "Requerido",
+        "optional": "Opcional",
+        "next": "Siguiente"
+      },
+      "preview": {
+        "title": "Vista Previa",
+        "description": "Revisa los datos antes de importar",
+        "validRecords": "Registros Válidos",
+        "invalidRecords": "Registros con Errores",
+        "totalRecords": "Total de Registros",
+        "startImport": "Iniciar Importación",
+        "back": "Volver",
+        "row": "Fila",
+        "status": "Estado",
+        "errors": "Errores"
+      },
+      "progress": {
+        "title": "Importando Datos",
+        "description": "Procesando registros...",
+        "imported": "Importados",
+        "failed": "Fallidos",
+        "remaining": "Restantes",
+        "cancel": "Cancelar",
+        "paused": "Pausado",
+        "resume": "Reanudar"
+      },
+      "results": {
+        "title": "Resultados de la Importación",
+        "success": "Importación Completada",
+        "summary": "Resumen",
+        "imported": "Registros Importados",
+        "failed": "Registros Fallidos",
+        "skipped": "Registros Omitidos",
+        "exportErrors": "Exportar Errores",
+        "close": "Cerrar",
+        "importMore": "Importar Más"
+      },
+      "errors": {
+        "fileRequired": "Por favor selecciona un archivo",
+        "invalidFile": "Formato de archivo no válido",
+        "fileTooLarge": "El archivo es demasiado grande",
+        "parseError": "Error al procesar el archivo",
+        "mappingRequired": "Debes mapear al menos los campos requeridos",
+        "importFailed": "Error durante la importación",
+        "networkError": "Error de conexión"
+      }
+    },
     "loading": {
       "inventory": "Cargando inventario...",
       "filters": "Cargando filtros...",
       "table": "Cargando tabla...",
       "modal": "Cargando modal...",
       "transactionBuilder": "Cargando constructor...",
-      "auditHistory": "Cargando historial..."
+      "auditHistory": "Cargando historial...",
+      "csvImport": "Cargando importador CSV..."
     },
     "errorLoadingInventory": "Error al cargar inventario",
     "errorLoadingInventoryDescription": "No se pudieron cargar los datos del inventario desde la base de datos",

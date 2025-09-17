@@ -22,6 +22,7 @@ const InventoryFilters = lazy(() => import('@/components/inventory/inventory-fil
 const TransactionBuilder = lazy(() => import('@/components/inventory/transaction-builder').then(mod => ({ default: mod.TransactionBuilder })))
 const AuditHistory = lazy(() => import('@/components/inventory/audit-history').then(mod => ({ default: mod.AuditHistory })))
 const BulkCreateModal = lazy(() => import('@/components/inventory/bulk-create-modal').then(mod => ({ default: mod.BulkCreateModal })))
+const CSVImportModal = lazy(() => import('@/components/inventory/csv-import/csv-import-modal').then(mod => ({ default: mod.CSVImportModal })))
 const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
 function InventoryContent() {
@@ -36,6 +37,7 @@ function InventoryContent() {
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
   const [isTutorialOpen, setIsTutorialOpen] = useState(false)
+  const [isCSVImportOpen, setIsCSVImportOpen] = useState(false)
   const [inventoryData, setInventoryData] = useState<any>(null)
   const [loadingTransactions, setLoadingTransactions] = useState(false)
   const { addToast } = useToast()
@@ -451,21 +453,15 @@ function InventoryContent() {
           
           <button
             className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-green-500/5 hover:border-green-200 dark:hover:border-green-800 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-            onClick={() => {
-              addToast({
-                title: t('import'),
-                description: t('importComingSoon'),
-                type: "info"
-              })
-            }}
-            title="Importar productos desde archivo CSV o Excel"
+            onClick={() => setIsCSVImportOpen(true)}
+            title="Importar productos desde archivo CSV"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-50 dark:bg-green-950/50 group-hover:bg-green-100 dark:group-hover:bg-green-900/50 transition-colors">
               <Upload className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-sm text-foreground">Importar Datos</p>
-              <p className="text-xs text-muted-foreground truncate">CSV/Excel</p>
+              <p className="text-xs text-muted-foreground truncate">CSV</p>
             </div>
           </button>
           
@@ -581,6 +577,17 @@ function InventoryContent() {
               { id: 'filters', target: '#inv-filters', title: 'Filtros', description: 'Refina por nombre/SKU/categorías y más para encontrar artículos rápido.', placement: 'bottom' },
               { id: 'table', target: '#inv-table', title: 'Tabla de inventario', description: 'Visualiza y gestiona tus productos; edita o abre acciones desde cada fila.', placement: 'top' }
             ]}
+          />
+        </Suspense>
+      )}
+
+      {/* CSV Import Modal */}
+      {isCSVImportOpen && (
+        <Suspense fallback={<PageLoading message="Cargando importador CSV..." />}>
+          <CSVImportModal
+            isOpen={isCSVImportOpen}
+            onClose={() => setIsCSVImportOpen(false)}
+            onSuccess={loadInventoryData}
           />
         </Suspense>
       )}
