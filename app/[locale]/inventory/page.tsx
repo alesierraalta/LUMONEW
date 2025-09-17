@@ -48,7 +48,7 @@ function InventoryContent() {
       setIsLoading(true)
       
       // Load inventory items
-      const inventoryResponse = await fetch('/api/inventory/items')
+      const inventoryResponse = await fetch('/api/inventory/items?limit=999999')
       if (!inventoryResponse.ok) {
         throw new Error('Failed to fetch inventory items')
       }
