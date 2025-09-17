@@ -7,6 +7,9 @@ export class InventoryService {
   /**
    * Get all inventory items with optional filtering
    */
+  /**
+   * Get all inventory items with optional filtering
+   */
   async getAll(filters?: FilterOptions): Promise<InventoryItem[]> {
     let query = supabase
       .from('inventory')
@@ -28,6 +31,9 @@ export class InventoryService {
     
     if (filters?.status) {
       query = query.eq('status', filters.status)
+    } else {
+      // Default to active items only (consistent with optimized service)
+      query = query.eq('status', 'active')
     }
 
     const { data, error } = await query
@@ -152,6 +158,9 @@ export class InventoryService {
   /**
    * Get low stock items
    */
+  /**
+   * Get low stock items
+   */
   async getLowStock(): Promise<InventoryItem[]> {
     const { data, error } = await supabase
       .from('inventory')
@@ -170,6 +179,9 @@ export class InventoryService {
   /**
    * Get items by category
    */
+  /**
+   * Get items by category
+   */
   async getByCategory(categoryId: string): Promise<InventoryItem[]> {
     const { data, error } = await supabase
       .from('inventory')
@@ -185,6 +197,9 @@ export class InventoryService {
     return data || []
   }
 
+  /**
+   * Get items by location
+   */
   /**
    * Get items by location
    */
