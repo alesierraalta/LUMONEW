@@ -131,7 +131,7 @@ export function TransactionBuilder({ isOpen, onClose, onSave, initialMode = 'sal
       try {
         setLoading(true)
         setError(null)
-        const response = await fetch('/api/inventory/items')
+        const response = await fetch('/api/inventory/items?limit=999999')
         if (!response.ok) {
           throw new Error('Failed to fetch inventory items')
         }

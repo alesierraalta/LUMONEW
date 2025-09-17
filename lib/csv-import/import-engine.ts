@@ -205,7 +205,7 @@ export class ImportEngine {
       const itemData = await this.prepareItemData(item)
 
       // Call the inventory API
-      const response = await fetch('/api/inventory/items', {
+      const response = await fetch('/api/inventory/items?limit=999999', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

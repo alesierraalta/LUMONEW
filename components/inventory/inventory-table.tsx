@@ -179,7 +179,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const fetchInventory = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/inventory/items')
+      const response = await fetch('/api/inventory/items?limit=999999')
       if (!response.ok) {
         throw new Error('Failed to fetch inventory items')
       }

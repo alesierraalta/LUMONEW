@@ -288,7 +288,7 @@ export class RequestBatcher {
   private canBatchGetRequests(endpoint: string): boolean {
     // Define endpoints that support batching
     const batchableEndpoints = [
-      '/api/inventory/items',
+      '/api/inventory/items?limit=999999',
       '/api/categories',
       '/api/locations',
       '/api/users'

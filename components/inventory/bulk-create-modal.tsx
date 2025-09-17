@@ -178,7 +178,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
             cat.name.toLowerCase().includes('sin categoría')
           ) || categories[0]
 
-          const response = await fetch('/api/inventory/items', {
+          const response = await fetch('/api/inventory/items?limit=999999', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
