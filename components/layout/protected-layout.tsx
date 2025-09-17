@@ -18,26 +18,6 @@ interface ProtectedLayoutProps {
   showSidebar?: boolean
 }
 
-export const 'use client'
-
-import { useState } from 'react'
-import { useAuth } from '@/lib/auth/auth-context'
-import { Sidebar } from '@/components/layout/sidebar'
-import { ToastProvider } from '@/components/ui/toast'
-import { ModalProvider } from '@/components/ui/modal'
-import { ProtectedRoute } from '@/components/auth/protected-route'
-import { Button } from '@/components/ui/button'
-import { Menu, X } from 'lucide-react'
-import Image from 'next/image'
-import { useTheme } from 'next-themes'
-import { cn } from '@/lib/utils'
-import { ConnectionIndicator } from '@/components/ui/connection-status'
-
-interface ProtectedLayoutProps {
-  children: React.ReactNode
-  showSidebar?: boolean
-}
-
 export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayoutProps) => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const { theme } = useTheme()
@@ -87,22 +67,19 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
                   </Button>
                   
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    <div className="h-6 w-6 sm:h-7 sm:w-7 flex items-center justify-center">
+                  <div className="flex items-center justify-center">
+                    <div className="h-14 w-14 sm:h-18 sm:w-18 flex items-center justify-center">
                       <Image 
                         src="/logo.png" 
                         alt="LUMO Logo" 
-                        width={28} 
-                        height={28} 
+                        width={96} 
+                        height={96} 
                         className={cn(
-                          "h-5 w-5 sm:h-6 sm:w-6 object-contain",
+                          "h-12 w-12 sm:h-16 sm:w-16 object-contain",
                           (theme === 'dark' || theme === 'black') && "invert"
                         )}
                       />
                     </div>
-                    <span className="text-sm sm:text-base font-bold text-foreground">
-                      LUMO
-                    </span>
                   </div>
                   
                   <div className="flex items-center">
@@ -120,61 +97,6 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
           ) : (
             <div className="min-h-screen bg-background">
               <div className="container mx-auto p-3 sm:p-4 lg:p-6">
-                {children}
-              </div>
-            </div>
-          )}
-        </ProtectedRoute>
-      </ModalProvider>
-    </ToastProvider>
-  )
-}
-              )}
-
-              {/* Main Content */}
-              <main className="flex-1 overflow-hidden">
-                {/* Mobile Header */}
-                <div className="lg:hidden flex items-center justify-between p-1 xs:p-2 sm:p-3 border-b border-border bg-card min-h-[44px]">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleToggleMobileSidebar}
-                    className="h-7 w-7 xs:h-8 xs:w-8 sm:h-9 sm:w-9 p-1"
-                  >
-                    <Menu className="h-4 w-4 xs:h-4 xs:w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                  <div className="flex items-center space-x-1">
-                    <div className="h-5 w-5 xs:h-6 xs:w-6 sm:h-7 sm:w-7 flex items-center justify-center">
-                      <Image 
-                        src="/logo.png" 
-                        alt="LUMO Logo" 
-                        width={24} 
-                        height={24} 
-                        className={cn(
-                          "h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6 object-contain",
-                          (theme === 'dark' || theme === 'black') && "invert"
-                        )}
-                      />
-                    </div>
-                    <span className="text-xs xs:text-sm sm:text-base font-bold text-foreground">
-                      LUMO
-                    </span>
-                  </div>
-                  <div className="flex items-center">
-                    <ConnectionIndicator />
-                  </div>
-                </div>
-
-                <div className="h-[calc(100vh-44px)] lg:h-full overflow-y-auto custom-scrollbar">
-                  <div className="p-1 xs:p-2 sm:p-3 lg:p-4">
-                    {children}
-                  </div>
-                </div>
-              </main>
-            </div>
-          ) : (
-            <div className="min-h-screen bg-background">
-              <div className="container mx-auto p-4 lg:p-6">
                 {children}
               </div>
             </div>
