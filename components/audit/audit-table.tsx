@@ -108,7 +108,12 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
   }
 
   const getHumanReadableDescription = (log: AuditLog) => {
-    const user = log.user_email || 'Sistema'
+    // Use enhanced action description if available, otherwise fallback to basic description
+    if (log.action_description) {
+      return log.action_description
+    }
+    
+    const user = log.user_name || log.user_email || 'Sistema'
     const table = formatTableName(log.table_name)
     const time = format(new Date(log.created_at), 'HH:mm', { locale: es })
     
@@ -265,6 +270,68 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
     )
   }
 
+  const getUserDisplayInfo = (log: AuditLog) => {
+    const userName = log.user_name || log.user_email || 'Sistema'
+    const userEmail = log.user_email
+    const userRole = log.user_role
+    const userDepartment = log.user_department
+    const userAvatar = log.user_avatar_url
+    
+    return {
+      name: userName,
+      email: userEmail,
+      role: userRole,
+      department: userDepartment,
+      avatar: userAvatar,
+      displayName: userName === userEmail ? userName.split('@')[0] : userName
+    }
+  }
+
+  const getActionImpactBadge = (impact: string | null) => {
+    if (!impact) return null
+    
+    const impactConfig = {
+      'LOW': { variant: 'outline' as const, className: 'text-green-600 border-green-300', label: 'Bajo' },
+      'MEDIUM': { variant: 'secondary' as const, className: 'text-yellow-600 border-yellow-300', label: 'Medio' },
+      'HIGH': { variant: 'default' as const, className: 'text-orange-600 border-orange-300', label: 'Alto' },
+      'CRITICAL': { variant: 'destructive' as const, className: 'text-red-600 border-red-300', label: 'Crítico' }
+    }
+    
+    const config = impactConfig[impact as keyof typeof impactConfig]
+    if (!config) return null
+    
+    return (
+      <Badge variant={config.variant} className={`text-xs ${config.className}`}>
+        {config.label}
+      </Badge>
+    )
+  }
+
+  const getActionCategoryBadge = (category: string | null) => {
+    if (!category) return null
+    
+    return (
+      <Badge variant="outline" className="text-xs text-blue-600 border-blue-300">
+        {category}
+      </Badge>
+    )
+  }
+
+  const getBusinessContextInfo = (log: AuditLog) => {
+    if (!log.business_context) return null
+    
+    return (
+      <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+        <h5 className="font-medium text-sm mb-2 text-blue-800 dark:text-blue-200">
+          🏢 Contexto de Negocio:
+        </h5>
+        <p className="text-sm text-blue-700 dark:text-blue-300">
+          {log.business_context}
+        </p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
@@ -408,6 +475,9 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
                       </div>
                     </div>
 
+                    {/* Business Context */}
+                    {getBusinessContextInfo(log)}
+
                     {/* Data Changes */}
                     {(log.old_values || log.new_values) && (
                       <div>
@@ -476,8 +546,28 @@ export function AuditTable({ auditLogs, loading, onRefresh }: AuditTableProps) {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <User className="h-4 w-4 text-gray-400" />
-                        <span className="font-medium">{log.user_email || 'Sistema'}</span>
+                        {(() => {
+                          const userInfo = getUserDisplayInfo(log)
+                          return (
+                            <>
+                              {userInfo.avatar ? (
+                                <img 
+                                  src={userInfo.avatar} 
+                                  alt={userInfo.displayName}
+                                  className="h-4 w-4 rounded-full"
+                                />
+                              ) : (
+                                <User className="h-4 w-4 text-gray-400" />
+                              )}
+                              <div className="flex flex-col">
+                                <span className="font-medium">{userInfo.displayName}</span>
+                                {userInfo.role && (
+                                  <span className="text-xs text-gray-500">{userInfo.role}</span>
+                                )}
+                              </div>
+                            </>
+                          )
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell>

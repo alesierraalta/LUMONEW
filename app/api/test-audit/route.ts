@@ -1,7 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auditService } from '../../../lib/audit'
+import { EnvironmentConfig } from '../../../lib/config/environment'
 
 export async function GET(request: NextRequest) {
+  // CRITICAL: Block test operations in production environment
+  if (EnvironmentConfig.isProduction()) {
+    console.error('🚨 BLOCKED: Test audit operations attempted in production environment')
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Test operations are not allowed in production environment',
+        environment: 'production',
+        blocked: true
+      },
+      { 
+        status: 403,
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      }
+    )
+  }
+
   console.log('🔍 Testing Audit Logging System...')
   console.log('================================')
   
@@ -16,10 +36,18 @@ export async function GET(request: NextRequest) {
     // Environment check
     results.environment = {
       supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
-      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing'
+      serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? 'Set' : 'Missing',
+      nodeEnv: process.env.NODE_ENV,
+      isProduction: EnvironmentConfig.isProduction(),
+      isDevelopment: EnvironmentConfig.isDevelopment(),
+      isTest: EnvironmentConfig.isTest()
     }
 
     console.log('Environment check:')
+    console.log('- NODE_ENV:', results.environment.nodeEnv)
+    console.log('- Is Production:', results.environment.isProduction)
+    console.log('- Is Development:', results.environment.isDevelopment)
+    console.log('- Is Test:', results.environment.isTest)
     console.log('- NEXT_PUBLIC_SUPABASE_URL:', results.environment.supabaseUrl)
     console.log('- SUPABASE_SERVICE_ROLE_KEY:', results.environment.serviceRoleKey)
 

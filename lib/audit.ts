@@ -6,11 +6,15 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 // Use browser client for regular operations (compatible with both server and client)
 const supabase = createBrowserClient()
 
-// Enhanced audit log interface
+// Enhanced audit log interface with comprehensive user and action details
 export interface AuditLog {
   id: string
   user_id: string | null
   user_email: string | null
+  user_name: string | null
+  user_role: string | null
+  user_department: string | null
+  user_avatar_url: string | null
   operation: 'INSERT' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'VIEW' | 'EXPORT' | 'IMPORT' | 'BULK_OPERATION'
   table_name: string
   record_id: string
@@ -20,6 +24,13 @@ export interface AuditLog {
   user_agent: string | null
   session_id: string | null
   created_at: string
+  // Enhanced action details
+  action_description: string | null
+  action_category: string | null
+  action_impact: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | null
+  business_context: string | null
+  affected_records_count: number | null
+  // Enhanced metadata
   metadata?: {
     action_type?: string
     affected_fields?: string[]
@@ -28,6 +39,29 @@ export interface AuditLog {
     notes?: string
     record_count?: number
     error?: string
+    // New enhanced fields
+    user_profile?: {
+      name?: string
+      role?: string
+      department?: string
+      avatar_url?: string
+      last_login?: string
+      status?: 'active' | 'inactive' | 'suspended'
+    }
+    action_details?: {
+      category?: string
+      impact?: string
+      business_context?: string
+      workflow_step?: string
+      validation_results?: any
+      related_actions?: string[]
+    }
+    system_context?: {
+      browser?: string
+      device_type?: string
+      location?: string
+      referrer?: string
+    }
     [key: string]: any
   }
 }
@@ -93,6 +127,186 @@ export class AuditService {
     return supabase
   }
 
+  // Helper method to generate enhanced action descriptions
+  private generateActionDescription(
+    operation: string,
+    tableName: string,
+    oldValues: any,
+    newValues: any
+  ): string {
+    const tableLabels: Record<string, string> = {
+      'inventory': 'Inventario',
+      'categories': 'Categorías',
+      'locations': 'Ubicaciones',
+      'users': 'Usuarios',
+      'audit_logs': 'Auditoría',
+      'projects': 'Proyectos',
+      'cl_tasks': 'Tareas CL',
+      'imp_tasks': 'Tareas IMP'
+    }
+    
+    const tableLabel = tableLabels[tableName] || tableName
+    
+    switch (operation) {
+      case 'INSERT':
+        return `Creó un nuevo registro en ${tableLabel}`
+      case 'UPDATE':
+        if (oldValues && newValues) {
+          const changedFields = Object.keys(newValues).filter(key =>
+            JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
+          )
+          if (changedFields.length > 0) {
+            return `Actualizó ${changedFields.length} campo(s) en ${tableLabel}: ${changedFields.join(', ')}`
+          }
+        }
+        return `Actualizó un registro en ${tableLabel}`
+      case 'DELETE':
+        return `Eliminó un registro de ${tableLabel}`
+      case 'LOGIN':
+        return 'Inició sesión en el sistema'
+      case 'LOGOUT':
+        return 'Cerró sesión del sistema'
+      case 'EXPORT':
+        return `Exportó datos de ${tableLabel}`
+      case 'IMPORT':
+        return `Importó datos a ${tableLabel}`
+      case 'BULK_OPERATION':
+        return `Realizó una operación masiva en ${tableLabel}`
+      default:
+        return `Realizó una operación en ${tableLabel}`
+    }
+  }
+
+  // Helper method to determine action category
+  private determineActionCategory(operation: string, tableName: string): string {
+    const categories: Record<string, string> = {
+      'inventory': 'Gestión de Inventario',
+      'categories': 'Gestión de Categorías',
+      'locations': 'Gestión de Ubicaciones',
+      'users': 'Gestión de Usuarios',
+      'audit_logs': 'Auditoría del Sistema',
+      'projects': 'Gestión de Proyectos',
+      'cl_tasks': 'Tareas de Control de Línea',
+      'imp_tasks': 'Tareas de Implementación'
+    }
+    
+    const operationCategories: Record<string, string> = {
+      'INSERT': 'Creación',
+      'UPDATE': 'Modificación',
+      'DELETE': 'Eliminación',
+      'LOGIN': 'Autenticación',
+      'LOGOUT': 'Autenticación',
+      'EXPORT': 'Exportación',
+      'IMPORT': 'Importación',
+      'BULK_OPERATION': 'Operación Masiva'
+    }
+    
+    const tableCategory = categories[tableName] || 'Sistema'
+    const operationCategory = operationCategories[operation] || 'Operación'
+    
+    return `${tableCategory} - ${operationCategory}`
+  }
+
+  // Helper method to determine action impact
+  private determineActionImpact(
+    operation: string,
+    tableName: string,
+    oldValues: any,
+    newValues: any
+  ): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
+    // Critical operations
+    if (operation === 'DELETE' && (tableName === 'users' || tableName === 'audit_logs')) {
+      return 'CRITICAL'
+    }
+    
+    // High impact operations
+    if (operation === 'DELETE' || operation === 'BULK_OPERATION') {
+      return 'HIGH'
+    }
+    
+    // Medium impact operations
+    if (operation === 'UPDATE' && tableName === 'users') {
+      return 'MEDIUM'
+    }
+    
+    if (operation === 'UPDATE' && oldValues && newValues) {
+      const changedFields = Object.keys(newValues).filter(key =>
+        JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
+      )
+      if (changedFields.length > 3) {
+        return 'MEDIUM'
+      }
+    }
+    
+    // Low impact operations
+    return 'LOW'
+  }
+
+  // Helper method to generate business context
+  private generateBusinessContext(
+    operation: string,
+    tableName: string,
+    oldValues: any,
+    newValues: any
+  ): string {
+    const contexts: Record<string, string> = {
+      'inventory': 'Gestión del inventario de productos y materiales',
+      'categories': 'Organización y clasificación de productos',
+      'locations': 'Administración de ubicaciones y almacenes',
+      'users': 'Gestión de usuarios y permisos del sistema',
+      'projects': 'Administración de proyectos y tareas',
+      'cl_tasks': 'Control de línea y seguimiento de tareas',
+      'imp_tasks': 'Implementación y desarrollo de tareas'
+    }
+    
+    const baseContext = contexts[tableName] || 'Operación del sistema'
+    
+    switch (operation) {
+      case 'INSERT':
+        return `${baseContext} - Nuevo registro agregado`
+      case 'UPDATE':
+        return `${baseContext} - Registro modificado`
+      case 'DELETE':
+        return `${baseContext} - Registro eliminado`
+      case 'LOGIN':
+        return 'Acceso al sistema'
+      case 'LOGOUT':
+        return 'Salida del sistema'
+      case 'EXPORT':
+        return `${baseContext} - Datos exportados`
+      case 'IMPORT':
+        return `${baseContext} - Datos importados`
+      default:
+        return baseContext
+    }
+  }
+
+  // Helper method to get browser information
+  private getBrowserInfo(): string {
+    if (typeof window === 'undefined') return 'Server-side'
+    
+    const userAgent = window.navigator.userAgent
+    if (userAgent.includes('Chrome')) return 'Chrome'
+    if (userAgent.includes('Firefox')) return 'Firefox'
+    if (userAgent.includes('Safari')) return 'Safari'
+    if (userAgent.includes('Edge')) return 'Edge'
+    return 'Unknown Browser'
+  }
+
+  // Helper method to get device type
+  private getDeviceType(): string {
+    if (typeof window === 'undefined') return 'Server'
+    
+    const userAgent = window.navigator.userAgent
+    if (/Mobile|Android|iPhone|iPad/.test(userAgent)) {
+      return 'Mobile'
+    }
+    if (/Tablet|iPad/.test(userAgent)) {
+      return 'Tablet'
+    }
+    return 'Desktop'
+  }
+
   // Log any operation with comprehensive details
   async logOperation(params: {
     operation: AuditLog['operation']
@@ -102,6 +316,15 @@ export class AuditService {
     new_values?: any
     user_id?: string
     user_email?: string
+    user_name?: string
+    user_role?: string
+    user_department?: string
+    user_avatar_url?: string
+    action_description?: string
+    action_category?: string
+    action_impact?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL'
+    business_context?: string
+    affected_records_count?: number
     metadata?: AuditLog['metadata']
     supabaseClient?: SupabaseClient
   }) {
@@ -121,17 +344,80 @@ export class AuditService {
         }
       }
       
+      // Generate enhanced action description if not provided
+      const actionDescription = params.action_description || this.generateActionDescription(
+        params.operation,
+        params.table_name,
+        params.old_values,
+        params.new_values
+      )
+      
+      // Determine action category if not provided
+      const actionCategory = params.action_category || this.determineActionCategory(
+        params.operation,
+        params.table_name
+      )
+      
+      // Determine action impact if not provided
+      const actionImpact = params.action_impact || this.determineActionImpact(
+        params.operation,
+        params.table_name,
+        params.old_values,
+        params.new_values
+      )
+      
+      // Generate business context if not provided
+      const businessContext = params.business_context || this.generateBusinessContext(
+        params.operation,
+        params.table_name,
+        params.old_values,
+        params.new_values
+      )
+      
       const auditEntry = {
         user_id: userId,
         user_email: params.user_email || this.currentUser?.email || null,
+        user_name: params.user_name || this.currentUser?.name || null,
+        user_role: params.user_role || this.currentUser?.role || null,
+        user_department: params.user_department || this.currentUser?.department || null,
+        user_avatar_url: params.user_avatar_url || this.currentUser?.avatar_url || null,
         operation: params.operation,
         table_name: params.table_name,
         record_id: params.record_id,
         old_values: params.old_values || null,
         new_values: params.new_values || null,
         session_id: this.sessionId,
+        action_description: actionDescription,
+        action_category: actionCategory,
+        action_impact: actionImpact,
+        business_context: businessContext,
+        affected_records_count: params.affected_records_count || 1,
         ...clientInfo,
-        metadata: params.metadata || null
+        metadata: {
+          ...params.metadata,
+          user_profile: {
+            name: params.user_name || this.currentUser?.name,
+            role: params.user_role || this.currentUser?.role,
+            department: params.user_department || this.currentUser?.department,
+            avatar_url: params.user_avatar_url || this.currentUser?.avatar_url,
+            last_login: this.currentUser?.last_login,
+            status: this.currentUser?.status || 'active'
+          },
+          action_details: {
+            category: actionCategory,
+            impact: actionImpact,
+            business_context: businessContext,
+            workflow_step: params.metadata?.workflow_step,
+            validation_results: params.metadata?.validation_results,
+            related_actions: params.metadata?.related_actions
+          },
+          system_context: {
+            browser: this.getBrowserInfo(),
+            device_type: this.getDeviceType(),
+            location: params.metadata?.location,
+            referrer: params.metadata?.referrer
+          }
+        }
       }
 
       // Use provided client or get fallback client
@@ -183,12 +469,28 @@ export class AuditService {
   }
 
   // Log CREATE operations
-  async logCreate(table_name: string, record_id: string, new_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
+  async logCreate(
+    table_name: string, 
+    record_id: string, 
+    new_values: any, 
+    metadata?: AuditLog['metadata'], 
+    supabaseClient?: SupabaseClient,
+    userContext?: {
+      user_name?: string
+      user_role?: string
+      user_department?: string
+      user_avatar_url?: string
+    }
+  ) {
     return this.logOperation({
       operation: 'INSERT',
       table_name,
       record_id,
       new_values,
+      user_name: userContext?.user_name,
+      user_role: userContext?.user_role,
+      user_department: userContext?.user_department,
+      user_avatar_url: userContext?.user_avatar_url,
       metadata: {
         ...metadata,
         action_type: 'create'
@@ -198,7 +500,20 @@ export class AuditService {
   }
 
   // Log UPDATE operations with field-level tracking
-  async logUpdate(table_name: string, record_id: string, old_values: any, new_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
+  async logUpdate(
+    table_name: string, 
+    record_id: string, 
+    old_values: any, 
+    new_values: any, 
+    metadata?: AuditLog['metadata'], 
+    supabaseClient?: SupabaseClient,
+    userContext?: {
+      user_name?: string
+      user_role?: string
+      user_department?: string
+      user_avatar_url?: string
+    }
+  ) {
     // Identify changed fields
     const affected_fields = Object.keys(new_values).filter(key =>
       JSON.stringify(old_values[key]) !== JSON.stringify(new_values[key])
@@ -210,6 +525,10 @@ export class AuditService {
       record_id,
       old_values,
       new_values,
+      user_name: userContext?.user_name,
+      user_role: userContext?.user_role,
+      user_department: userContext?.user_department,
+      user_avatar_url: userContext?.user_avatar_url,
       metadata: {
         ...metadata,
         action_type: 'update',
@@ -220,12 +539,28 @@ export class AuditService {
   }
 
   // Log DELETE operations
-  async logDelete(table_name: string, record_id: string, old_values: any, metadata?: AuditLog['metadata'], supabaseClient?: SupabaseClient) {
+  async logDelete(
+    table_name: string, 
+    record_id: string, 
+    old_values: any, 
+    metadata?: AuditLog['metadata'], 
+    supabaseClient?: SupabaseClient,
+    userContext?: {
+      user_name?: string
+      user_role?: string
+      user_department?: string
+      user_avatar_url?: string
+    }
+  ) {
     return this.logOperation({
       operation: 'DELETE',
       table_name,
       record_id,
       old_values,
+      user_name: userContext?.user_name,
+      user_role: userContext?.user_role,
+      user_department: userContext?.user_department,
+      user_avatar_url: userContext?.user_avatar_url,
       metadata: {
         ...metadata,
         action_type: 'delete'
@@ -235,13 +570,28 @@ export class AuditService {
   }
 
   // Log user authentication events
-  async logAuth(operation: 'LOGIN' | 'LOGOUT', user_id: string, user_email: string, metadata?: AuditLog['metadata']) {
+  async logAuth(
+    operation: 'LOGIN' | 'LOGOUT', 
+    user_id: string, 
+    user_email: string, 
+    metadata?: AuditLog['metadata'],
+    userContext?: {
+      user_name?: string
+      user_role?: string
+      user_department?: string
+      user_avatar_url?: string
+    }
+  ) {
     return this.logOperation({
       operation,
       table_name: 'users',
       record_id: user_id,
       user_id,
       user_email,
+      user_name: userContext?.user_name,
+      user_role: userContext?.user_role,
+      user_department: userContext?.user_department,
+      user_avatar_url: userContext?.user_avatar_url,
       metadata: {
         ...metadata,
         action_type: operation.toLowerCase()
@@ -283,7 +633,8 @@ export class AuditService {
       }
     })
   }
-// Get recent audit logs
+
+  // Get recent audit logs
   async getRecentLogs(limit: number = 10, supabaseClient?: SupabaseClient): Promise<AuditLog[]> {
     try {
       const client = this.getSupabaseClient(supabaseClient)

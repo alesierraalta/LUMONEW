@@ -44,7 +44,8 @@ export function TotalValueModal({ isOpen, onClose }: TotalValueModalProps) {
   const fetchInventoryItems = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/inventory/items')
+      // Fetch all inventory items by setting a high limit to avoid pagination issues
+      const response = await fetch('/api/inventory/items?limit=999999')
       if (!response.ok) {
         throw new Error('Failed to fetch inventory items')
       }
