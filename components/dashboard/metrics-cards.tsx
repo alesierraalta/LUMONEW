@@ -41,16 +41,16 @@ export function MetricsCards() {
 
   if (loading) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-4">
         {[...Array(4)].map((_, index) => (
           <Card key={index} className="animate-pulse">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div className="h-4 bg-gray-200 rounded w-20"></div>
-              <div className="h-4 w-4 bg-gray-200 rounded"></div>
+              <div className="h-3 sm:h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 sm:w-20"></div>
+              <div className="h-3 w-3 sm:h-4 sm:w-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
             </CardHeader>
-            <CardContent>
-              <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
-              <div className="h-3 bg-gray-200 rounded w-24"></div>
+            <CardContent className="pb-3 sm:pb-4">
+              <div className="h-6 sm:h-8 bg-gray-200 dark:bg-gray-700 rounded w-12 sm:w-16 mb-2"></div>
+              <div className="h-2 sm:h-3 bg-gray-200 dark:bg-gray-700 rounded w-20 sm:w-24"></div>
             </CardContent>
           </Card>
         ))}
@@ -60,10 +60,12 @@ export function MetricsCards() {
 
   if (error) {
     return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="col-span-full border-red-200 bg-red-50/50">
-          <CardContent className="pt-6">
-            <p className="text-red-600">{t('errorLoadingMetrics')}: {error}</p>
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 xs:grid-cols-2 md:grid-cols-4">
+        <Card className="col-span-full border-red-200 dark:border-red-800 bg-red-50/50 dark:bg-red-900/20">
+          <CardContent className="pt-4 sm:pt-6">
+            <p className="text-red-600 dark:text-red-400 text-sm sm:text-base">
+              {t('errorLoadingMetrics')}: {error}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -110,29 +112,31 @@ export function MetricsCards() {
       {metricsData.map((metric, index) => (
         <Card 
           key={index} 
-          className={`${metric.isAlert ? 'border-yellow-200 bg-yellow-50/50 dark:border-yellow-800 dark:bg-yellow-900/20' : ''} ${metric.isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+          className={`${metric.isAlert ? 'border-yellow-200 dark:border-yellow-800 bg-yellow-50/50 dark:bg-yellow-900/20' : ''} ${metric.isClickable ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
           onClick={metric.isClickable ? () => setIsTotalValueModalOpen(true) : undefined}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs md:text-sm font-medium">
+            <CardTitle className="text-xs sm:text-sm font-medium leading-tight">
               {metric.title}
             </CardTitle>
-            <metric.icon className={`h-4 w-4 ${metric.isAlert ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`} />
+            <metric.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${metric.isAlert ? 'text-yellow-600 dark:text-yellow-400' : 'text-muted-foreground'}`} />
           </CardHeader>
-          <CardContent>
-            <div className="text-lg md:text-2xl font-bold">{metric.value}</div>
-            <p className="text-xs text-description-dark line-clamp-2">
+          <CardContent className="pb-3 sm:pb-4">
+            <div className="text-base sm:text-lg md:text-2xl font-bold leading-tight">
+              {metric.value}
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-2 leading-tight mt-1">
               {metric.description}
             </p>
-            <p className={`text-xs mt-1 ${
+            <p className={`text-xs mt-1 leading-tight ${
               metric.trend.includes('+') ? 'text-green-600 dark:text-green-300' : 
               metric.trend.includes('-') ? 'text-red-600 dark:text-red-300' : 
-              'text-description-dark'
+              'text-muted-foreground'
             }`}>
               {metric.trend}
             </p>
             {metric.isClickable && (
-              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400">
+              <p className="text-xs mt-1 text-blue-600 dark:text-blue-400 leading-tight">
                 Click para ver detalles
               </p>
             )}
