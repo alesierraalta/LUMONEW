@@ -635,12 +635,20 @@ export class AuditService {
   }
 
   // Get recent audit logs
+  // Get recent audit logs
   async getRecentLogs(limit: number = 10, supabaseClient?: SupabaseClient): Promise<AuditLog[]> {
     try {
       const client = this.getSupabaseClient(supabaseClient)
       const { data, error } = await client
         .from('audit_logs')
         .select('*')
+        // CRITICAL: Filter out test audit logs from production views
+        .not('table_name', 'eq', 'test_table')
+        .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
+        .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
+        .not('metadata->notes', 'like', '%Testing audit system%')
+        .not('metadata->notes', 'like', '%Testing update operation%')
+        .not('metadata->notes', 'like', '%Removing test data%')
         .order('created_at', { ascending: false })
         .limit(limit)
 
@@ -652,6 +660,7 @@ export class AuditService {
     }
   }
 
+  // Get audit logs with advanced filtering
   // Get audit logs with advanced filtering
   async getAuditLogs(filters: {
     limit?: number
@@ -671,6 +680,14 @@ export class AuditService {
         *,
         users (id, name, email)
       `)
+
+    // CRITICAL: Filter out test audit logs from production views
+    query = query.not('table_name', 'eq', 'test_table')
+    query = query.not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
+    query = query.not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
+    query = query.not('metadata->notes', 'like', '%Testing audit system%')
+    query = query.not('metadata->notes', 'like', '%Testing update operation%')
+    query = query.not('metadata->notes', 'like', '%Removing test data%')
 
     // Apply filters
     if (filters.user_id) {
@@ -725,12 +742,20 @@ export class AuditService {
   }
 
   // Get audit statistics
+  // Get audit statistics
   async getAuditStats(date_from?: string, date_to?: string, supabaseClient?: SupabaseClient) {
     try {
       const client = this.getSupabaseClient(supabaseClient)
       let query = client
         .from('audit_logs')
         .select('operation, table_name, created_at')
+        // CRITICAL: Filter out test audit logs from production views
+        .not('table_name', 'eq', 'test_table')
+        .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
+        .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
+        .not('metadata->notes', 'like', '%Testing audit system%')
+        .not('metadata->notes', 'like', '%Testing update operation%')
+        .not('metadata->notes', 'like', '%Removing test data%')
 
       if (date_from) {
         query = query.gte('created_at', date_from)
@@ -771,6 +796,7 @@ export class AuditService {
   }
 
   // Get recent activity for dashboard
+  // Get recent activity for dashboard
   async getRecentActivity(limit: number = 10, supabaseClient?: SupabaseClient) {
     const client = this.getSupabaseClient(supabaseClient)
     const { data, error } = await client
@@ -779,6 +805,13 @@ export class AuditService {
         *,
         users (id, name, email)
       `)
+      // CRITICAL: Filter out test audit logs from production views
+      .not('table_name', 'eq', 'test_table')
+      .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
+      .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
+      .not('metadata->notes', 'like', '%Testing audit system%')
+      .not('metadata->notes', 'like', '%Testing update operation%')
+      .not('metadata->notes', 'like', '%Removing test data%')
       .order('created_at', { ascending: false })
       .limit(limit)
 
@@ -791,12 +824,20 @@ export class AuditService {
   }
 
   // Get user activity history
+  // Get user activity history
   async getUserActivity(user_id: string, limit: number = 20, supabaseClient?: SupabaseClient) {
     const client = this.getSupabaseClient(supabaseClient)
     const { data, error } = await client
       .from('audit_logs')
       .select('*')
       .eq('user_id', user_id)
+      // CRITICAL: Filter out test audit logs from production views
+      .not('table_name', 'eq', 'test_table')
+      .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
+      .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
+      .not('metadata->notes', 'like', '%Testing audit system%')
+      .not('metadata->notes', 'like', '%Testing update operation%')
+      .not('metadata->notes', 'like', '%Removing test data%')
       .order('created_at', { ascending: false })
       .limit(limit)
 
