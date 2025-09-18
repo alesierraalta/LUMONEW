@@ -11,6 +11,7 @@ import { ModalProvider } from '@/components/ui/modal'
 import { useAuth } from '@/lib/auth/auth-context'
 import { auditedInventoryService, auditedCategoryService, auditedLocationService } from '@/lib/database-with-audit'
 import { LoadingSpinner } from '@/components/ui/loading'
+import { ImageUpload } from '@/components/ui/image-upload'
 
 interface FormData {
   sku: string
@@ -21,6 +22,7 @@ interface FormData {
   quantity: string
   min_stock: string
   max_stock: string
+  images: string[]
 }
 
 interface FormErrors {
@@ -42,7 +44,8 @@ function EditInventoryItemContent() {
     unit_price: '',
     quantity: '',
     min_stock: '',
-    max_stock: ''
+    max_stock: '',
+    images: []
   })
   
   const [errors, setErrors] = useState<FormErrors>({})
@@ -50,6 +53,7 @@ function EditInventoryItemContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [categories, setCategories] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
+  const [uploadingImages, setUploadingImages] = useState(false)
 
   // Load item data and form options
   const loadData = useCallback(async () => {
@@ -83,6 +87,7 @@ function EditInventoryItemContent() {
         quantity: itemData.quantity?.toString() || '',
         min_stock: itemData.min_stock?.toString() || '',
         max_stock: itemData.max_stock?.toString() || '',
+        images: itemData.images || []
       })
 
       setCategories(categoriesData)
@@ -106,6 +111,55 @@ function EditInventoryItemContent() {
       loadData()
     }
   }, [itemId, loadData])
+
+  // Handle image upload
+  const handleImageUpload = async (file: File) => {
+    setUploadingImages(true)
+    try {
+      const formData = new FormData()
+      formData.append('image', file)
+      formData.append('itemId', itemId)
+      
+      const response = await fetch('/api/inventory/upload-image', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image')
+      }
+
+      const result = await response.json()
+      
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, result.imageUrl]
+      }))
+
+      addToast({
+        type: 'success',
+        title: 'Imagen cargada',
+        description: 'La imagen se ha cargado exitosamente'
+      })
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      addToast({
+        type: 'error',
+        title: 'Error al cargar imagen',
+        description: 'No se pudo cargar la imagen. Inténtalo de nuevo.'
+      })
+    } finally {
+      setUploadingImages(false)
+    }
+  }
+
+  // Handle image removal
+  const handleImageRemove = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }))
+  }
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {}
@@ -156,10 +210,10 @@ function EditInventoryItemContent() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleInputChange = (field: keyof FormData, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
-    if (errors[field]) {
+    if (typeof value === 'string' && errors[field]) {
       setErrors(prev => ({ ...prev, [field]: '' }))
     }
   }
@@ -192,6 +246,7 @@ function EditInventoryItemContent() {
         quantity: formData.quantity ? parseInt(formData.quantity) : 0,
         min_stock: formData.min_stock ? parseInt(formData.min_stock) : 0,
         max_stock: formData.max_stock ? parseInt(formData.max_stock) : (formData.min_stock ? parseInt(formData.min_stock) * 2 : 0),
+        images: formData.images
       }
 
       // Validate that we have required IDs
@@ -213,12 +268,24 @@ function EditInventoryItemContent() {
         return
       }
 
-      await auditedInventoryService.update(itemId, updatedItem)
+      // Send to API with images
+      const response = await fetch(`/api/inventory/items/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(updatedItem)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.message || 'Failed to update item')
+      }
 
       addToast({
         type: 'success',
         title: 'Item actualizado exitosamente',
-        description: `El item "${formData.name}" ha sido actualizado`
+        description: `El item "${formData.name}" ha sido actualizado con ${formData.images.length} imagen(es)`
       })
 
       // Redirect back to inventory page
@@ -443,15 +510,56 @@ function EditInventoryItemContent() {
                   <p className="text-sm text-red-600">{errors.max_stock}</p>
                 )}
               </div>
-
-              {/* Removed status field as it's not necessary */}
-
-              
-
-
             </div>
 
-            {/* Removed description field as it doesn't exist in the database schema */}
+            {/* Image Upload Section */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">
+                  Imágenes del Producto
+                </label>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Sube imágenes del producto para mejor identificación (JPEG, PNG)
+                </p>
+              </div>
+
+              {/* Image Upload Component */}
+              <ImageUpload
+                onImageSelect={handleImageUpload}
+                currentImage={formData.images[0] || undefined}
+                maxSize={5}
+                acceptedTypes={['image/jpeg', 'image/png']}
+                disabled={uploadingImages}
+                className="w-full"
+              />
+
+              {/* Display uploaded images */}
+              {formData.images.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Imágenes cargadas ({formData.images.length})
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {formData.images.map((imageUrl, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={imageUrl}
+                          alt={`Producto ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleImageRemove(index)}
+                          className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600 transition-colors"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Botones */}
             <div className="flex justify-end space-x-4 pt-6">
@@ -465,7 +573,7 @@ function EditInventoryItemContent() {
               </Button>
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || uploadingImages}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 {isSubmitting ? (

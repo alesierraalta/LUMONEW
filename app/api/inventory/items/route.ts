@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { optimizedInventoryService } from '@/lib/services/optimized-inventory-service'
 import { createCachedResponse, getCacheConfig } from '@/lib/cache/api-cache-manager'
 import { PaginationHelper } from '@/lib/utils/pagination'
+import { createClient } from '@/lib/supabase/server-with-retry'
 
 export async function GET(request: NextRequest) {
   try {
@@ -94,7 +95,8 @@ export async function POST(request: NextRequest) {
         quantity: parseInt(item.quantity || item.currentStock || 0),
         min_stock: parseInt(item.min_stock || item.minimumLevel || 0),
         max_stock: parseInt(item.max_stock || item.maximumLevel || item.quantity * 2 || 0),
-        status: item.status || 'active'
+        status: item.status || 'active',
+        images: item.images || []
       }))
       
       // Validate required fields for each item
@@ -109,7 +111,15 @@ export async function POST(request: NextRequest) {
         )
       }
       
-      const createdItems = await optimizedInventoryService.createMany(items)
+      // Get authenticated user information
+      const supabase = createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        console.warn('Could not get authenticated user for audit:', authError)
+      }
+
+      const createdItems = await optimizedInventoryService.createMany(items, user)
       
       return NextResponse.json({
         success: true,
@@ -130,6 +140,14 @@ export async function POST(request: NextRequest) {
         )
       }
       
+      // Get authenticated user information
+      const supabase = createClient()
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError) {
+        console.warn('Could not get authenticated user for audit:', authError)
+      }
+
       // Create single inventory item
       const newItem = await optimizedInventoryService.create({
         sku: body.sku,
@@ -140,8 +158,9 @@ export async function POST(request: NextRequest) {
         quantity: parseInt(body.quantity || body.currentStock || 0),
         min_stock: parseInt(body.min_stock || body.minimumLevel || 0),
         max_stock: parseInt(body.max_stock || body.maximumLevel || body.quantity * 2 || 0),
-        status: body.status || 'active'
-      })
+        status: body.status || 'active',
+        images: body.images || []
+      }, user) // Pass user context for audit
       
       return NextResponse.json({
         success: true,

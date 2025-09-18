@@ -11,11 +11,19 @@ import { PaginationHelper, PaginationParams, PaginationResult } from '../utils/p
 const supabase = createClient()
 
 // Get audit client for logging
-function getAuditClient() {
+function getAuditClient(user?: any) {
   if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
     try {
       const { getServiceRoleClient } = require('../supabase/service-role')
-      return getServiceRoleClient()
+      const client = getServiceRoleClient()
+      
+      // If user is provided, we'll pass user info to audit functions
+      if (user) {
+        // Store user info in a way that audit functions can access it
+        client._auditUser = user
+      }
+      
+      return client
     } catch (error) {
       console.warn('Service role client not available, using browser client for audit operations:', error)
       return supabase
@@ -35,6 +43,7 @@ export interface InventoryItem {
   max_stock: number
   unit_price: number
   status: string
+  images: string[]
   created_at: string
   updated_at: string
   categories?: {
@@ -99,10 +108,11 @@ export class OptimizedInventoryService {
           max_stock,
           unit_price,
           status,
+          images,
           created_at,
           updated_at,
-          categories!inner(id, name, color),
-          locations!inner(id, name, address)
+          categories\(id, name, color\),
+          locations\(id, name, address\)
         `)
 
       // Apply filters at database level for better performance
@@ -302,7 +312,8 @@ export class OptimizedInventoryService {
     max_stock: number
     unit_price: number
     status?: string
-  }): Promise<InventoryItem> {
+    images?: string[]
+  }, user?: any): Promise<InventoryItem> {
     try {
       const { data, error } = await supabase
         .from('inventory')
@@ -320,11 +331,18 @@ export class OptimizedInventoryService {
       this.invalidateRelatedCaches(['list', 'low-stock'])
 
       // Log the creation (non-blocking)
+      const userContext = user ? {
+        user_name: user.email || user.user_metadata?.name || 'Unknown User',
+        user_role: user.user_metadata?.role || 'user',
+        user_department: user.user_metadata?.department || 'General',
+        user_avatar_url: user.user_metadata?.avatar_url
+      } : undefined
+
       auditService.logCreate('inventory', data.id, data, {
         action_type: 'inventory_item_created',
         reason: 'New inventory item added',
         notes: `Item: ${item.name} (SKU: ${item.sku})`
-      }, getAuditClient()).catch(error => {
+      }, getAuditClient(user), userContext).catch(error => {
         console.warn('Audit logging failed for inventory creation:', error)
       })
 
@@ -358,7 +376,8 @@ export class OptimizedInventoryService {
     max_stock: number
     unit_price: number
     status: string
-  }>): Promise<InventoryItem> {
+    images: string[]
+  }>, user?: any): Promise<InventoryItem> {
     try {
       const oldData = await this.getById(id)
 
@@ -396,7 +415,14 @@ export class OptimizedInventoryService {
       }
 
       // Log the update (non-blocking)
-      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient()).catch(error => {
+      const userContext = user ? {
+        user_name: user.email || user.user_metadata?.name || 'Unknown User',
+        user_role: user.user_metadata?.role || 'user',
+        user_department: user.user_metadata?.department || 'General',
+        user_avatar_url: user.user_metadata?.avatar_url
+      } : undefined
+
+      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient(user), userContext).catch(error => {
         console.warn('Audit logging failed for inventory update:', error)
       })
 
@@ -411,7 +437,7 @@ export class OptimizedInventoryService {
           action_type: 'failed_inventory_update',
           error: error instanceof Error ? error.message : 'Unknown error'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient(user)
       })
       throw error
     }
@@ -420,7 +446,7 @@ export class OptimizedInventoryService {
   /**
    * Delete inventory item with cache invalidation
    */
-  async delete(id: string): Promise<void> {
+  async delete(id: string, user?: any): Promise<void> {
     try {
       const oldData = await this.getById(id)
 
@@ -435,11 +461,18 @@ export class OptimizedInventoryService {
       this.invalidateRelatedCaches(['list', 'low-stock', `item:${id}`])
 
       // Log the deletion (non-blocking)
+      const userContext = user ? {
+        user_name: user.email || user.user_metadata?.name || 'Unknown User',
+        user_role: user.user_metadata?.role || 'user',
+        user_department: user.user_metadata?.department || 'General',
+        user_avatar_url: user.user_metadata?.avatar_url
+      } : undefined
+
       auditService.logDelete('inventory', id, oldData, {
         action_type: 'inventory_item_deleted',
         reason: 'Inventory item removed from system',
         notes: `Deleted item: ${oldData.name} (SKU: ${oldData.sku})`
-      }, getAuditClient()).catch(error => {
+      }, getAuditClient(user), userContext).catch(error => {
         console.warn('Audit logging failed for inventory deletion:', error)
       })
     } catch (error) {
@@ -470,7 +503,8 @@ export class OptimizedInventoryService {
     max_stock: number
     unit_price: number
     status?: string
-  }>): Promise<InventoryItem[]> {
+    images?: string[]
+  }>, user?: any): Promise<InventoryItem[]> {
     try {
       const itemsWithStatus = items.map(item => ({ ...item, status: item.status || 'active' }))
 
@@ -489,16 +523,27 @@ export class OptimizedInventoryService {
       this.invalidateRelatedCaches(['list', 'low-stock'])
 
       // Log bulk creation
+      const userContext = user ? {
+        user_name: user.email || user.user_metadata?.name || 'Unknown User',
+        user_role: user.user_metadata?.role || 'user',
+        user_department: user.user_metadata?.department || 'General',
+        user_avatar_url: user.user_metadata?.avatar_url
+      } : undefined
+
       auditService.logOperation({
         operation: 'BULK_OPERATION',
         table_name: 'inventory',
         record_id: `bulk_create_${Date.now()}`,
+        user_name: userContext?.user_name,
+        user_role: userContext?.user_role,
+        user_department: userContext?.user_department,
+        user_avatar_url: userContext?.user_avatar_url,
         metadata: {
           action_type: 'bulk_inventory_creation',
           total_items: items.length,
           reason: 'Bulk inventory creation operation'
         },
-        supabaseClient: getAuditClient()
+        supabaseClient: getAuditClient(user)
       }).catch(error => {
         console.warn('Audit logging failed for bulk creation:', error)
       })

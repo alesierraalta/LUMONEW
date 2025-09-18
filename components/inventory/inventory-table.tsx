@@ -14,7 +14,8 @@ import {
   ArrowUpDown,
   Search,
   Plus,
-  Minus
+  Minus,
+  Image as ImageIcon
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
 // Removed direct database import - now using API endpoint
@@ -32,6 +33,7 @@ interface InventoryItem {
   max_stock: number
   unit_price: number
   status: 'active' | 'inactive' | 'discontinued'
+  images: string[]
   created_at: string
   updated_at: string
   categories: {
@@ -217,6 +219,34 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     }
   }
 
+  // Render item image
+  const renderItemImage = (item: InventoryItem) => {
+    if (item.images && item.images.length > 0) {
+      return (
+        <div className="relative w-12 h-12 rounded-lg overflow-hidden border">
+          <img
+            src={item.images[0]}
+            alt={item.name}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // Fallback to icon if image fails to load
+              e.currentTarget.style.display = 'none'
+              e.currentTarget.nextElementSibling?.classList.remove('hidden')
+            }}
+          />
+          <div className="hidden w-full h-full bg-muted flex items-center justify-center">
+            <ImageIcon className="h-4 w-4 text-muted-foreground" />
+          </div>
+        </div>
+      )
+    }
+    return (
+      <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center border">
+        <ImageIcon className="h-4 w-4 text-muted-foreground" />
+      </div>
+    )
+  }
+
   if (loading) {
     return (
       <div className="space-y-4">
@@ -230,6 +260,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
             {[...Array(5)].map((_, index) => (
               <div key={index} className="flex items-center space-x-4 py-4 animate-pulse">
                 <div className="w-4 h-4 bg-muted rounded"></div>
+                <div className="w-12 h-12 bg-muted rounded"></div>
                 <div className="w-20 h-4 bg-muted rounded"></div>
                 <div className="w-32 h-4 bg-muted rounded"></div>
                 <div className="w-16 h-4 bg-muted rounded"></div>
@@ -275,7 +306,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       {/* Table */}
       <div className="rounded-md border">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[600px] xs:min-w-[700px] sm:min-w-[800px]">
+          <table className="w-full min-w-[700px] xs:min-w-[800px] sm:min-w-[900px]">
             <thead>
               <tr className="border-b bg-muted/50">
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
@@ -284,6 +315,9 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                     onCheckedChange={handleSelectAll}
                     aria-label="Select all"
                   />
+                </th>
+                <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
+                  Imagen
                 </th>
                 <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">
                   <Button
@@ -363,6 +397,9 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                       onCheckedChange={(checked) => handleSelectItem(item.id, checked as boolean)}
                       aria-label={`Select ${item.name}`}
                     />
+                  </td>
+                  <td className="p-4 align-middle">
+                    {renderItemImage(item)}
                   </td>
                   <td className="p-4 align-middle">
                     <div className="font-medium">{item.sku}</div>
