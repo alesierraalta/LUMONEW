@@ -118,6 +118,13 @@ temp/
 .lotus/
 .magic/
 .playwright/
+.playwright-mcp/
+.kiro/
+
+# MCP temporary files and artifacts
+*.mcp-*
+mcp-*.log
+mcp-*.tmp
 
 # Python files (for utility scripts)
 __pycache__/
