@@ -74,7 +74,7 @@
     "tailwindcss-animate": "^1.0.7",
     "typescript": "^5.5.4",
     "validator": "^13.15.15",
-    "zod": "^3.25.76",
+    "zod": "^4.1.9",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
