@@ -636,6 +636,7 @@ export class AuditService {
 
   // Get recent audit logs
   // Get recent audit logs
+  // Get recent audit logs
   async getRecentLogs(limit: number = 10, supabaseClient?: SupabaseClient): Promise<AuditLog[]> {
     try {
       const client = this.getSupabaseClient(supabaseClient)
@@ -645,21 +646,35 @@ export class AuditService {
         // CRITICAL: Filter out test audit logs from production views
         .not('table_name', 'eq', 'test_table')
         .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
-        .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
-        .not('metadata->notes', 'like', '%Testing audit system%')
-        .not('metadata->notes', 'like', '%Testing update operation%')
-        .not('metadata->notes', 'like', '%Removing test data%')
         .order('created_at', { ascending: false })
-        .limit(limit)
+        .limit(limit * 2) // Get more to account for filtering
 
       if (error) throw error
-      return data || []
+      
+      // Additional client-side filtering for test logs
+      const filteredData = (data || []).filter(log => {
+        if (log.metadata?.action_type === 'test_operation' || 
+            log.metadata?.action_type === 'cleanup_test_data') {
+          return false
+        }
+        
+        if (log.metadata?.notes?.includes('Testing audit system') ||
+            log.metadata?.notes?.includes('Testing update operation') ||
+            log.metadata?.notes?.includes('Removing test data')) {
+          return false
+        }
+        
+        return true
+      }).slice(0, limit) // Take only the requested limit
+      
+      return filteredData
     } catch (error) {
       console.error('Error getting recent audit logs:', error)
       throw error
     }
   }
 
+  // Get audit logs with advanced filtering
   // Get audit logs with advanced filtering
   // Get audit logs with advanced filtering
   async getAuditLogs(filters: {
@@ -682,12 +697,9 @@ export class AuditService {
       `)
 
     // CRITICAL: Filter out test audit logs from production views
+    // Only filter out the most obvious test patterns
     query = query.not('table_name', 'eq', 'test_table')
     query = query.not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
-    query = query.not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
-    query = query.not('metadata->notes', 'like', '%Testing audit system%')
-    query = query.not('metadata->notes', 'like', '%Testing update operation%')
-    query = query.not('metadata->notes', 'like', '%Removing test data%')
 
     // Apply filters
     if (filters.user_id) {
@@ -738,9 +750,27 @@ export class AuditService {
       return { data: [], error }
     }
 
-    return { data: data || [], error: null }
+    // Additional client-side filtering for test logs (more reliable)
+    const filteredData = (data || []).filter(log => {
+      // Filter out test logs based on metadata content
+      if (log.metadata?.action_type === 'test_operation' || 
+          log.metadata?.action_type === 'cleanup_test_data') {
+        return false
+      }
+      
+      if (log.metadata?.notes?.includes('Testing audit system') ||
+          log.metadata?.notes?.includes('Testing update operation') ||
+          log.metadata?.notes?.includes('Removing test data')) {
+        return false
+      }
+      
+      return true
+    })
+
+    return { data: filteredData, error: null }
   }
 
+  // Get audit statistics
   // Get audit statistics
   // Get audit statistics
   async getAuditStats(date_from?: string, date_to?: string, supabaseClient?: SupabaseClient) {
@@ -748,14 +778,10 @@ export class AuditService {
       const client = this.getSupabaseClient(supabaseClient)
       let query = client
         .from('audit_logs')
-        .select('operation, table_name, created_at')
+        .select('operation, table_name, created_at, metadata')
         // CRITICAL: Filter out test audit logs from production views
         .not('table_name', 'eq', 'test_table')
         .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
-        .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
-        .not('metadata->notes', 'like', '%Testing audit system%')
-        .not('metadata->notes', 'like', '%Testing update operation%')
-        .not('metadata->notes', 'like', '%Removing test data%')
 
       if (date_from) {
         query = query.gte('created_at', date_from)
@@ -772,15 +798,31 @@ export class AuditService {
         return null
       }
 
+      // Additional client-side filtering for test logs
+      const filteredData = (data || []).filter(log => {
+        if (log.metadata?.action_type === 'test_operation' || 
+            log.metadata?.action_type === 'cleanup_test_data') {
+          return false
+        }
+        
+        if (log.metadata?.notes?.includes('Testing audit system') ||
+            log.metadata?.notes?.includes('Testing update operation') ||
+            log.metadata?.notes?.includes('Removing test data')) {
+          return false
+        }
+        
+        return true
+      })
+
       // Calculate statistics
       const stats = {
-        total_operations: data?.length || 0,
+        total_operations: filteredData.length,
         operations_by_type: {} as Record<string, number>,
         operations_by_table: {} as Record<string, number>,
-        recent_activity: data?.slice(0, 10) || []
+        recent_activity: filteredData.slice(0, 10)
       }
 
-      data?.forEach(log => {
+      filteredData.forEach(log => {
         // Count by operation type
         stats.operations_by_type[log.operation] = (stats.operations_by_type[log.operation] || 0) + 1
         
@@ -797,6 +839,7 @@ export class AuditService {
 
   // Get recent activity for dashboard
   // Get recent activity for dashboard
+  // Get recent activity for dashboard
   async getRecentActivity(limit: number = 10, supabaseClient?: SupabaseClient) {
     const client = this.getSupabaseClient(supabaseClient)
     const { data, error } = await client
@@ -808,21 +851,34 @@ export class AuditService {
       // CRITICAL: Filter out test audit logs from production views
       .not('table_name', 'eq', 'test_table')
       .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
-      .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
-      .not('metadata->notes', 'like', '%Testing audit system%')
-      .not('metadata->notes', 'like', '%Testing update operation%')
-      .not('metadata->notes', 'like', '%Removing test data%')
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .limit(limit * 2) // Get more to account for filtering
 
     if (error) {
       console.error('Error fetching recent activity:', error)
       return []
     }
 
-    return data || []
+    // Additional client-side filtering for test logs
+    const filteredData = (data || []).filter(log => {
+      if (log.metadata?.action_type === 'test_operation' || 
+          log.metadata?.action_type === 'cleanup_test_data') {
+        return false
+      }
+      
+      if (log.metadata?.notes?.includes('Testing audit system') ||
+          log.metadata?.notes?.includes('Testing update operation') ||
+          log.metadata?.notes?.includes('Removing test data')) {
+        return false
+      }
+      
+      return true
+    }).slice(0, limit) // Take only the requested limit
+
+    return filteredData
   }
 
+  // Get user activity history
   // Get user activity history
   // Get user activity history
   async getUserActivity(user_id: string, limit: number = 20, supabaseClient?: SupabaseClient) {
@@ -834,19 +890,31 @@ export class AuditService {
       // CRITICAL: Filter out test audit logs from production views
       .not('table_name', 'eq', 'test_table')
       .not('record_id', 'eq', '00000000-0000-0000-0000-000000000002')
-      .not('metadata->action_type', 'in', '(test_operation,cleanup_test_data)')
-      .not('metadata->notes', 'like', '%Testing audit system%')
-      .not('metadata->notes', 'like', '%Testing update operation%')
-      .not('metadata->notes', 'like', '%Removing test data%')
       .order('created_at', { ascending: false })
-      .limit(limit)
+      .limit(limit * 2) // Get more to account for filtering
 
     if (error) {
       console.error('Error fetching user activity:', error)
       return []
     }
 
-    return data || []
+    // Additional client-side filtering for test logs
+    const filteredData = (data || []).filter(log => {
+      if (log.metadata?.action_type === 'test_operation' || 
+          log.metadata?.action_type === 'cleanup_test_data') {
+        return false
+      }
+      
+      if (log.metadata?.notes?.includes('Testing audit system') ||
+          log.metadata?.notes?.includes('Testing update operation') ||
+          log.metadata?.notes?.includes('Removing test data')) {
+        return false
+      }
+      
+      return true
+    }).slice(0, limit) // Take only the requested limit
+
+    return filteredData
   }
 
   // Clean up old audit logs (for maintenance)
