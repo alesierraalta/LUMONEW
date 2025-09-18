@@ -320,14 +320,14 @@ export const auditedInventoryService = {
       
       if (error) throw error
 
-      // Log the creation (non-blocking to prevent audit failures from affecting main operation)
-      auditService.logCreate('inventory', data.id, data, {
+      // Log the creation - REMOVED .catch() to see audit errors
+      console.log('Attempting to log inventory creation:', data.id)
+      await auditService.logCreate('inventory', data.id, data, {
         action_type: 'inventory_item_created',
         reason: 'New inventory item added',
         notes: `Item: ${item.name} (SKU: ${item.sku})`
-      }, getAuditClient() as any).catch(error => {
-        console.warn('Audit logging failed for inventory creation:', error)
-      })
+      }, getAuditClient() as any)
+      console.log('Successfully logged inventory creation')
       
       return data
     } catch (error) {
@@ -390,10 +390,10 @@ export const auditedInventoryService = {
         metadata.reason = 'Stock quantity adjusted'
       }
 
-      // Log the update (non-blocking to prevent audit failures from affecting main operation)
-      auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient() as any).catch(error => {
-        console.warn('Audit logging failed for inventory update:', error)
-      })
+      // Log the update - REMOVED .catch() to see audit errors
+      console.log('Attempting to log inventory update:', id)
+      await auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient() as any)
+      console.log('Successfully logged inventory update')
       
       return data
     } catch (error) {
@@ -423,14 +423,14 @@ export const auditedInventoryService = {
       
       if (error) throw error
 
-      // Log the deletion (non-blocking to prevent audit failures from affecting main operation)
-      auditService.logDelete('inventory', id, oldData, {
+      // Log the deletion - REMOVED .catch() to see audit errors
+      console.log('Attempting to log inventory deletion:', id)
+      await auditService.logDelete('inventory', id, oldData, {
         action_type: 'inventory_item_deleted',
         reason: 'Inventory item removed from system',
         notes: `Deleted item: ${oldData.name} (SKU: ${oldData.sku})`
-      }, getAuditClient() as any).catch(error => {
-        console.warn('Audit logging failed for inventory deletion:', error)
-      })
+      }, getAuditClient() as any)
+      console.log('Successfully logged inventory deletion')
     } catch (error) {
       await auditService.logOperation({
         operation: 'DELETE',

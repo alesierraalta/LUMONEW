@@ -9,10 +9,14 @@ async function setAuditUserFromRequest() {
     const supabase = createServerSupabaseClient()
     const { data, error } = await supabase.auth.getUser()
     if (!error && data?.user) {
+      console.log('Setting audit user context:', data.user.email)
       auditService.setUserContext(data.user)
+    } else {
+      console.warn('No user found for audit context:', error)
     }
-  } catch {
-    // Silenciar errores de contexto de usuario para no bloquear la operación principal
+  } catch (error) {
+    console.error('Error setting audit user context:', error)
+    // Don't silence errors - we need to know if audit context is failing
   }
 }
 
