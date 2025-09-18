@@ -6,7 +6,7 @@ import { Plus, Package, FolderOpen, MapPin, Users, Sparkles, ArrowRight, MoreHor
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 
 export function QuickActions() {
@@ -15,6 +15,7 @@ export function QuickActions() {
   const [hoveredButton, setHoveredButton] = useState<string | null>(null)
   const [clickedButton, setClickedButton] = useState<string | null>(null)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const mobileMenuRef = useRef<HTMLDivElement>(null)
 
   const actions = [
     {
@@ -87,6 +88,25 @@ export function QuickActions() {
       setClickedButton(null)
     }, 150)
   }
+
+  // Handle click outside to close mobile menu
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
+        setShowMobileMenu(false)
+      }
+    }
+
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+      document.addEventListener('touchstart', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [showMobileMenu])
 
   return (
     <div className="flex items-center gap-2 sm:gap-4">
@@ -369,6 +389,7 @@ export function QuickActions() {
         <AnimatePresence>
           {showMobileMenu && (
             <motion.div
+              ref={mobileMenuRef}
               initial={{ opacity: 0, scale: 0.8, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.8, y: -10 }}

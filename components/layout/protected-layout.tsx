@@ -56,38 +56,38 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
 
               {/* Main Content */}
               <main className="flex-1 overflow-hidden">
-                {/* Enhanced Mobile Header */}
-                <div className="lg:hidden flex items-center justify-between p-2 sm:p-3 border-b border-border bg-card min-h-[48px] sm:min-h-[52px]">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleToggleMobileSidebar}
-                    className="h-8 w-8 sm:h-9 sm:w-9 p-1 hover:bg-accent/50"
-                  >
-                    <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </Button>
-                  
-                  <div className="flex items-center justify-center">
-                    <div className="h-14 w-14 sm:h-18 sm:w-18 flex items-center justify-center">
-                      <Image 
-                        src="/logo.png" 
-                        alt="LUMO Logo" 
-                        width={96} 
-                        height={96} 
-                        className={cn(
-                          "h-12 w-12 sm:h-16 sm:w-16 object-contain",
-                          (theme === 'dark' || theme === 'black') && "invert"
-                        )}
-                      />
-                    </div>
-                  </div>
+                 {/* Enhanced Mobile Header */}
+                 <div className="lg:hidden flex items-center justify-between p-2 sm:p-3 border-b border-border bg-card min-h-[64px] sm:min-h-[72px]">
+                   <Button
+                     variant="ghost"
+                     size="icon"
+                     onClick={handleToggleMobileSidebar}
+                     className="h-8 w-8 sm:h-9 sm:w-9 p-1 hover:bg-accent/50"
+                   >
+                     <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                   </Button>
+                   
+                   <div className="flex items-center justify-center">
+                     <div className="h-16 w-16 sm:h-20 sm:w-20 flex items-center justify-center">
+                       <Image 
+                         src="/logo.png" 
+                         alt="LUMO Logo" 
+                         width={128} 
+                         height={128} 
+                         className={cn(
+                           "h-full w-full object-contain",
+                           (theme === 'dark' || theme === 'black') && "invert"
+                         )}
+                       />
+                     </div>
+                   </div>
                   
                   <div className="flex items-center">
                     <ConnectionIndicator />
                   </div>
                 </div>
 
-                <div className="h-[calc(100vh-48px)] sm:h-[calc(100vh-52px)] lg:h-full overflow-y-auto custom-scrollbar">
+                 <div className="h-[calc(100vh-64px)] sm:h-[calc(100vh-72px)] lg:h-full overflow-y-auto custom-scrollbar">
                   <div className="p-2 sm:p-3 lg:p-4">
                     {children}
                   </div>
