@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { NavigationItem, createNavigationConfig, getNavigationIcons } from '@/lib/navigation-config'
 import { ConnectionIndicator } from '@/components/ui/connection-status'
+import { UserMenu } from '@/components/auth/user-menu'
 
 interface NavigationItemProps {
   item: NavigationItem

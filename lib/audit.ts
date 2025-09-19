@@ -480,6 +480,7 @@ export class AuditService {
       user_role?: string
       user_department?: string
       user_avatar_url?: string
+      user_email?: string
     }
   ) {
     return this.logOperation({
@@ -491,6 +492,7 @@ export class AuditService {
       user_role: userContext?.user_role,
       user_department: userContext?.user_department,
       user_avatar_url: userContext?.user_avatar_url,
+      user_email: userContext?.user_email,
       metadata: {
         ...metadata,
         action_type: 'create'
@@ -512,6 +514,7 @@ export class AuditService {
       user_role?: string
       user_department?: string
       user_avatar_url?: string
+      user_email?: string
     }
   ) {
     // Identify changed fields
@@ -529,6 +532,7 @@ export class AuditService {
       user_role: userContext?.user_role,
       user_department: userContext?.user_department,
       user_avatar_url: userContext?.user_avatar_url,
+      user_email: userContext?.user_email,
       metadata: {
         ...metadata,
         action_type: 'update',
@@ -550,6 +554,7 @@ export class AuditService {
       user_role?: string
       user_department?: string
       user_avatar_url?: string
+      user_email?: string
     }
   ) {
     return this.logOperation({
@@ -561,6 +566,7 @@ export class AuditService {
       user_role: userContext?.user_role,
       user_department: userContext?.user_department,
       user_avatar_url: userContext?.user_avatar_url,
+      user_email: userContext?.user_email,
       metadata: {
         ...metadata,
         action_type: 'delete'

@@ -12,6 +12,7 @@ import Image from 'next/image'
 import { useTheme } from 'next-themes'
 import { cn } from '@/lib/utils'
 import { ConnectionIndicator } from '@/components/ui/connection-status'
+import { UserMenu } from '@/components/auth/user-menu'
 
 interface ProtectedLayoutProps {
   children: React.ReactNode
@@ -82,8 +83,9 @@ export const ProtectedLayout = ({ children, showSidebar = true }: ProtectedLayou
                      </div>
                    </div>
                   
-                  <div className="flex items-center">
+                  <div className="flex items-center space-x-2">
                     <ConnectionIndicator />
+                    <UserMenu />
                   </div>
                 </div>
 

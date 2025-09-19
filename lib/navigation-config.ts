@@ -19,7 +19,8 @@ export const getNavigationIcons = async () => {
     Users,
     Settings,
     Box,
-    Briefcase
+    Briefcase,
+    Trash2
   } = await import('lucide-react')
 
   return {
@@ -30,7 +31,8 @@ export const getNavigationIcons = async () => {
     Users,
     Settings,
     Box,
-    Briefcase
+    Briefcase,
+    Trash2
   }
 }
 
@@ -80,6 +82,12 @@ export const createNavigationConfig = (icons: Awaited<ReturnType<typeof getNavig
     translationKey: 'navigation.users',
     href: `/${locale}/users`,
     icon: icons.Users,
+  },
+  {
+    name: 'Deleted Items',
+    translationKey: 'navigation.deleted_items',
+    href: `/${locale}/deleted-items`,
+    icon: icons.Trash2,
   },
   {
     name: 'Settings',

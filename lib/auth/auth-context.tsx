@@ -105,7 +105,7 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
         console.warn('Auth loading timeout - forcing completion')
         debouncedStateUpdate(user, session, 'Authentication service is taking too long to respond. Please check your internet connection.', true)
       }
-    }, 3000) // Reduced to 3 second timeout as per requirements
+    }, 5000) // Increased to 5 second timeout for better reliability
     
     // If initialAuth is provided, use it immediately and set up listener without verification
     if (initialAuth) {
@@ -175,11 +175,12 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
       const authStatePromise = new Promise<{ error?: string }>((resolve, reject) => {
         const timeout = setTimeout(() => {
           reject(new Error('Authentication timeout - please try again'))
-        }, 10000) // 10 second timeout
+        }, 15000) // Increased to 15 second timeout
         
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event: any, session: any) => {
+            console.log('Auth state change during sign in:', event, session?.user?.email)
             if (event === 'SIGNED_IN' && session?.user) {
               clearTimeout(timeout)
               subscription.unsubscribe()

@@ -335,7 +335,8 @@ export class OptimizedInventoryService {
         user_name: user.email || user.user_metadata?.name || 'Unknown User',
         user_role: user.user_metadata?.role || 'user',
         user_department: user.user_metadata?.department || 'General',
-        user_avatar_url: user.user_metadata?.avatar_url
+        user_avatar_url: user.user_metadata?.avatar_url,
+        user_email: user.email
       } : undefined
 
       auditService.logCreate('inventory', data.id, data, {
@@ -419,7 +420,8 @@ export class OptimizedInventoryService {
         user_name: user.email || user.user_metadata?.name || 'Unknown User',
         user_role: user.user_metadata?.role || 'user',
         user_department: user.user_metadata?.department || 'General',
-        user_avatar_url: user.user_metadata?.avatar_url
+        user_avatar_url: user.user_metadata?.avatar_url,
+        user_email: user.email
       } : undefined
 
       auditService.logUpdate('inventory', id, oldData, data, metadata, getAuditClient(user), userContext).catch(error => {
@@ -465,7 +467,8 @@ export class OptimizedInventoryService {
         user_name: user.email || user.user_metadata?.name || 'Unknown User',
         user_role: user.user_metadata?.role || 'user',
         user_department: user.user_metadata?.department || 'General',
-        user_avatar_url: user.user_metadata?.avatar_url
+        user_avatar_url: user.user_metadata?.avatar_url,
+        user_email: user.email
       } : undefined
 
       auditService.logDelete('inventory', id, oldData, {
@@ -527,7 +530,8 @@ export class OptimizedInventoryService {
         user_name: user.email || user.user_metadata?.name || 'Unknown User',
         user_role: user.user_metadata?.role || 'user',
         user_department: user.user_metadata?.department || 'General',
-        user_avatar_url: user.user_metadata?.avatar_url
+        user_avatar_url: user.user_metadata?.avatar_url,
+        user_email: user.email
       } : undefined
 
       auditService.logOperation({
@@ -538,6 +542,7 @@ export class OptimizedInventoryService {
         user_role: userContext?.user_role,
         user_department: userContext?.user_department,
         user_avatar_url: userContext?.user_avatar_url,
+        user_email: userContext?.user_email,
         metadata: {
           action_type: 'bulk_inventory_creation',
           total_items: items.length,

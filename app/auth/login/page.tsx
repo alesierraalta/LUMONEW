@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Loader2, Eye, EyeOff } from 'lucide-react'
 import { ConnectionIndicator } from '@/components/ui/connection-status'
+import { UserMenu } from '@/components/auth/user-menu'
 import Image from 'next/image'
 
 export default function LoginPage() {
@@ -22,7 +23,7 @@ export default function LoginPage() {
   const [localLoading, setLocalLoading] = useState(false)
   const [error, setError] = useState('')
   
-  const { signIn, loading: authLoading, user } = useAuth()
+  const { signIn, loading: authLoading, user, signOut } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
   const redirectTo = searchParams.get('redirectTo') || '/dashboard'
@@ -48,18 +49,24 @@ export default function LoginPage() {
     }
   }
 
-  // Auto-redirect if user is already authenticated
+  // Auto-redirect if user is already authenticated - but only after a delay to allow logout
   useEffect(() => {
     if (user && !authLoading) {
-      router.push(redirectTo)
+      // Add a small delay to allow user to see the login page and potentially logout
+      const timer = setTimeout(() => {
+        router.push(redirectTo)
+      }, 2000) // 2 second delay
+      
+      return () => clearTimeout(timer)
     }
   }, [user, authLoading, router, redirectTo])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background py-4 px-4 sm:py-12 sm:px-6 lg:px-8 relative">
-      {/* Connection Status Indicator */}
-      <div className="absolute top-4 right-4 z-10">
+      {/* Connection Status Indicator and User Menu */}
+      <div className="absolute top-4 right-4 z-10 flex items-center space-x-2">
         <ConnectionIndicator />
+        {user && <UserMenu />}
       </div>
       <div className="max-w-md w-full space-y-6 sm:space-y-8">
         <div className="text-center">
@@ -84,7 +91,10 @@ export default function LoginPage() {
           <CardHeader className="pb-4 sm:pb-6">
             <CardTitle className="text-lg sm:text-xl">Acceso al Sistema</CardTitle>
             <CardDescription className="text-sm">
-              Ingresa tus credenciales para acceder al sistema de inventario
+              {user ? 
+                'Ya estás autenticado. Serás redirigido automáticamente o puedes cerrar sesión.' : 
+                'Ingresa tus credenciales para acceder al sistema de inventario'
+              }
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
