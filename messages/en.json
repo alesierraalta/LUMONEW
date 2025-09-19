@@ -232,6 +232,7 @@
     "daysInInventory": "Days in Inventory"
   },
   "inventory": {
+    "noItemsFound": "No items found matching your criteria.",
     "title": "Inventory",
     "description": "Manage your product inventory and stock",
     "subtitle": "Manage your product inventory and stock",

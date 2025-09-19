@@ -116,13 +116,28 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
       // Only get initial user if not provided
       supabase.auth.getUser().then(({ data: { user }, error }: any) => {
         if (error) {
-          console.error('Error getting user:', error)
-          debouncedStateUpdate(null, null, error.message, true)
+          // Handle specific auth session missing error gracefully
+          if (error.message?.includes('Auth session missing')) {
+            console.log('No active session found - user not authenticated')
+            debouncedStateUpdate(null, null, null, true)
+          } else {
+            console.error('Error getting user:', error)
+            debouncedStateUpdate(null, null, error.message, true)
+          }
         } else {
           // If we have a user, get the session for additional data
           if (user) {
             supabase.auth.getSession().then(({ data: { session } }: any) => {
               debouncedStateUpdate(user, session, null, true)
+            }).catch((sessionError: any) => {
+              // Handle session retrieval errors gracefully
+              if (sessionError.message?.includes('Auth session missing')) {
+                console.log('Session expired or missing - user needs to re-authenticate')
+                debouncedStateUpdate(null, null, null, true)
+              } else {
+                console.error('Error getting session:', sessionError)
+                debouncedStateUpdate(user, null, sessionError.message, true)
+              }
             })
           } else {
             debouncedStateUpdate(null, null, null, true)
@@ -142,10 +157,16 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
       (event: any, session: any) => {
         console.log('Auth state change:', event)
         
-        // Use debounced update to prevent race conditions
-        if (session?.user) {
-          debouncedStateUpdate(session.user, session, null)
-        } else {
+        try {
+          // Use debounced update to prevent race conditions
+          if (session?.user) {
+            debouncedStateUpdate(session.user, session, null)
+          } else {
+            debouncedStateUpdate(null, null, null)
+          }
+        } catch (error: any) {
+          console.error('Error handling auth state change:', error)
+          // Fallback to safe state
           debouncedStateUpdate(null, null, null)
         }
       }
@@ -180,15 +201,22 @@ export function AuthProvider({ children, initialAuth }: AuthProviderProps) {
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
           (event: any, session: any) => {
-            console.log('Auth state change during sign in:', event, session?.user?.email)
-            if (event === 'SIGNED_IN' && session?.user) {
+            try {
+              console.log('Auth state change during sign in:', event, session?.user?.email)
+              if (event === 'SIGNED_IN' && session?.user) {
+                clearTimeout(timeout)
+                subscription.unsubscribe()
+                resolve({})
+              } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session?.user)) {
+                clearTimeout(timeout)
+                subscription.unsubscribe()
+                resolve({ error: 'Authentication failed' })
+              }
+            } catch (error: any) {
+              console.error('Error in auth state change listener:', error)
               clearTimeout(timeout)
               subscription.unsubscribe()
-              resolve({})
-            } else if (event === 'SIGNED_OUT' || (event === 'TOKEN_REFRESHED' && !session?.user)) {
-              clearTimeout(timeout)
-              subscription.unsubscribe()
-              resolve({ error: 'Authentication failed' })
+              resolve({ error: 'Authentication process failed' })
             }
           }
         )

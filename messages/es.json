@@ -290,6 +290,7 @@
     "daysInInventory": "Días en Inventario"
   },
   "inventory": {
+    "noItemsFound": "No se encontraron artículos que coincidan con tus criterios.",
     "title": "Inventario",
     "description": "Administra tu inventario de productos y stock",
     "subtitle": "Administra tu inventario de productos y stock",

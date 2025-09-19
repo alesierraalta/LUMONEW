@@ -104,18 +104,36 @@ export async function middleware(request: NextRequest) {
 
       // If there's an error getting the session, handle appropriately
       if (error) {
-        Logger.warn('Middleware auth check error:', error.message)
-        
-        // Handle API routes differently
-        if (pathname.startsWith('/api/')) {
-          return NextResponse.json(
-            { success: false, error: 'Authentication failed' },
-            { status: 401 }
-          )
+        // Handle specific auth session missing error gracefully
+        if (error.message?.includes('Auth session missing')) {
+          Logger.log('No active session found in middleware - user not authenticated')
+          
+          // Handle API routes differently
+          if (pathname.startsWith('/api/')) {
+            return NextResponse.json(
+              { success: false, error: 'Authentication required' },
+              { status: 401 }
+            )
+          }
+          
+          // For web routes, redirect to login
+          const loginUrl = new URL('/auth/login', request.url)
+          loginUrl.searchParams.set('redirectTo', pathname)
+          return NextResponse.redirect(loginUrl)
+        } else {
+          Logger.warn('Middleware auth check error:', error.message)
+          
+          // Handle API routes differently
+          if (pathname.startsWith('/api/')) {
+            return NextResponse.json(
+              { success: false, error: 'Authentication failed' },
+              { status: 401 }
+            )
+          }
+          
+          // For web routes, allow client-side to handle auth
+          return intlMiddleware(request)
         }
-        
-        // For web routes, allow client-side to handle auth
-        return intlMiddleware(request)
       }
 
       if (!user) {

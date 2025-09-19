@@ -33,13 +33,25 @@ export async function withAuth(
     const { data: { user }, error: sessionError } = await supabase.auth.getUser()
     
     if (sessionError) {
-      console.error('Session verification error:', sessionError)
-      return {
-        user: null,
-        error: NextResponse.json(
-          { success: false, error: 'Authentication failed' },
-          { status: 401 }
-        )
+      // Handle specific auth session missing error gracefully
+      if (sessionError.message?.includes('Auth session missing')) {
+        console.log('No active session found in auth middleware - user not authenticated')
+        return {
+          user: null,
+          error: options.requireAuth ? NextResponse.json(
+            { success: false, error: 'Authentication required' },
+            { status: 401 }
+          ) : null
+        }
+      } else {
+        console.error('Session verification error:', sessionError)
+        return {
+          user: null,
+          error: NextResponse.json(
+            { success: false, error: 'Authentication failed' },
+            { status: 401 }
+          )
+        }
       }
     }
     

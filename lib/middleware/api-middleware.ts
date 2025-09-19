@@ -39,7 +39,24 @@ export async function authMiddleware(request: NextRequest): Promise<{ user: any 
     const supabase = createClient()
     const { data: { user }, error } = await supabase.auth.getUser()
 
-    if (error || !user) {
+    if (error) {
+      // Handle specific auth session missing error gracefully
+      if (error.message?.includes('Auth session missing')) {
+        console.log('No active session found in API middleware - user not authenticated')
+        return NextResponse.json(
+          { error: 'Unauthorized', message: 'Authentication required' },
+          { status: 401 }
+        )
+      } else {
+        console.error('Auth middleware error:', error)
+        return NextResponse.json(
+          { error: 'Authentication failed', message: 'Unable to verify user' },
+          { status: 500 }
+        )
+      }
+    }
+
+    if (!user) {
       return NextResponse.json(
         { error: 'Unauthorized', message: 'Authentication required' },
         { status: 401 }
