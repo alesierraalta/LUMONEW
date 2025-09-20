@@ -1,0 +1,66 @@
+---
+globs: .github/workflows/*.yml,.github/workflows/*.yaml
+description: GitHub Actions workflow configuration and best practices
+---
+
+# GitHub Actions Workflow Rules
+
+## Workflow Files Structure
+All workflow files are in [.github/workflows/](mdc:.github/workflows/) directory:
+
+- [ci.yml](mdc:.github/workflows/ci.yml): Main CI/CD pipeline
+- [dev-deploy.yml](mdc:.github/workflows/dev-deploy.yml): Development deployment
+- [prod-deploy.yml](mdc:.github/workflows/prod-deploy.yml): Production deployment
+- [pr-checks.yml](mdc:.github/workflows/pr-checks.yml): Pull request validation
+
+## Environment Variables
+Always use these environment variables:
+```yaml
+env:
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+```
+
+## Required Secrets
+Ensure these secrets are configured in repository settings:
+- `VERCEL_TOKEN`: Vercel deployment token
+- `VERCEL_ORG_ID`: Vercel organization ID
+- `VERCEL_PROJECT_ID`: Vercel project ID
+- `SNYK_TOKEN`: Snyk security scan token
+- `CODECOV_TOKEN`: Codecov coverage token
+- `GITHUB_TOKEN`: Automatically provided
+
+## Workflow Triggers
+- **dev-deploy.yml**: Triggers on push/PR to `dev` branch
+- **prod-deploy.yml**: Triggers on push/PR to `main` branch
+- **pr-checks.yml**: Triggers on PR events to `main` branch
+- **ci.yml**: Triggers on push/PR to both `main` and `dev` branches
+
+## Job Dependencies
+Follow this dependency chain for production:
+1. `prod-quality` → Quality checks
+2. `security` → Security scans
+3. `prod-test` → Testing
+4. `prod-build` → Build (depends on quality, security, test)
+5. `prod-deploy` → Deployment (depends on build)
+6. `prod-e2e` → E2E tests (depends on deploy)
+7. `lighthouse` → Performance monitoring (depends on e2e)
+
+## Status Check Names
+Use consistent naming for status checks:
+- `prod-deploy / prod-quality`
+- `prod-deploy / security`
+- `prod-deploy / prod-test`
+- `pr-checks / pr-validation`
+- `pr-checks / pr-security`
+- `dev-deploy / dev-quality`
+
+## Artifact Management
+- Use descriptive artifact names: `prod-build-files`, `dev-build-files`
+- Set appropriate retention days: 7 for production, 3 for development
+- Upload E2E test reports on failure with 7-day retention
+
+## Error Handling
+- Use `continue-on-error: true` for non-critical jobs like security scans
+- Upload artifacts on failure for debugging
+- Provide meaningful error messages in comments

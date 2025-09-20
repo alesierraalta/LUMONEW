@@ -1,0 +1,118 @@
+---
+alwaysApply: true
+description: Daily development workflow and best practices for the dev/prod branching strategy
+---
+
+# Development Workflow Rules
+
+## Daily Development Process
+
+### Starting Work
+1. **Sync with latest changes**:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   ```
+
+2. **Create feature branch**:
+   ```bash
+   git checkout -b feature/descriptive-name
+   ```
+
+### During Development
+1. **Make focused commits**:
+   ```bash
+   git add .
+   git commit -m "feat: add user authentication"
+   ```
+
+2. **Push frequently**:
+   ```bash
+   git push origin feature/descriptive-name
+   ```
+
+3. **Keep branch updated**:
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout feature/descriptive-name
+   git rebase dev
+   ```
+
+### Completing Features
+1. **Create PR to dev**:
+   - Use descriptive title and description
+   - Link related issues
+   - Request appropriate reviewers
+
+2. **Address feedback**:
+   - Make requested changes
+   - Respond to comments
+   - Update PR description if needed
+
+3. **Merge to dev**:
+   - Wait for CI checks to pass
+   - Get required approvals
+   - Merge using "Squash and merge"
+
+### Promoting to Production
+1. **Create PR from dev to main**:
+   - Use release notes format for title
+   - Include comprehensive description of changes
+   - Link to all related PRs merged to dev
+
+2. **Production deployment**:
+   - All CI checks must pass
+   - Security scans must pass
+   - Performance tests must pass
+   - Required approvals must be obtained
+
+## Commit Message Convention
+Use conventional commit format:
+- `feat:` - New features
+- `fix:` - Bug fixes
+- `docs:` - Documentation changes
+- `style:` - Formatting changes
+- `refactor:` - Code refactoring
+- `test:` - Adding tests
+- `chore:` - Maintenance tasks
+- `perf:` - Performance improvements
+- `ci:` - CI/CD changes
+- `build:` - Build system changes
+
+## File Organization
+- Keep feature-related files together
+- Update relevant documentation
+- Add tests for new functionality
+- Update type definitions if needed
+
+## Testing Requirements
+- Unit tests for new functions/components
+- Integration tests for API endpoints
+- E2E tests for user workflows
+- Update existing tests if behavior changes
+
+## Documentation Updates
+When making changes, update:
+- [docs/GITHUB_WORKFLOW.md](mdc:docs/GITHUB_WORKFLOW.md) if workflow changes
+- README.md if setup instructions change
+- Code comments for complex logic
+- Type definitions for new interfaces
+
+## Code Review Checklist
+Before requesting review, ensure:
+- [ ] Code follows project conventions
+- [ ] Tests are added/updated
+- [ ] Documentation is updated
+- [ ] No console.log or debug code
+- [ ] Proper error handling
+- [ ] Performance considerations addressed
+- [ ] Security implications reviewed
+
+## Deployment Monitoring
+After deployment:
+- [ ] Check deployment logs
+- [ ] Verify E2E tests pass
+- [ ] Monitor performance metrics
+- [ ] Check error rates
+- [ ] Validate functionality in production

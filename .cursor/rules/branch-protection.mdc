@@ -1,0 +1,96 @@
+---
+description: Branch protection and pull request management rules
+---
+
+# Branch Protection Rules
+
+## Main Branch Protection
+The `main` branch has strict protection rules configured via [scripts/setup-branch-protection.js](mdc:scripts/setup-branch-protection.js):
+
+### Required Settings
+- **Pull Request Reviews**: Minimum 1 approval required
+- **Dismiss Stale Reviews**: Yes, when new commits are pushed
+- **Code Owner Reviews**: Required
+- **Status Checks**: All CI checks must pass
+- **Up-to-date Branches**: Required before merging
+- **Linear History**: Enforced
+- **Force Pushes**: Disabled
+- **Deletions**: Disabled
+
+### Required Status Checks
+- `prod-deploy / prod-quality`
+- `prod-deploy / security`
+- `prod-deploy / prod-test`
+- `pr-checks / pr-validation`
+- `pr-checks / pr-security`
+
+## Dev Branch Protection
+The `dev` branch has moderate protection for faster iteration:
+
+### Required Settings
+- **Pull Request Reviews**: Not required
+- **Status Checks**: Basic quality checks only
+- **Force Pushes**: Allowed for rebasing
+- **Deletions**: Disabled
+
+### Required Status Checks
+- `dev-deploy / dev-quality`
+
+## Pull Request Guidelines
+When creating PRs:
+
+### From Feature to Dev
+- Use descriptive titles
+- Link related issues
+- Request appropriate reviewers
+- Ensure all dev checks pass
+
+### From Dev to Main
+- Use release notes format for title
+- Include comprehensive description
+- Link all related PRs merged to dev
+- Wait for all production checks to pass
+- Get required approvals before merging
+
+## CODEOWNERS File
+The [.github/CODEOWNERS](mdc:.github/CODEOWNERS) file defines code ownership:
+- Global owners for all files
+- Specific owners for documentation, workflows, config files
+- Database migrations and scripts require owner approval
+
+## Emergency Procedures
+For critical production issues:
+
+1. **Create Hotfix Branch**:
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b hotfix/critical-issue
+   ```
+
+2. **Make Minimal Fix**:
+   ```bash
+   git add .
+   git commit -m "fix: critical security issue"
+   git push origin hotfix/critical-issue
+   ```
+
+3. **Create PR to Main**:
+   - Mark as urgent
+   - Request expedited review
+   - Include detailed explanation
+
+4. **Sync Back to Dev**:
+   ```bash
+   git checkout dev
+   git merge main
+   git push origin dev
+   ```
+
+## Branch Protection Setup
+Use the automated script to set up protection rules:
+```bash
+node scripts/setup-branch-protection.js
+```
+
+Or configure manually via GitHub web interface following the settings in [docs/SETUP_GITHUB_WORKFLOW.md](mdc:docs/SETUP_GITHUB_WORKFLOW.md).

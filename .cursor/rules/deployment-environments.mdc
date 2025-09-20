@@ -1,0 +1,148 @@
+---
+description: Deployment environment configuration and management rules
+---
+
+# Deployment Environment Rules
+
+## Environment Structure
+The project uses three deployment environments:
+
+### Development Environment
+- **Branch**: `dev`
+- **Trigger**: Push to dev branch
+- **Workflow**: [dev-deploy.yml](mdc:.github/workflows/dev-deploy.yml)
+- **URL**: Development preview URL
+- **Purpose**: Active development and testing
+
+### Production Environment  
+- **Branch**: `main`
+- **Trigger**: Push to main branch (after PR merge)
+- **Workflow**: [prod-deploy.yml](mdc:.github/workflows/prod-deploy.yml)
+- **URL**: Production URL
+- **Purpose**: Live production application
+
+### Preview Environment
+- **Branch**: Feature branches
+- **Trigger**: Pull requests to main
+- **Workflow**: [pr-checks.yml](mdc:.github/workflows/pr-checks.yml)
+- **URL**: PR-specific preview URL
+- **Purpose**: Testing changes before merge
+
+## Environment Configuration
+
+### Vercel Configuration
+- **Production**: Uses `--prod` flag
+- **Development**: Uses `--target=development`
+- **Preview**: Uses `--target=preview`
+
+### Environment Variables
+Configure these in Vercel dashboard:
+- `NODE_ENV`: `development` | `production`
+- `NEXT_PUBLIC_API_URL`: Environment-specific API URL
+- `DATABASE_URL`: Environment-specific database
+- `NEXTAUTH_SECRET`: Authentication secret
+- `NEXTAUTH_URL`: Environment-specific URL
+
+### Secrets Management
+Repository secrets for GitHub Actions:
+- `VERCEL_TOKEN`: Vercel deployment token
+- `VERCEL_ORG_ID`: Vercel organization ID  
+- `VERCEL_PROJECT_ID`: Vercel project ID
+- `SNYK_TOKEN`: Security scan token
+- `CODECOV_TOKEN`: Test coverage token
+
+## Deployment Process
+
+### Development Deployment
+1. Push to `dev` branch
+2. GitHub Actions runs dev-deploy workflow
+3. Quality checks pass
+4. Build completes
+5. Deploy to development environment
+6. E2E tests run against dev environment
+
+### Production Deployment
+1. PR created from `dev` to `main`
+2. All checks pass (quality, security, tests)
+3. PR approved and merged
+4. GitHub Actions runs prod-deploy workflow
+5. Comprehensive checks pass
+6. Deploy to production environment
+7. E2E tests run against production
+8. Lighthouse performance monitoring
+9. Deployment notification sent
+
+### Preview Deployment
+1. PR created to `main` branch
+2. GitHub Actions runs pr-checks workflow
+3. Validation checks pass
+4. Build completes
+5. Deploy to preview environment
+6. E2E tests run against preview
+7. PR comment updated with preview URL
+
+## Monitoring and Alerts
+
+### Development Environment
+- Build status notifications
+- Test failure alerts
+- Deployment success/failure notifications
+
+### Production Environment
+- Performance monitoring (Lighthouse)
+- Error rate monitoring
+- Security scan alerts
+- Deployment status notifications
+- Uptime monitoring
+
+### Preview Environment
+- PR status updates
+- Preview deployment URLs
+- Test result summaries
+
+## Rollback Procedures
+
+### Automatic Rollback
+- Failed deployments trigger automatic rollback
+- Previous successful deployment is restored
+- Notification sent to team
+
+### Manual Rollback
+1. Identify last successful deployment
+2. Use Vercel dashboard or CLI to rollback
+3. Verify rollback success
+4. Notify team of rollback
+5. Investigate and fix issues
+6. Re-deploy when ready
+
+## Environment-Specific Configurations
+
+### Database Configuration
+- **Development**: Separate dev database
+- **Production**: Production database with backups
+- **Preview**: Isolated preview database
+
+### Feature Flags
+- Use environment variables for feature toggles
+- Enable/disable features per environment
+- Test feature flags in preview environments
+
+### Logging Configuration
+- **Development**: Verbose logging for debugging
+- **Production**: Structured logging with monitoring
+- **Preview**: Moderate logging for testing
+
+## Troubleshooting
+
+### Common Issues
+1. **Deployment Failures**: Check GitHub Actions logs
+2. **Environment Variables**: Verify Vercel configuration
+3. **Build Errors**: Check TypeScript/ESLint issues
+4. **Test Failures**: Review test logs and fix issues
+5. **Performance Issues**: Check Lighthouse reports
+
+### Getting Help
+1. Check GitHub Actions logs
+2. Review Vercel deployment logs
+3. Check environment variable configuration
+4. Contact development team for assistance

@@ -1,0 +1,49 @@
+---
+alwaysApply: true
+description: GitHub workflow and branching strategy rules for dev/prod environment management
+---
+
+# GitHub Workflow Rules
+
+## Branch Structure
+- **main**: Production branch with strict protection rules
+- **dev**: Development branch for active development and testing
+- **feature/***: Feature branches created from dev branch
+
+## Development Workflow
+1. Always start from `dev` branch: `git checkout dev && git pull origin dev`
+2. Create feature branches: `git checkout -b feature/descriptive-name`
+3. Make commits with conventional commit messages: `feat:`, `fix:`, `docs:`, etc.
+4. Push feature branch and create PR to `dev`
+5. After testing in dev, create PR from `dev` to `main` for production
+
+## Branch Protection Rules
+- **main branch**: Requires PR reviews, status checks, no direct pushes
+- **dev branch**: Lighter protection, allows force pushes for rebasing
+- Use [scripts/setup-branch-protection.js](mdc:scripts/setup-branch-protection.js) to configure protection
+
+## GitHub Actions Workflows
+- [.github/workflows/dev-deploy.yml](mdc:.github/workflows/dev-deploy.yml): Development deployment
+- [.github/workflows/prod-deploy.yml](mdc:.github/workflows/prod-deploy.yml): Production deployment  
+- [.github/workflows/pr-checks.yml](mdc:.github/workflows/pr-checks.yml): PR validation
+- [.github/workflows/ci.yml](mdc:.github/workflows/ci.yml): Main CI/CD pipeline
+
+## Documentation
+- [docs/GITHUB_WORKFLOW.md](mdc:docs/GITHUB_WORKFLOW.md): Complete workflow documentation
+- [docs/SETUP_GITHUB_WORKFLOW.md](mdc:docs/SETUP_GITHUB_WORKFLOW.md): Setup guide
+
+## Commit Message Format
+Use conventional commits:
+- `feat:` new features
+- `fix:` bug fixes
+- `docs:` documentation changes
+- `style:` formatting changes
+- `refactor:` code refactoring
+- `test:` adding tests
+- `chore:` maintenance tasks
+
+## Emergency Procedures
+For critical production fixes:
+1. Create hotfix branch from main: `git checkout -b hotfix/critical-issue`
+2. Make minimal fix and create PR to main
+3. After merge, sync back to dev: `git checkout dev && git merge main`
