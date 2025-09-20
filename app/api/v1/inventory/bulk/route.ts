@@ -41,8 +41,17 @@ export async function POST(request: NextRequest) {
     const supabase = createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (authError) {
+    if (authError || !user) {
       console.warn('Could not get authenticated user for audit:', authError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          message: 'User authentication required for bulk operations',
+          timestamp: new Date().toISOString()
+        },
+        { status: 401 }
+      )
     }
 
     let result: any
@@ -227,8 +236,17 @@ export async function DELETE(request: NextRequest) {
     const supabase = createClient()
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    if (authError) {
+    if (authError || !user) {
       console.warn('Could not get authenticated user for audit:', authError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unauthorized',
+          message: 'User authentication required for bulk operations',
+          timestamp: new Date().toISOString()
+        },
+        { status: 401 }
+      )
     }
 
     // Real bulk delete using optimized inventory service

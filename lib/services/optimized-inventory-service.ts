@@ -111,8 +111,8 @@ export class OptimizedInventoryService {
           images,
           created_at,
           updated_at,
-          categories\(id, name, color\),
-          locations\(id, name, address\)
+          categories(id, name, color),
+          locations(id, name, address)
         `)
 
       // Apply filters at database level for better performance
@@ -494,7 +494,7 @@ export class OptimizedInventoryService {
   }
 
   /**
-   * Bulk create items with optimized performance
+   * Bulk create items with optimized performance - SIMPLIFIED VERSION WITHOUT AUDIT
    */
   async createMany(items: Array<{
     name: string
@@ -525,33 +525,31 @@ export class OptimizedInventoryService {
       // Invalidate related caches
       this.invalidateRelatedCaches(['list', 'low-stock'])
 
-      // Log bulk creation
-      const userContext = user ? {
-        user_name: user.email || user.user_metadata?.name || 'Unknown User',
-        user_role: user.user_metadata?.role || 'user',
-        user_department: user.user_metadata?.department || 'General',
-        user_avatar_url: user.user_metadata?.avatar_url,
-        user_email: user.email
-      } : undefined
+      // Log bulk operation with proper user context
+      if (user) {
+        const userContext = {
+          user_name: user.email || user.user_metadata?.name || 'Unknown User',
+          user_role: user.user_metadata?.role || 'user',
+          user_department: user.user_metadata?.department || 'General',
+          user_avatar_url: user.user_metadata?.avatar_url,
+          user_email: user.email
+        }
 
-      auditService.logOperation({
-        operation: 'BULK_OPERATION',
-        table_name: 'inventory',
-        record_id: `bulk_create_${Date.now()}`,
-        user_name: userContext?.user_name,
-        user_role: userContext?.user_role,
-        user_department: userContext?.user_department,
-        user_avatar_url: userContext?.user_avatar_url,
-        user_email: userContext?.user_email,
-        metadata: {
-          action_type: 'bulk_inventory_creation',
-          total_items: items.length,
-          reason: 'Bulk inventory creation operation'
-        },
-        supabaseClient: getAuditClient(user)
-      }).catch(error => {
-        console.warn('Audit logging failed for bulk creation:', error)
-      })
+        // Log bulk operation (non-blocking)
+        auditService.logBulkOperation(
+          'bulk_create',
+          'inventory',
+          data.map(item => item.id),
+          {
+            action_type: 'bulk_inventory_creation',
+            reason: 'Bulk inventory items created',
+            notes: `Created ${data.length} inventory items`,
+            record_count: data.length
+          }
+        ).catch(error => {
+          console.warn('Audit logging failed for bulk inventory creation:', error)
+        })
+      }
 
       return data || []
     } catch (error) {

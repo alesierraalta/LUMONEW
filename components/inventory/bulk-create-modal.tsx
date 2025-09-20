@@ -166,71 +166,72 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
         return
       }
 
-      let successCount = 0
-      let errorCount = 0
-      const errors: string[] = []
+      // Find default category if not provided
+      const defaultCategory = categories.find(cat =>
+        cat.name.toLowerCase().includes('general') ||
+        cat.name.toLowerCase().includes('sin categoría')
+      ) || categories[0]
 
-      for (const item of validItems) {
-        try {
-          // Find default category if not provided
-          const defaultCategory = categories.find(cat =>
-            cat.name.toLowerCase().includes('general') ||
-            cat.name.toLowerCase().includes('sin categoría')
-          ) || categories[0]
+      // Prepare items for bulk API
+      const itemsToCreate = validItems.map(item => ({
+        name: item.name.trim(),
+        sku: item.sku.trim(),
+        category_id: item.category_id.trim() || (defaultCategory?.id || ''),
+        location_id: isAdvancedMode ? (item.location_id || '') : (defaultLocation?.id || ''),
+        unit_price: 0,
+        quantity: isAdvancedMode ? Number.parseInt(item.quantity || '0', 10) || 0 : 0,
+        min_stock: 0,
+        max_stock: 0,
+        status: 'active'
+      }))
 
-          const response = await fetch('/api/inventory/items?limit=999999', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              sku: item.sku.trim(),
-              name: item.name.trim(),
-              category_id: item.category_id.trim() || (defaultCategory?.id || ''),
-              location_id: isAdvancedMode ? (item.location_id || '') : (defaultLocation?.id || ''),
-              unit_price: 0,
-              quantity: isAdvancedMode ? Number.parseInt(item.quantity || '0', 10) || 0 : 0,
-              min_stock: 0,
-              max_stock: 0,
-              status: 'active'
-            })
+      // Use bulk API endpoint instead of individual calls
+      const response = await fetch('/api/v1/inventory/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          operation: 'create',
+          items: itemsToCreate
+        })
+      })
+      
+      const result = await response.json()
+      
+      if (!response.ok) {
+        throw new Error(result.error || result.message || 'Failed to create items')
+      }
+
+      if (result.success && result.data) {
+        const successCount = result.data.successful || 0
+        const failedCount = result.data.failed || 0
+        
+        if (successCount > 0) {
+          addToast({
+            type: 'success',
+            title: 'Items creados exitosamente',
+            description: `${successCount} items fueron creados correctamente${failedCount > 0 ? `, ${failedCount} fallaron` : ''}`
           })
           
-          if (!response.ok) {
-            const errorData = await response.json()
-            throw new Error(errorData.error || 'Failed to create item')
-          }
-          successCount++
-        } catch (error) {
-          errorCount++
-          errors.push(`${item.sku}: ${error instanceof Error ? error.message : 'Error desconocido'}`)
+          // Reset form
+          setItems([
+            { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+            { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
+            { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
+          ])
+          
+          onSuccess()
+          onClose()
+        } else {
+          addToast({
+            type: 'error',
+            title: 'Error al crear items',
+            description: 'No se pudieron crear los items. Verifica los datos e intenta nuevamente.'
+          })
         }
-      }
-
-      if (successCount > 0) {
-        addToast({
-          type: 'success',
-          title: 'Items creados exitosamente',
-          description: `${successCount} items fueron creados correctamente${errorCount > 0 ? `, ${errorCount} fallaron` : ''}`
-        })
-        
-        // Reset form
-        setItems([
-          { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-          { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-          { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
-        ])
-        
-        onSuccess()
-        onClose()
-      }
-
-      if (errorCount > 0 && successCount === 0) {
-        addToast({
-          type: 'error',
-          title: 'Error al crear items',
-          description: `No se pudieron crear los items. Errores: ${errors.slice(0, 3).join(', ')}`
-        })
+      } else {
+        throw new Error('Invalid response from server')
       }
 
     } catch (error) {
@@ -238,13 +239,12 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
       addToast({
         type: 'error',
         title: 'Error del sistema',
-        description: 'Ocurrió un error inesperado al crear los items'
+        description: error instanceof Error ? error.message : 'Ocurrió un error inesperado al crear los items'
       })
     } finally {
       setIsSubmitting(false)
     }
   }
-
   const handleClose = () => {
     closeModal()
   }
