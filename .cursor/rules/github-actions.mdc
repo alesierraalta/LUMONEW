@@ -1,0 +1,72 @@
+---
+globs: .github/workflows/*.yml
+---
+
+# GitHub Actions Workflow Configuration Guidelines
+
+When working with GitHub Actions workflow files (`.yml` files in `.github/workflows/`), follow these guidelines:
+
+## General Structure:
+- **`name`**: Clearly describe the workflow's purpose.
+- **`on`**: Define triggers (e.g., `push`, `pull_request`, `workflow_dispatch`). Specify target branches (`main`, `dev`).
+- **`env`**: Define global environment variables for the workflow.
+- **`jobs`**: Organize tasks into logical jobs (e.g., `quality`, `security`, `test`, `build`, `deploy`).
+
+## Job Configuration:
+- **`name`**: Provide a descriptive name for each job.
+- **`runs-on`**: Specify the runner environment (e.g., `ubuntu-latest`).
+- **`needs`**: Define job dependencies to ensure sequential execution (e.g., `needs: [quality, test]`).
+- **`if`**: Use conditional expressions for job execution (e.g., `if: github.ref == 'refs/heads/main'`).
+- **`environment`**: Link to a GitHub environment for deployments, enabling environment protection rules and secrets.
+
+## Steps Configuration:
+- **`name`**: Describe each step's action.
+- **`uses`**: Use official or community actions (e.g., `actions/checkout@v4`, `actions/setup-node@v4`). Always specify a version.
+- **`run`**: Execute shell commands.
+- **`with`**: Pass inputs to actions.
+- **`env`**: Define step-specific environment variables.
+
+## Branch-Specific Workflows:
+
+### Development Workflow (`dev-deploy.yml`):
+- Triggers on pushes and PRs to `dev` branch.
+- Lighter quality gates for faster iteration.
+- Deploys to development environment.
+- Includes basic checks: build, lint, test.
+
+### Production Workflow (`prod-deploy.yml`):
+- Triggers only on pushes to `main` branch.
+- Comprehensive quality gates: security, performance, E2E tests.
+- Deploys to production environment.
+- Includes all checks: quality, security, test, build, deploy, lighthouse.
+
+### PR Checks (`pr-checks.yml`):
+- Triggers on PRs to `main` or `dev` branches.
+- Essential validation checks for pull requests.
+- Runs on every PR to ensure code quality.
+
+## Secrets Management:
+- Access secrets using `${{ secrets.SECRET_NAME }}`.
+- Never hardcode sensitive information directly in workflow files.
+- Ensure necessary secrets are configured in the GitHub repository settings for each environment.
+
+## Best Practices:
+- **Reusability**: Break down complex workflows into reusable components or composite actions if applicable.
+- **Readability**: Use clear names, comments, and consistent formatting.
+- **Security**:
+  - Limit permissions for `GITHUB_TOKEN` where possible.
+  - Use `snyk/actions/node@master` for security scanning.
+  - Ensure `npm audit` is run.
+- **Testing**: Include `npm run test` and `npx playwright test` steps.
+- **Artifacts**: Use `actions/upload-artifact` and `actions/download-artifact` for passing data between jobs.
+- **Deployment**: Use `amondnet/vercel-action@v25` for Vercel deployments.
+- **Performance**: Integrate `treosh/lighthouse-ci-action@v12` for performance monitoring on production deployments.
+
+## Status Checks:
+- Ensure that all critical jobs (e.g., `quality`, `test`, `security`, `build`, `deploy`) are configured as required status checks in branch protection rules.
+
+## Workflow Files:
+- [`.github/workflows/ci.yml`](mdc:.github/workflows/ci.yml): Core CI workflow for all branches.
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development deployment workflow.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production deployment workflow.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): Pull request validation workflow.

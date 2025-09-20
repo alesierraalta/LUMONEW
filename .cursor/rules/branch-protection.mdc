@@ -1,0 +1,68 @@
+---
+alwaysApply: false
+description: "Guidelines for configuring GitHub branch protection rules."
+---
+
+# GitHub Branch Protection Rules Guidelines
+
+Branch protection rules are crucial for maintaining code quality and ensuring a stable release process. These rules are configured in your GitHub repository settings under `Settings > Branches > Branch protection rules`.
+
+## `main` Branch Protection (Production)
+
+The `main` branch is highly protected to ensure only thoroughly reviewed and tested code reaches production.
+
+### Required Settings:
+- **Require a pull request before merging**: **Enabled**
+  - **Require approvals**: **Enabled** (at least 1 approving review)
+  - **Require code owner reviews**: **Enabled** (if `CODEOWNERS` file is used)
+  - **Dismiss stale pull request approvals when new commits are pushed**: **Enabled** (ensures reviews are always on the latest code)
+- **Require status checks to pass before merging**: **Enabled**
+  - **Strict status checks**: **Enabled** (branches must be up to date before merging)
+  - **Required status checks**: Select all critical CI/CD jobs from `prod-deploy.yml` and `pr-checks.yml`:
+    - `prod-deploy / quality`
+    - `prod-deploy / security`
+    - `prod-deploy / test`
+    - `prod-deploy / e2e-test`
+    - `prod-deploy / build`
+    - `pr-checks / pr-quality-checks`
+- **Require signed commits**: (Optional, but recommended for high-security projects)
+- **Require linear history**: (Optional, prevents merge commits)
+- **Include administrators**: **Enabled** (ensures admins also follow the rules)
+- **Allow force pushes**: **Disabled**
+- **Allow deletions**: **Disabled**
+
+## `dev` Branch Protection (Development)
+
+The `dev` branch has lighter protection to facilitate faster iteration while still maintaining quality.
+
+### Required Settings:
+- **Require a pull request before merging**: **Disabled** (allows direct pushes for faster development)
+- **Require status checks to pass before merging**: **Enabled**
+  - **Strict status checks**: **Enabled**
+  - **Required status checks**: Select essential CI checks from `dev-deploy.yml` and `pr-checks.yml`:
+    - `dev-deploy / build-and-deploy-dev`
+    - `pr-checks / pr-quality-checks`
+- **Include administrators**: **Disabled** (allows admins to push directly for quick fixes if necessary, but generally discouraged)
+- **Allow force pushes**: **Enabled** (useful for rebasing during development)
+- **Allow deletions**: **Disabled**
+
+## Setup Script:
+- Use [`scripts/fix-github-workflow.js`](mdc:scripts/fix-github-workflow.js) to automate the configuration of these rules via the GitHub API. Remember to set `GITHUB_TOKEN`, `GITHUB_REPOSITORY_OWNER`, and `GITHUB_REPOSITORY_NAME` environment variables.
+
+## Manual Setup:
+1. Go to GitHub repository settings: `Settings > Branches`
+2. Click "Add rule" for each branch (`main` and `dev`)
+3. Configure the settings as described above
+4. Save the rules
+
+## Emergency Bypass:
+- In extreme emergencies, an administrator can temporarily disable protection rules or use a bypass mechanism if configured, but this should be a last resort and thoroughly documented.
+
+## Branch Protection Status:
+- **`main`**: Highly protected, requires PRs from `dev` with approvals
+- **`dev`**: Lightly protected, allows direct pushes but requires status checks
+- **`feature/*`**: No protection, allows full freedom for development
+
+## Documentation:
+- [`docs/CORRECT_GITHUB_WORKFLOW.md`](mdc:docs/CORRECT_GITHUB_WORKFLOW.md): Detailed workflow documentation with branch protection explanation.
+- [`GITHUB_WORKFLOW_QUICK_REFERENCE.md`](mdc:GITHUB_WORKFLOW_QUICK_REFERENCE.md): Quick reference for branch protection setup.

@@ -1,0 +1,79 @@
+---
+alwaysApply: false
+description: "Guidelines for managing deployment environments (development, production)."
+---
+
+# Deployment Environments Guidelines
+
+This project utilizes distinct deployment environments to ensure a robust and reliable release process.
+
+## 1. Development Environment (`dev` branch)
+
+- **Purpose**: Used for active development, feature integration, and initial testing.
+- **Trigger**: Pushes and pull requests to the `dev` branch.
+- **Workflow**: [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml)
+- **Deployment Target**: Vercel preview deployments or a dedicated development URL.
+- **Characteristics**:
+  - May have less strict quality gates compared to production.
+  - Faster deployment cycles.
+  - Often uses test or staging databases.
+  - Environment variables are configured for development settings.
+- **Access**: Typically accessible to the development team and internal stakeholders for testing.
+
+## 2. Production Environment (`main` branch)
+
+- **Purpose**: Hosts the live application accessible to end-users.
+- **Trigger**: Pushes to the `main` branch (only via merged pull requests from `dev`).
+- **Workflow**: [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml)
+- **Deployment Target**: Vercel production deployment.
+- **Characteristics**:
+  - Requires all quality, security, testing, and performance checks to pass.
+  - Slower, more controlled deployment cycles.
+  - Uses production databases and infrastructure.
+  - Environment variables are configured for production settings.
+- **Access**: Publicly accessible.
+
+## 3. Environment Variables and Secrets
+
+- **Management**: All environment-specific configurations (API keys, database URLs, etc.) must be managed as secrets in GitHub (for GitHub Actions) and Vercel (for deployments).
+- **Naming Convention**: Use clear prefixes (e.g., `NEXT_PUBLIC_`, `VERCEL_`).
+- **Never commit sensitive data** directly to the repository.
+
+## 4. Monitoring and Rollback
+
+- **Monitoring**: After any production deployment, closely monitor application performance, error rates, and key metrics.
+  - Integrate tools like Lighthouse CI for performance.
+  - Set up error tracking (e.g., Sentry, Datadog).
+- **Rollback Strategy**: Be prepared to quickly roll back to a previous stable version in case of critical issues in production. Vercel provides built-in rollback capabilities.
+
+## 5. Testing in Environments
+
+- **Development**: Extensive functional and integration testing.
+- **Production**: Post-deployment smoke tests and continuous monitoring.
+- **E2E Tests**: Run on both `dev` (for PRs) and `main` (before/during production deployment) to ensure end-to-end functionality.
+
+## 6. Deployment Workflow Files
+
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development deployment workflow with lighter checks.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production deployment workflow with comprehensive checks.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): Pull request validation for both environments.
+
+## 7. Environment Configuration
+
+### Development Environment Variables:
+- `NODE_ENV=development`
+- `NEXT_PUBLIC_API_URL=https://dev-api.yourapp.com`
+- `DATABASE_URL=postgresql://dev-db...`
+
+### Production Environment Variables:
+- `NODE_ENV=production`
+- `NEXT_PUBLIC_API_URL=https://api.yourapp.com`
+- `DATABASE_URL=postgresql://prod-db...`
+
+## 8. Best Practices
+
+- **Environment Parity**: Keep development and production environments as similar as possible.
+- **Configuration Management**: Use environment-specific configuration files when necessary.
+- **Secret Rotation**: Regularly rotate secrets and API keys.
+- **Monitoring**: Set up alerts for both environments.
+- **Documentation**: Keep environment setup and configuration documentation up to date.

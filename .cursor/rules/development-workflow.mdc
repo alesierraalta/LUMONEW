@@ -1,0 +1,75 @@
+---
+alwaysApply: true
+---
+
+# Development Workflow Best Practices
+
+This document outlines the recommended practices for daily development within the project, aligning with our GitHub branching strategy.
+
+## 1. Branching Strategy:
+- Always create a new feature or bugfix branch from `dev`.
+  - `git checkout dev`
+  - `git pull origin dev`
+  - `git checkout -b feature/my-new-feature` (or `bugfix/issue-id`)
+- **NEVER commit directly to `dev` or `main`**.
+
+## 2. Commit Messages:
+- Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+- **Format**: `<type>(<scope>): <description>`
+  - **`type`**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`
+  - **`scope`**: (Optional) The part of the codebase affected (e.g., `inventory`, `auth`, `ui`).
+  - **`description`**: Concise summary of the change.
+- **Examples**:
+  - `feat(inventory): add bulk create functionality`
+  - `fix(auth): resolve login redirect bug`
+  - `docs: update GitHub workflow guide`
+  - `test(inventory): add e2e tests for quick stock`
+
+## 3. Code Quality:
+- Run linters and formatters locally before committing:
+  - `npm run lint`
+  - `npm run format` (or `npx prettier --write .`)
+- Ensure TypeScript type checks pass: `npm run type-check`
+- Write clear, concise, and well-commented code.
+
+## 4. Testing:
+- Write unit tests for new components/functions.
+- Write E2E tests for new user flows, especially for critical paths.
+- Run relevant tests locally before pushing:
+  - `npm run test` (unit tests)
+  - `npx playwright test` (all E2E tests)
+  - `npx playwright test tests/e2e/inventory/my-feature.spec.ts` (specific E2E test)
+- Ensure tests pass and maintain high code coverage.
+
+## 5. Pull Requests (PRs):
+- Open PRs from your feature/bugfix branch to `dev`.
+- Provide a clear title and description, referencing any related issues.
+- Request reviews from appropriate team members.
+- Address all review comments and ensure all CI checks pass before merging.
+
+## 6. Code Review Checklist:
+- [ ] Code adheres to style guides (ESLint, Prettier).
+- [ ] Functionality matches requirements.
+- [ ] Edge cases are handled.
+- [ ] Tests are sufficient and pass.
+- [ ] Documentation (code comments, READMEs, workflow docs) is updated.
+- [ ] No sensitive information is exposed.
+- [ ] Performance implications are considered.
+
+## 7. Keeping `dev` up-to-date:
+- Regularly pull changes from `dev` into your feature branch to avoid merge conflicts.
+  - `git checkout dev`
+  - `git pull origin dev`
+  - `git checkout feature/my-new-feature`
+  - `git merge dev` (resolve conflicts if any)
+
+## 8. Production Releases:
+- Only create PRs from `dev` to `main` when `dev` is stable.
+- Ensure all tests pass and code is thoroughly reviewed.
+- Production deployments are automatic when `dev` is merged to `main`.
+
+## Workflow Files:
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development deployment workflow.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production deployment workflow.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): PR validation workflow.
+- [`docs/CORRECT_GITHUB_WORKFLOW.md`](mdc:docs/CORRECT_GITHUB_WORKFLOW.md): Detailed workflow documentation.

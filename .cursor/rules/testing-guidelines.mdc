@@ -1,0 +1,166 @@
+---
+globs: tests/**/*.ts,tests/**/*.tsx,tests/**/*.js,__tests__/**/*
+---
+
+# Testing Guidelines
+
+This project uses a comprehensive testing strategy with unit tests, integration tests, and end-to-end (E2E) tests.
+
+## Testing Framework
+
+### Unit Tests
+- **Framework**: Vitest
+- **Location**: `tests/` directory and `__tests__/` directories
+- **Coverage**: Components, utilities, services, and business logic
+- **Command**: `npm run test`
+
+### E2E Tests
+- **Framework**: Playwright
+- **Location**: `tests/e2e/` directory
+- **Coverage**: Full user workflows and critical paths
+- **Command**: `npx playwright test`
+
+## Test Structure
+
+### Page Object Model (POM)
+- Use Page Object Model for E2E tests to improve maintainability
+- Location: `tests/e2e/page-objects/`
+- Example: [`tests/e2e/page-objects/inventory-page.ts`](mdc:tests/e2e/page-objects/inventory-page.ts)
+
+### Test Utilities
+- Common test utilities and helpers
+- Location: `tests/e2e/utils/`
+- Example: [`tests/e2e/utils/test-results-tracker.ts`](mdc:tests/e2e/utils/test-results-tracker.ts)
+
+### Test Data and Fixtures
+- Test data setup and cleanup
+- Location: `tests/e2e/fixtures/` and `tests/helpers/`
+- Global setup: [`tests/e2e/global-setup.ts`](mdc:tests/e2e/global-setup.ts)
+
+## Writing Tests
+
+### Unit Test Guidelines
+```typescript
+// Example unit test structure
+import { describe, it, expect, vi } from 'vitest';
+import { MyComponent } from './MyComponent';
+
+describe('MyComponent', () => {
+  it('should render correctly', () => {
+    // Test implementation
+    expect(true).toBe(true);
+  });
+});
+```
+
+### E2E Test Guidelines
+```typescript
+// Example E2E test structure
+import { test, expect } from '@playwright/test';
+import { InventoryPage } from '../page-objects/inventory-page';
+
+test.describe('Inventory Management', () => {
+  test('should create new inventory item', async ({ page }) => {
+    const inventoryPage = new InventoryPage(page);
+    await inventoryPage.goto();
+    // Test implementation
+  });
+});
+```
+
+## Test Configuration
+
+### Playwright Configuration
+- File: [`playwright.config.ts`](mdc:playwright.config.ts)
+- Supports multiple browsers: Chromium, Firefox, WebKit
+- Includes mobile and branded browser testing
+
+### Vitest Configuration
+- File: [`vitest.config.ts`](mdc:vitest.config.ts)
+- Includes setup file: [`vitest.setup.ts`](mdc:vitest.setup.ts)
+
+## Test Execution
+
+### Local Testing
+```bash
+# Run all unit tests
+npm run test
+
+# Run E2E tests
+npx playwright test
+
+# Run specific test file
+npx playwright test tests/e2e/inventory/inventory-comprehensive-testing.spec.ts
+
+# Run tests with UI
+npx playwright test --ui
+
+# Run tests in headed mode
+npx playwright test --headed
+```
+
+### CI/CD Testing
+- Tests run automatically on pull requests and pushes
+- E2E tests run on both `dev` and `main` branches
+- Test results are reported and artifacts are uploaded
+
+## Test Data Management
+
+### Setup and Cleanup
+- Use global setup for test data initialization
+- Clean up test data after each test or test suite
+- Use unique identifiers to avoid conflicts
+
+### Test Data Isolation
+- Each test should be independent
+- Use proper cleanup mechanisms
+- Avoid sharing mutable state between tests
+
+## Test Reporting
+
+### Coverage Reports
+- Unit test coverage is generated and uploaded to Codecov
+- E2E test results are reported in multiple formats (HTML, JSON, JUnit)
+
+### Test Results Tracking
+- Use [`TestResultsTracker`](mdc:tests/e2e/utils/test-results-tracker.ts) for comprehensive test result management
+- Generate reports in multiple formats: JSON, Markdown, HTML, CSV
+
+## Best Practices
+
+### Test Organization
+- Group related tests in describe blocks
+- Use descriptive test names
+- Follow AAA pattern: Arrange, Act, Assert
+
+### Test Reliability
+- Use proper waits and assertions
+- Handle async operations correctly
+- Avoid flaky tests by using stable selectors
+
+### Performance
+- Run tests in parallel when possible
+- Use test fixtures for expensive setup
+- Optimize test execution time
+
+## Testing Documentation
+
+### Comprehensive Test Documentation
+- File: [`docs/INVENTORY_TESTING_DOCUMENTATION.md`](mdc:docs/INVENTORY_TESTING_DOCUMENTATION.md)
+- Includes all test cases, expected results, and test status
+
+### Test Execution Scripts
+- File: [`tests/e2e/run-inventory-tests.js`](mdc:tests/e2e/run-inventory-tests.js)
+- Automated test execution and report generation
+
+## Integration with CI/CD
+
+### GitHub Actions
+- Tests run automatically on PRs and pushes
+- Different test suites for different branches
+- Test results affect deployment decisions
+
+### Quality Gates
+- All tests must pass before merging to `main`
+- E2E tests are required for production deployments
+- Test coverage thresholds are enforced
