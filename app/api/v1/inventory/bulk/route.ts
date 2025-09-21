@@ -60,11 +60,21 @@ export async function POST(request: NextRequest) {
       case 'create':
         // Real bulk create using optimized inventory service
         try {
+          // Get default category and location IDs
+          const supabase = createClient()
+          const [categoryResult, locationResult] = await Promise.all([
+            supabase.from('categories').select('id').limit(1).single(),
+            supabase.from('locations').select('id').limit(1).single()
+          ])
+          
+          const defaultCategoryId = categoryResult.data?.id || '44166394-996a-4c80-b48b-c6bf2e97387b' // Electronics
+          const defaultLocationId = locationResult.data?.id || '424acea8-70c2-46c6-9a2e-e7ee0ba6a72d' // Main Warehouse
+
           const itemsToCreate = items.map((item: any) => ({
             name: item.name,
             sku: item.sku,
-            category_id: item.category_id || item.categoryId,
-            location_id: item.location_id || item.locationId,
+            category_id: item.category_id || item.categoryId || defaultCategoryId,
+            location_id: item.location_id || item.locationId || defaultLocationId,
             unit_price: parseFloat(item.unit_price || item.price || 0),
             quantity: parseInt(item.quantity || item.currentStock || 0),
             min_stock: parseInt(item.min_stock || item.minimumLevel || 0),

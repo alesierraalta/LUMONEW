@@ -1,13 +1,21 @@
-import { describe, it, expect, vi } from 'vitest'
-import { screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest'
+import { screen, fireEvent, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../utils/test-render'
+import { simpleRender, setupCommonMocks } from '../../utils/test-render'
 import { Button, buttonVariants } from '@/components/ui/button'
+
+beforeAll(() => {
+  setupCommonMocks()
+})
+
+beforeEach(() => {
+  cleanup()
+})
 
 describe('Button', () => {
   describe('Rendering', () => {
     it('should render button with default props', () => {
-      render(<Button>Click me</Button>)
+      simpleRender(<Button>Click me</Button>)
       
       const button = screen.getByRole('button', { name: 'Click me' })
       expect(button).toBeInTheDocument()
@@ -15,13 +23,13 @@ describe('Button', () => {
     })
 
     it('should render button with custom text', () => {
-      render(<Button>Custom Button Text</Button>)
+      simpleRender(<Button>Custom Button Text</Button>)
       
       expect(screen.getByText('Custom Button Text')).toBeInTheDocument()
     })
 
     it('should render as child component when asChild is true', () => {
-      render(
+      simpleRender(
         <Button asChild>
           <a href="/test">Link Button</a>
         </Button>
@@ -35,42 +43,42 @@ describe('Button', () => {
 
   describe('Variants', () => {
     it('should apply default variant styles', () => {
-      render(<Button>Default</Button>)
+      simpleRender(<Button>Default</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('bg-primary', 'text-primary-foreground')
     })
 
     it('should apply destructive variant styles', () => {
-      render(<Button variant="destructive">Delete</Button>)
+      simpleRender(<Button variant="destructive">Delete</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('bg-destructive', 'text-destructive-foreground')
     })
 
     it('should apply outline variant styles', () => {
-      render(<Button variant="outline">Outline</Button>)
+      simpleRender(<Button variant="outline">Outline</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('border', 'border-input', 'bg-background')
     })
 
     it('should apply secondary variant styles', () => {
-      render(<Button variant="secondary">Secondary</Button>)
+      simpleRender(<Button variant="secondary">Secondary</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('bg-secondary', 'text-secondary-foreground')
     })
 
     it('should apply ghost variant styles', () => {
-      render(<Button variant="ghost">Ghost</Button>)
+      simpleRender(<Button variant="ghost">Ghost</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('hover:bg-accent', 'hover:text-accent-foreground')
     })
 
     it('should apply link variant styles', () => {
-      render(<Button variant="link">Link</Button>)
+      simpleRender(<Button variant="link">Link</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('text-primary', 'underline-offset-4', 'hover:underline')
@@ -79,28 +87,28 @@ describe('Button', () => {
 
   describe('Sizes', () => {
     it('should apply default size styles', () => {
-      render(<Button>Default Size</Button>)
+      simpleRender(<Button>Default Size</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('h-9', 'px-4', 'py-2')
     })
 
     it('should apply small size styles', () => {
-      render(<Button size="sm">Small</Button>)
+      simpleRender(<Button size="sm">Small</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('h-8', 'px-3', 'text-xs')
     })
 
     it('should apply large size styles', () => {
-      render(<Button size="lg">Large</Button>)
+      simpleRender(<Button size="lg">Large</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('h-10', 'px-8')
     })
 
     it('should apply icon size styles', () => {
-      render(<Button size="icon">🔍</Button>)
+      simpleRender(<Button size="icon">🔍</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('h-9', 'w-9')
@@ -109,7 +117,7 @@ describe('Button', () => {
 
   describe('States', () => {
     it('should be disabled when disabled prop is true', () => {
-      render(<Button disabled>Disabled</Button>)
+      simpleRender(<Button disabled>Disabled</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
@@ -117,7 +125,7 @@ describe('Button', () => {
     })
 
     it('should not be disabled by default', () => {
-      render(<Button>Enabled</Button>)
+      simpleRender(<Button>Enabled</Button>)
       
       const button = screen.getByRole('button')
       expect(button).not.toBeDisabled()
@@ -129,7 +137,7 @@ describe('Button', () => {
       const handleClick = vi.fn()
       const user = userEvent.setup()
       
-      render(<Button onClick={handleClick}>Click me</Button>)
+      simpleRender(<Button onClick={handleClick}>Click me</Button>)
       
       const button = screen.getByRole('button')
       await user.click(button)
@@ -141,7 +149,7 @@ describe('Button', () => {
       const handleClick = vi.fn()
       const user = userEvent.setup()
       
-      render(<Button onClick={handleClick} disabled>Disabled</Button>)
+      simpleRender(<Button onClick={handleClick} disabled>Disabled</Button>)
       
       const button = screen.getByRole('button')
       await user.click(button)
@@ -152,7 +160,7 @@ describe('Button', () => {
     it('should handle keyboard events', () => {
       const handleKeyDown = vi.fn()
       
-      render(<Button onKeyDown={handleKeyDown}>Keyboard</Button>)
+      simpleRender(<Button onKeyDown={handleKeyDown}>Keyboard</Button>)
       
       const button = screen.getByRole('button')
       fireEvent.keyDown(button, { key: 'Enter' })
@@ -163,28 +171,28 @@ describe('Button', () => {
 
   describe('Custom Props', () => {
     it('should accept custom className', () => {
-      render(<Button className="custom-class">Custom</Button>)
+      simpleRender(<Button className="custom-class">Custom</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('custom-class')
     })
 
     it('should accept custom type attribute', () => {
-      render(<Button type="submit">Submit</Button>)
+      simpleRender(<Button type="submit">Submit</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveAttribute('type', 'submit')
     })
 
     it('should accept custom id', () => {
-      render(<Button id="custom-id">Custom ID</Button>)
+      simpleRender(<Button id="custom-id">Custom ID</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveAttribute('id', 'custom-id')
     })
 
     it('should accept data attributes', () => {
-      render(<Button data-testid="custom-button">Data Attr</Button>)
+      simpleRender(<Button data-testid="custom-button">Data Attr</Button>)
       
       const button = screen.getByTestId('custom-button')
       expect(button).toBeInTheDocument()
@@ -193,21 +201,21 @@ describe('Button', () => {
 
   describe('Accessibility', () => {
     it('should have proper focus styles', () => {
-      render(<Button>Focus me</Button>)
+      simpleRender(<Button>Focus me</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('focus-visible:outline-none', 'focus-visible:ring-1', 'focus-visible:ring-ring')
     })
 
     it('should support aria-label', () => {
-      render(<Button aria-label="Close dialog">×</Button>)
+      simpleRender(<Button aria-label="Close dialog">×</Button>)
       
       const button = screen.getByRole('button', { name: 'Close dialog' })
       expect(button).toBeInTheDocument()
     })
 
     it('should support aria-describedby', () => {
-      render(
+      simpleRender(
         <div>
           <Button aria-describedby="help-text">Help</Button>
           <div id="help-text">This button provides help</div>
@@ -221,7 +229,7 @@ describe('Button', () => {
     it('should be keyboard navigable', async () => {
       const user = userEvent.setup()
       
-      render(
+      simpleRender(
         <div>
           <Button>First</Button>
           <Button>Second</Button>
@@ -241,7 +249,7 @@ describe('Button', () => {
 
   describe('Icon Support', () => {
     it('should render with icons', () => {
-      render(
+      simpleRender(
         <Button>
           <span>🔍</span>
           Search
@@ -253,7 +261,7 @@ describe('Button', () => {
     })
 
     it('should apply icon-specific styles', () => {
-      render(<Button>Test</Button>)
+      simpleRender(<Button>Test</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toHaveClass('[&_svg]:pointer-events-none', '[&_svg]:size-4', '[&_svg]:shrink-0')
@@ -293,7 +301,7 @@ describe('Button', () => {
 
   describe('Edge Cases', () => {
     it('should handle empty children', () => {
-      render(<Button></Button>)
+      simpleRender(<Button></Button>)
       
       const button = screen.getByRole('button')
       expect(button).toBeInTheDocument()
@@ -301,14 +309,14 @@ describe('Button', () => {
     })
 
     it('should handle null children', () => {
-      render(<Button>{null}</Button>)
+      simpleRender(<Button>{null}</Button>)
       
       const button = screen.getByRole('button')
       expect(button).toBeInTheDocument()
     })
 
     it('should handle multiple children', () => {
-      render(
+      simpleRender(
         <Button>
           <span>Icon</span>
           <span>Text</span>
@@ -320,7 +328,7 @@ describe('Button', () => {
     })
 
     it('should handle complex children', () => {
-      render(
+      simpleRender(
         <Button>
           <div>
             <span>Complex</span>
@@ -338,7 +346,7 @@ describe('Button', () => {
     it('should work as form submit button', () => {
       const handleSubmit = vi.fn((e) => e.preventDefault())
       
-      render(
+      simpleRender(
         <form onSubmit={handleSubmit}>
           <Button type="submit">Submit Form</Button>
         </form>
@@ -351,7 +359,7 @@ describe('Button', () => {
     })
 
     it('should work as form reset button', () => {
-      render(
+      simpleRender(
         <form>
           <input defaultValue="test" />
           <Button type="reset">Reset Form</Button>

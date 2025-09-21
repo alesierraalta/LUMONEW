@@ -1,7 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, beforeAll } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../utils/test-render'
+import { simpleRender, setupCommonMocks } from '../../utils/test-render'
 import React from 'react'
 
 // Mock the utils module first
@@ -61,10 +61,14 @@ function ComponentWithoutProvider() {
   }
 }
 
+beforeAll(() => {
+  setupCommonMocks()
+})
+
 describe('Modal Components', () => {
   describe('ModalProvider', () => {
     it('should provide modal context to children', () => {
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -75,7 +79,7 @@ describe('Modal Components', () => {
     })
 
     it('should render children without modal initially', () => {
-      render(
+      simpleRender(
         <ModalProvider>
           <div data-testid="test-content">Test content</div>
         </ModalProvider>
@@ -91,7 +95,7 @@ describe('Modal Components', () => {
       // Mock console.error to avoid test output noise
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-      render(<ComponentWithoutProvider />)
+      simpleRender(<ComponentWithoutProvider />)
 
       expect(screen.getByTestId('error-message')).toHaveTextContent('useModal must be used within a ModalProvider')
 
@@ -99,7 +103,7 @@ describe('Modal Components', () => {
     })
 
     it('should provide modal functions when used within provider', () => {
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -114,7 +118,7 @@ describe('Modal Components', () => {
     it('should open modal when openModal is called', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -135,7 +139,7 @@ describe('Modal Components', () => {
     it('should close modal when closeModal is called', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -161,7 +165,7 @@ describe('Modal Components', () => {
     it('should close modal when clicking overlay', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -188,7 +192,7 @@ describe('Modal Components', () => {
     it('should close modal when clicking X button', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -230,7 +234,7 @@ describe('Modal Components', () => {
         return <button onClick={handleOpen} data-testid="open-large">Open Large</button>
       }
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SizeTestComponent />
         </ModalProvider>
@@ -261,7 +265,7 @@ describe('Modal Components', () => {
         return <button onClick={handleOpen} data-testid="open-non-closable">Open Non-closable</button>
       }
 
-      render(
+      simpleRender(
         <ModalProvider>
           <NonClosableComponent />
         </ModalProvider>
@@ -312,7 +316,7 @@ describe('Modal Components', () => {
         return <button onClick={handleOpen} data-testid="open-confirmation">Open Confirmation</button>
       }
 
-      render(
+      simpleRender(
         <ModalProvider>
           <ConfirmationTestComponent />
         </ModalProvider>
@@ -351,7 +355,7 @@ describe('Modal Components', () => {
         return <button onClick={handleOpen} data-testid="open-confirmation">Open Confirmation</button>
       }
 
-      render(
+      simpleRender(
         <ModalProvider>
           <ConfirmationTestComponent />
         </ModalProvider>
@@ -393,7 +397,7 @@ describe('Modal Components', () => {
         return <button onClick={handleOpen} data-testid="open-confirmation">Open Confirmation</button>
       }
 
-      render(
+      simpleRender(
         <ModalProvider>
           <ConfirmationTestComponent />
         </ModalProvider>
@@ -418,7 +422,7 @@ describe('Modal Components', () => {
     it('should prevent body scroll when modal is open', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -448,7 +452,7 @@ describe('Modal Components', () => {
     it('should have proper modal overlay structure', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>
@@ -467,7 +471,7 @@ describe('Modal Components', () => {
     it('should prevent clicks on content from closing modal', async () => {
       const user = userEvent.setup()
 
-      render(
+      simpleRender(
         <ModalProvider>
           <SimpleTestComponent />
         </ModalProvider>

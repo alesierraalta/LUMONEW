@@ -1,7 +1,7 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../utils/test-render'
+import { simpleRender, setupCommonMocks } from '../../utils/test-render'
 import {
   Select,
   SelectContent,
@@ -93,29 +93,33 @@ function ScrollableSelect() {
   )
 }
 
+beforeAll(() => {
+  setupCommonMocks()
+})
+
 describe('Select Components', () => {
   describe('Select (Root)', () => {
     it('should render select trigger', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       expect(trigger).toBeInTheDocument()
     })
 
     it('should show placeholder when no value selected', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       expect(screen.getByText('Select an option')).toBeInTheDocument()
     })
 
     it('should show default value when provided', () => {
-      render(<BasicSelect defaultValue="option2" />)
+      simpleRender(<BasicSelect defaultValue="option2" />)
       
       expect(screen.getByText('Option 2')).toBeInTheDocument()
     })
 
     it('should be disabled when disabled prop is true', () => {
-      render(<BasicSelect disabled />)
+      simpleRender(<BasicSelect disabled />)
       
       const trigger = screen.getByRole('combobox')
       expect(trigger).toBeDisabled()
@@ -124,7 +128,7 @@ describe('Select Components', () => {
 
   describe('SelectTrigger', () => {
     it('should render with default styling', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       expect(trigger).toHaveClass(
@@ -139,7 +143,7 @@ describe('Select Components', () => {
     })
 
     it('should accept custom className', () => {
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger className="custom-trigger">
             <SelectValue />
@@ -152,7 +156,7 @@ describe('Select Components', () => {
     })
 
     it('should show chevron down icon', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const chevronIcon = screen.getByTestId('chevron-down-icon')
       expect(chevronIcon).toBeInTheDocument()
@@ -161,7 +165,7 @@ describe('Select Components', () => {
 
     it('should open dropdown when clicked', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -175,7 +179,7 @@ describe('Select Components', () => {
 
     it('should open dropdown with keyboard', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       trigger.focus()
@@ -189,7 +193,7 @@ describe('Select Components', () => {
 
   describe('SelectValue', () => {
     it('should show placeholder when no value', () => {
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="Choose option" />
@@ -201,7 +205,7 @@ describe('Select Components', () => {
     })
 
     it('should show selected value', () => {
-      render(
+      simpleRender(
         <Select defaultValue="test">
           <SelectTrigger>
             <SelectValue />
@@ -218,14 +222,14 @@ describe('Select Components', () => {
 
   describe('SelectContent', () => {
     it('should not be visible initially', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       expect(screen.queryByText('Option 1')).not.toBeInTheDocument()
     })
 
     it('should render with default position', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -238,7 +242,7 @@ describe('Select Components', () => {
 
     it('should accept custom className', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -260,7 +264,7 @@ describe('Select Components', () => {
 
     it('should close when clicking outside', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <div>
           <BasicSelect />
           <div data-testid="outside">Outside</div>
@@ -284,7 +288,7 @@ describe('Select Components', () => {
 
     it('should close when pressing Escape', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -304,7 +308,7 @@ describe('Select Components', () => {
   describe('SelectItem', () => {
     it('should render items correctly', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -320,7 +324,7 @@ describe('Select Components', () => {
       const handleValueChange = vi.fn()
       const user = userEvent.setup()
       
-      render(<BasicSelect onValueChange={handleValueChange} />)
+      simpleRender(<BasicSelect onValueChange={handleValueChange} />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -341,7 +345,7 @@ describe('Select Components', () => {
 
     it('should show check icon for selected item', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect defaultValue="option1" />)
+      simpleRender(<BasicSelect defaultValue="option1" />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -354,7 +358,7 @@ describe('Select Components', () => {
 
     it('should accept custom className', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -378,7 +382,7 @@ describe('Select Components', () => {
 
     it('should be disabled when disabled prop is true', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -405,7 +409,7 @@ describe('Select Components', () => {
   describe('SelectGroup and SelectLabel', () => {
     it('should render groups with labels', async () => {
       const user = userEvent.setup()
-      render(<GroupedSelect />)
+      simpleRender(<GroupedSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -420,7 +424,7 @@ describe('Select Components', () => {
 
     it('should render label with correct styling', async () => {
       const user = userEvent.setup()
-      render(<GroupedSelect />)
+      simpleRender(<GroupedSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -433,7 +437,7 @@ describe('Select Components', () => {
 
     it('should accept custom className for label', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -460,7 +464,7 @@ describe('Select Components', () => {
   describe('SelectSeparator', () => {
     it('should render separator between groups', async () => {
       const user = userEvent.setup()
-      render(<GroupedSelect />)
+      simpleRender(<GroupedSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -473,7 +477,7 @@ describe('Select Components', () => {
 
     it('should have correct styling', async () => {
       const user = userEvent.setup()
-      render(<GroupedSelect />)
+      simpleRender(<GroupedSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -486,7 +490,7 @@ describe('Select Components', () => {
 
     it('should accept custom className', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -512,7 +516,7 @@ describe('Select Components', () => {
   describe('Scroll Buttons', () => {
     it('should render scroll buttons in scrollable content', async () => {
       const user = userEvent.setup()
-      render(<ScrollableSelect />)
+      simpleRender(<ScrollableSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -536,7 +540,7 @@ describe('Select Components', () => {
 
     it('should accept custom className for scroll buttons', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -564,7 +568,7 @@ describe('Select Components', () => {
   describe('Keyboard Navigation', () => {
     it('should navigate items with arrow keys', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -585,7 +589,7 @@ describe('Select Components', () => {
       const handleValueChange = vi.fn()
       const user = userEvent.setup()
       
-      render(<BasicSelect onValueChange={handleValueChange} />)
+      simpleRender(<BasicSelect onValueChange={handleValueChange} />)
       
       const trigger = screen.getByRole('combobox')
       trigger.focus()
@@ -602,7 +606,7 @@ describe('Select Components', () => {
 
     it('should close dropdown with Tab key', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -621,7 +625,7 @@ describe('Select Components', () => {
 
   describe('Accessibility', () => {
     it('should have proper ARIA attributes', () => {
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       expect(trigger).toHaveAttribute('aria-expanded', 'false')
@@ -631,7 +635,7 @@ describe('Select Components', () => {
 
     it('should update aria-expanded when opened', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -643,7 +647,7 @@ describe('Select Components', () => {
 
     it('should have proper role attributes for items', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -659,7 +663,7 @@ describe('Select Components', () => {
 
     it('should support screen reader announcements', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect />)
+      simpleRender(<BasicSelect />)
       
       const trigger = screen.getByRole('combobox')
       await user.click(trigger)
@@ -721,7 +725,7 @@ describe('Select Components', () => {
 
     it('should work as uncontrolled component', async () => {
       const user = userEvent.setup()
-      render(<BasicSelect defaultValue="option1" />)
+      simpleRender(<BasicSelect defaultValue="option1" />)
       
       expect(screen.getByText('Option 1')).toBeInTheDocument()
       
@@ -745,7 +749,7 @@ describe('Select Components', () => {
   describe('Edge Cases', () => {
     it('should handle empty content', async () => {
       const user = userEvent.setup()
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue placeholder="No options" />
@@ -769,7 +773,7 @@ describe('Select Components', () => {
       const longText = 'This is a very long option text that should be handled properly by the select component'
       const user = userEvent.setup()
       
-      render(
+      simpleRender(
         <Select>
           <SelectTrigger>
             <SelectValue />
@@ -792,7 +796,7 @@ describe('Select Components', () => {
       const user = userEvent.setup()
       const handleValueChange = vi.fn()
       
-      render(
+      simpleRender(
         <Select onValueChange={handleValueChange}>
           <SelectTrigger>
             <SelectValue />
