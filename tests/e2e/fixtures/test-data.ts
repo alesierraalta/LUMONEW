@@ -152,12 +152,12 @@ export const formData = {
 export const selectors = {
   // Authentication
   auth: {
-    emailInput: '[data-testid="email-input"]',
-    passwordInput: '[data-testid="password-input"]',
-    loginButton: '[data-testid="login-button"]',
-    signupButton: '[data-testid="signup-button"]',
+    emailInput: '#email',
+    passwordInput: '#password',
+    loginButton: 'button[type="submit"]',
+    signupButton: 'button[type="submit"]',
     logoutButton: '[data-testid="logout-button"]',
-    resetPasswordButton: '[data-testid="reset-password-button"]',
+    resetPasswordButton: 'button[type="submit"]',
     adminSignupLink: '[data-testid="admin-signup-link"]'
   },
   

@@ -2,9 +2,23 @@ import { createClient as createBrowserClient } from './supabase/client'
 import { getServiceRoleClient } from './supabase/service-role'
 import { auditService } from './audit'
 
-// Use browser client for regular operations (compatible with both server and client)
-const supabase = createBrowserClient()
+// Use appropriate client based on environment
+function getMainClient() {
+  // Check if we're in a server environment where service role key is available
+  if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    try {
+      return getServiceRoleClient()
+    } catch (error) {
+      console.warn('Service role client not available, using browser client:', error)
+      return createBrowserClient()
+    }
+  }
+  
+  // For client-side operations, use the regular browser client
+  return createBrowserClient()
+}
 
+const supabase = getMainClient()
 // Get appropriate client for audit operations based on context
 function getAuditClient() {
   // Check if we're in a server environment where service role key is available

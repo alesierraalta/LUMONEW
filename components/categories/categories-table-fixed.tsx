@@ -70,9 +70,7 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
   }
 
   const handleDelete = async (category: Category) => {
-    const confirmMessage = `¿Estás seguro de que quieres eliminar la categoría "${category.name}"?
-
-Esta acción no se puede deshacer y puede afectar los items de inventario asociados.`
+    const confirmMessage = `¿Estás seguro de que quieres eliminar la categoría "${category.name}"?\n\nEsta acción no se puede deshacer y puede afectar los items de inventario asociados.`
     
     if (confirm(confirmMessage)) {
       try {
@@ -88,9 +86,7 @@ Esta acción no se puede deshacer y puede afectar los items de inventario asocia
       } catch (err) {
         console.error('Failed to delete category:', err)
         const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
-        alert(`Error al eliminar categoría: ${errorMessage}
-
-La categoría puede estar en uso por items de inventario.`)
+        alert(`Error al eliminar categoría: ${errorMessage}\n\nLa categoría puede estar en uso por items de inventario.`)
       }
     }
   }
@@ -241,8 +237,9 @@ La categoría puede estar en uso por items de inventario.`)
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-8 w-8 p-0 text-destructive"
+                    className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
                     onClick={() => handleDelete(category)}
+                    title="Eliminar categoría"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

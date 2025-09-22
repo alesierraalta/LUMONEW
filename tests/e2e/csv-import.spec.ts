@@ -10,7 +10,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should open CSV import modal', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Wait for modal to appear
     await expect(page.getByText('Importar Inventario desde CSV')).toBeVisible()
@@ -21,7 +21,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should handle CSV file upload and processing', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Wait for modal to appear
     await expect(page.getByText('Importar Inventario desde CSV')).toBeVisible()
@@ -50,7 +50,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should show column mapping interface', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Upload test CSV file
     const csvFilePath = path.join(__dirname, '../../public/test-inventory.csv')
@@ -70,7 +70,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should show preview with data validation', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Upload test CSV file
     const csvFilePath = path.join(__dirname, '../../public/test-inventory.csv')
@@ -95,7 +95,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should handle import process', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Upload test CSV file
     const csvFilePath = path.join(__dirname, '../../public/test-inventory.csv')
@@ -123,7 +123,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should handle file validation errors', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Try to upload a non-CSV file (create a temporary text file)
     const tempFilePath = path.join(__dirname, '../../public/test.txt')
@@ -152,7 +152,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should allow modal cancellation at any step', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Check if modal is open
     await expect(page.getByText('Importar Inventario desde CSV')).toBeVisible()
@@ -166,7 +166,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should show progress indicators', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Check if progress indicators are visible
     await expect(page.getByText('Cargar')).toBeVisible()
@@ -178,7 +178,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should display helpful tips and information', async ({ page }) => {
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Check if helpful information is displayed
     await expect(page.getByText('Formatos Soportados')).toBeVisible()
@@ -193,7 +193,7 @@ test.describe('CSV Import Functionality', () => {
     const emptyCSVContent = ''
     
     // Click on the import button
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     // Create and upload empty file
     await page.evaluate((content) => {
@@ -213,7 +213,7 @@ test.describe('CSV Import Functionality', () => {
 
   test('should provide export functionality for results', async ({ page }) => {
     // Complete a full import process first
-    await page.getByRole('button', { name: /importar datos/i }).click()
+    await page.getByText('Importar Datos').click()
     
     const csvFilePath = path.join(__dirname, '../../public/test-inventory.csv')
     await page.getByText('Seleccionar Archivo').click()
