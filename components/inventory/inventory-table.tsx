@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
@@ -56,9 +56,10 @@ interface FilterOptions {
 
 interface InventoryTableProps {
   filters: FilterOptions
+  refreshTrigger?: number
 }
 
-export function InventoryTable({ filters }: InventoryTableProps) {
+export function InventoryTable({ filters, refreshTrigger }: InventoryTableProps) {
   const router = useRouter()
   const t = useTranslations('inventory')
   const [searchTerm, setSearchTerm] = useState('')
@@ -75,9 +76,42 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   }>({ isOpen: false, item: null, initialOperation: 'add' })
 
   // Fetch inventory data
+  // Move fetchInventory function outside useEffect so it can be reused
+  const fetchInventory = useCallback(async () => {
+    try {
+      setLoading(true)
+      const response = await fetch('/api/inventory/items?limit=999999')
+      if (!response.ok) {
+        throw new Error('Failed to fetch inventory items')
+      }
+      const data = await response.json()
+      
+      // Handle both old format (array) and new format (pagination object)
+      if (Array.isArray(data)) {
+        setItems(data)
+      } else if (data && data.data && Array.isArray(data.data)) {
+        // New pagination format
+        setItems(data.data)
+      } else {
+        setItems([])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('errorLoadingInventory'))
+    } finally {
+      setLoading(false)
+    }
+  }, [t])
+
   useEffect(() => {
     fetchInventory()
-  }, [])
+  }, [fetchInventory])
+
+  // Refresh inventory data when refreshTrigger changes
+  useEffect(() => {
+    if (refreshTrigger && refreshTrigger > 0) {
+      fetchInventory()
+    }
+  }, [refreshTrigger, fetchInventory])
 
   // Handle bulk selection
   const handleSelectAll = (checked: boolean) => {
@@ -175,32 +209,6 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   const handleStockUpdated = () => {
     // Refresh the inventory data
     fetchInventory()
-  }
-
-  // Move fetchInventory function outside useEffect so it can be reused
-  const fetchInventory = async () => {
-    try {
-      setLoading(true)
-      const response = await fetch('/api/inventory/items?limit=999999')
-      if (!response.ok) {
-        throw new Error('Failed to fetch inventory items')
-      }
-      const data = await response.json()
-      
-      // Handle both old format (array) and new format (pagination object)
-      if (Array.isArray(data)) {
-        setItems(data)
-      } else if (data && data.data && Array.isArray(data.data)) {
-        // New pagination format
-        setItems(data.data)
-      } else {
-        setItems([])
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t('errorLoadingInventory'))
-    } finally {
-      setLoading(false)
-    }
   }
 
   const handleDelete = async (item: InventoryItem) => {

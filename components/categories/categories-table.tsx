@@ -70,13 +70,27 @@ export function CategoriesTable({ searchTerm = '' }: CategoriesTableProps) {
   }
 
   const handleDelete = async (category: Category) => {
-    if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+    const confirmMessage = `¿Estás seguro de que quieres eliminar la categoría "${category.name}"?
+
+Esta acción no se puede deshacer y puede afectar los items de inventario asociados.`
+    
+    if (confirm(confirmMessage)) {
       try {
+        console.log('Attempting to delete category:', category.id)
         await categoryService.delete(category.id)
+        console.log('Category deleted successfully')
+        
+        // Update local state
         setCategories(prev => prev.filter(c => c.id !== category.id))
+        
+        // Show success message
+        alert('Categoría eliminada exitosamente')
       } catch (err) {
         console.error('Failed to delete category:', err)
-        alert('Failed to delete category. It may be in use by inventory items.')
+        const errorMessage = err instanceof Error ? err.message : 'Error desconocido'
+        alert(`Error al eliminar categoría: ${errorMessage}
+
+La categoría puede estar en uso por items de inventario.`)
       }
     }
   }

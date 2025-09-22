@@ -1,488 +1,789 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createMocks } from 'node-mocks-http'
-import { GET, POST, DELETE } from '@/app/api/transactions/route'
-import { transactionService } from '@/lib/database'
+import { NextRequest } from 'next/server'
+import handler from '@/app/api/transactions/route'
+import { auditedTransactionService } from '@/lib/database-with-audit'
 
-// Mock the database services
-vi.mock('@/lib/database', () => ({
-  transactionService: {
+// Mock the database service
+vi.mock('@/lib/database-with-audit', () => ({
+  auditedTransactionService: {
     getAll: vi.fn(),
     getById: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
-    deleteAll: vi.fn(),
-    getByDateRange: vi.fn(),
     getByType: vi.fn(),
-    getByUser: vi.fn()
+    getByDateRange: vi.fn(),
+    getByUser: vi.fn(),
+    getAnalytics: vi.fn(),
+    getTransactionItems: vi.fn(),
+    addTransactionItem: vi.fn(),
+    updateTransactionItem: vi.fn(),
+    removeTransactionItem: vi.fn(),
   }
 }))
 
-describe('/api/transactions', () => {
+describe('/api/transactions - Integration Tests', () => {
+  const mockTransactions = [
+    {
+      id: 'trans-1',
+      type: 'sale',
+      status: 'completed',
+      subtotal: 100.00,
+      tax: 8.50,
+      tax_rate: 0.085,
+      total: 108.50,
+      notes: 'Customer purchase',
+      user_id: 'user-1',
+      created_at: '2024-01-01T10:00:00Z',
+      updated_at: '2024-01-01T10:00:00Z',
+      line_items: [
+        {
+          id: 'item-1',
+          product_id: 'prod-1',
+          product_sku: 'TEST-001',
+          product_name: 'Test Product 1',
+          quantity: 2,
+          unit_price: 50.00,
+          total_price: 100.00,
+          notes: ''
+        }
+      ]
+    },
+    {
+      id: 'trans-2',
+      type: 'stock_addition',
+      status: 'completed',
+      subtotal: 75.00,
+      tax: 0.00,
+      tax_rate: 0.00,
+      total: 75.00,
+      notes: 'Stock replenishment',
+      user_id: 'user-1',
+      created_at: '2024-01-02T14:30:00Z',
+      updated_at: '2024-01-02T14:30:00Z',
+      line_items: [
+        {
+          id: 'item-2',
+          product_id: 'prod-2',
+          product_sku: 'TEST-002',
+          product_name: 'Test Product 2',
+          quantity: 5,
+          unit_price: 15.00,
+          total_price: 75.00,
+          notes: ''
+        }
+      ]
+    }
+  ]
+
   beforeEach(() => {
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
-    vi.restoreAllMocks()
-  })
-
   describe('GET /api/transactions', () => {
-    it('should return all transactions successfully', async () => {
-      const mockTransactions = [
-        {
-          id: '1',
-          type: 'sale',
-          subtotal: 100.00,
-          tax: 8.00,
-          tax_rate: 0.08,
-          total: 108.00,
-          notes: 'Test sale transaction',
-          created_by: 'user1',
-          status: 'completed',
-          created_at: new Date().toISOString(),
-          transaction_items: [
-            {
-              id: 'item1',
-              product_id: 'prod1',
-              product_sku: 'SKU-001',
-              product_name: 'Test Product',
-              quantity: 2,
-              unit_price: 50.00,
-              total_price: 100.00,
-              notes: null
-            }
-          ]
-        },
-        {
-          id: '2',
-          type: 'stock_addition',
-          subtotal: 200.00,
-          tax: 0.00,
-          tax_rate: 0.00,
-          total: 200.00,
-          notes: 'Stock replenishment',
-          created_by: 'user2',
-          status: 'completed',
-          created_at: new Date().toISOString(),
-          transaction_items: [
-            {
-              id: 'item2',
-              product_id: 'prod2',
-              product_sku: 'SKU-002',
-              product_name: 'Another Product',
-              quantity: 4,
-              unit_price: 50.00,
-              total_price: 200.00,
-              notes: 'Bulk purchase'
-            }
-          ]
-        }
-      ]
-
-      vi.mocked(transactionService.getAll).mockResolvedValue(mockTransactions)
+    it('should return all transactions with default pagination', async () => {
+      auditedTransactionService.getAll.mockResolvedValue({
+        transactions: mockTransactions,
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      })
 
       const { req } = createMocks({
         method: 'GET',
-        url: '/api/transactions'
+        url: '/api/transactions',
       })
 
-      const response = await GET(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(transactionService.getAll).toHaveBeenCalledWith(50) // Default limit
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockTransactions)
+      expect(response.status).toBe(200)
+      expect(data.transactions).toEqual(mockTransactions)
+      expect(data.total).toBe(2)
+      expect(data.page).toBe(1)
+      expect(data.limit).toBe(10)
+      expect(auditedTransactionService.getAll).toHaveBeenCalledWith({
+        page: 1,
+        limit: 10,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      })
     })
 
-    it('should respect custom limit parameter', async () => {
-      const mockTransactions: any[] = []
-      vi.mocked(transactionService.getAll).mockResolvedValue(mockTransactions)
+    it('should handle custom pagination parameters', async () => {
+      auditedTransactionService.getAll.mockResolvedValue({
+        transactions: [mockTransactions[0]],
+        total: 1,
+        page: 2,
+        limit: 1,
+        totalPages: 2
+      })
 
       const { req } = createMocks({
         method: 'GET',
-        url: '/api/transactions?limit=25'
+        url: '/api/transactions?page=2&limit=1&sortBy=total&sortOrder=asc',
       })
 
-      const response = await GET(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(transactionService.getAll).toHaveBeenCalledWith(25)
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockTransactions)
+      expect(response.status).toBe(200)
+      expect(data.page).toBe(2)
+      expect(data.limit).toBe(1)
+      expect(auditedTransactionService.getAll).toHaveBeenCalledWith({
+        page: 2,
+        limit: 1,
+        sortBy: 'total',
+        sortOrder: 'asc'
+      })
     })
 
     it('should filter by transaction type', async () => {
-      const mockSaleTransactions = [
-        {
-          id: '1',
-          type: 'sale',
-          subtotal: 100.00,
-          tax: 8.00,
-          tax_rate: 0.08,
-          total: 108.00,
-          status: 'completed',
-          transaction_items: []
-        }
-      ]
-
-      vi.mocked(transactionService.getByType).mockResolvedValue(mockSaleTransactions)
+      auditedTransactionService.getByType.mockResolvedValue({
+        transactions: [mockTransactions[0]],
+        total: 1,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      })
 
       const { req } = createMocks({
         method: 'GET',
-        url: '/api/transactions?type=sale'
+        url: '/api/transactions?type=sale',
       })
 
-      const response = await GET(req)
-      const data = await response.json()
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
 
-      expect(transactionService.getByType).toHaveBeenCalledWith('sale', 50)
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockSaleTransactions)
-    })
-
-    it('should filter by user', async () => {
-      const mockUserTransactions = [
-        {
-          id: '1',
-          type: 'sale',
-          created_by: 'user123',
-          status: 'completed',
-          transaction_items: []
-        }
-      ]
-
-      vi.mocked(transactionService.getByUser).mockResolvedValue(mockUserTransactions)
-
-      const { req } = createMocks({
-        method: 'GET',
-        url: '/api/transactions?user=user123'
+      expect(response.status).toBe(200)
+      expect(auditedTransactionService.getByType).toHaveBeenCalledWith('sale', {
+        page: 1,
+        limit: 10,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
       })
-
-      const response = await GET(req)
-      const data = await response.json()
-
-      expect(transactionService.getByUser).toHaveBeenCalledWith('user123', 50)
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockUserTransactions)
     })
 
     it('should filter by date range', async () => {
-      const mockDateRangeTransactions = [
-        {
-          id: '1',
-          type: 'sale',
-          created_at: '2024-01-15T10:00:00Z',
-          status: 'completed',
-          transaction_items: []
-        }
-      ]
-
-      vi.mocked(transactionService.getByDateRange).mockResolvedValue(mockDateRangeTransactions)
+      auditedTransactionService.getByDateRange.mockResolvedValue({
+        transactions: mockTransactions,
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      })
 
       const { req } = createMocks({
         method: 'GET',
-        url: '/api/transactions?startDate=2024-01-01&endDate=2024-01-31'
+        url: '/api/transactions?startDate=2024-01-01&endDate=2024-01-31',
       })
 
-      const response = await GET(req)
-      const data = await response.json()
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
 
-      expect(transactionService.getByDateRange).toHaveBeenCalledWith(
-        new Date('2024-01-01'),
-        new Date('2024-01-31')
+      expect(response.status).toBe(200)
+      expect(auditedTransactionService.getByDateRange).toHaveBeenCalledWith(
+        '2024-01-01',
+        '2024-01-31',
+        {
+          page: 1,
+          limit: 10,
+          sortBy: 'created_at',
+          sortOrder: 'desc'
+        }
       )
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(mockDateRangeTransactions)
     })
 
-    it('should handle database errors gracefully', async () => {
-      vi.mocked(transactionService.getAll).mockRejectedValue(new Error('Database connection failed'))
+    it('should filter by user', async () => {
+      auditedTransactionService.getByUser.mockResolvedValue({
+        transactions: mockTransactions,
+        total: 2,
+        page: 1,
+        limit: 10,
+        totalPages: 1
+      })
 
       const { req } = createMocks({
         method: 'GET',
-        url: '/api/transactions'
+        url: '/api/transactions?userId=user-1',
       })
 
-      const response = await GET(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+
+      expect(response.status).toBe(200)
+      expect(auditedTransactionService.getByUser).toHaveBeenCalledWith('user-1', {
+        page: 1,
+        limit: 10,
+        sortBy: 'created_at',
+        sortOrder: 'desc'
+      })
+    })
+
+    it('should handle server errors', async () => {
+      auditedTransactionService.getAll.mockRejectedValue(new Error('Database connection failed'))
+
+      const { req } = createMocks({
+        method: 'GET',
+        url: '/api/transactions',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
       expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Failed to fetch transactions')
+      expect(data.error).toBe('Internal server error')
       expect(data.message).toBe('Database connection failed')
+    })
+
+    it('should validate pagination parameters', async () => {
+      const { req } = createMocks({
+        method: 'GET',
+        url: '/api/transactions?page=0&limit=0',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Page must be greater than 0')
+    })
+
+    it('should validate sort parameters', async () => {
+      const { req } = createMocks({
+        method: 'GET',
+        url: '/api/transactions?sortBy=invalid_field',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Invalid sort field')
+    })
+
+    it('should validate date format', async () => {
+      const { req } = createMocks({
+        method: 'GET',
+        url: '/api/transactions?startDate=invalid-date',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Invalid date format')
     })
   })
 
   describe('POST /api/transactions', () => {
+    const validTransaction = {
+      type: 'sale',
+      notes: 'Customer purchase',
+      subtotal: 100.00,
+      tax: 8.50,
+      tax_rate: 0.085,
+      total: 108.50,
+      line_items: [
+        {
+          product_id: 'prod-1',
+          product_sku: 'TEST-001',
+          product_name: 'Test Product 1',
+          quantity: 2,
+          unit_price: 50.00,
+          total_price: 100.00,
+          notes: ''
+        }
+      ]
+    }
+
     it('should create a new transaction successfully', async () => {
-      const newTransaction = {
-        type: 'sale',
-        subtotal: 150.00,
-        tax: 12.00,
-        tax_rate: 0.08,
-        total: 162.00,
-        notes: 'New sale transaction',
-        created_by: 'user1',
-        status: 'completed',
-        line_items: [
-          {
-            product_id: 'prod1',
-            product_sku: 'SKU-001',
-            product_name: 'Test Product',
-            quantity: 3,
-            unit_price: 50.00,
-            total_price: 150.00,
-            notes: 'Bulk discount applied'
-          }
-        ]
-      }
-
       const createdTransaction = {
-        id: '123',
-        ...newTransaction,
-        created_at: new Date().toISOString(),
-        transaction_items: newTransaction.line_items.map(item => ({
-          id: 'item123',
-          transaction_id: '123',
-          ...item
-        }))
+        id: 'trans-3',
+        ...validTransaction,
+        status: 'completed',
+        user_id: 'user-1',
+        created_at: '2024-01-03T10:00:00Z',
+        updated_at: '2024-01-03T10:00:00Z'
       }
-
-      vi.mocked(transactionService.create).mockResolvedValue(createdTransaction)
+      auditedTransactionService.create.mockResolvedValue(createdTransaction)
 
       const { req } = createMocks({
         method: 'POST',
         url: '/api/transactions',
-        body: newTransaction
+        body: validTransaction,
       })
 
-      const response = await POST(req)
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(validTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(transactionService.create).toHaveBeenCalledWith(newTransaction)
-      expect(data.success).toBe(true)
-      expect(data.data).toEqual(createdTransaction)
+      expect(response.status).toBe(201)
+      expect(data).toEqual(createdTransaction)
+      expect(auditedTransactionService.create).toHaveBeenCalledWith(validTransaction)
     })
 
     it('should validate required fields', async () => {
-      const incompleteTransaction = {
-        type: 'sale',
-        subtotal: 100.00
-        // Missing required fields: tax, tax_rate, total, created_by, line_items
+      const invalidTransaction = {
+        // Missing required fields: type, line_items
+        notes: 'Test transaction'
       }
 
       const { req } = createMocks({
         method: 'POST',
         url: '/api/transactions',
-        body: incompleteTransaction
+        body: invalidTransaction,
       })
 
-      const response = await POST(req)
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Missing required fields')
-      expect(data.message).toContain('tax')
-      expect(data.message).toContain('tax_rate')
-      expect(data.message).toContain('total')
-      expect(data.message).toContain('created_by')
-      expect(data.message).toContain('line_items')
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Transaction type is required')
     })
 
     it('should validate transaction type', async () => {
       const invalidTransaction = {
-        type: 'invalid_type',
-        subtotal: 100.00,
-        tax: 8.00,
-        tax_rate: 0.08,
-        total: 108.00,
-        created_by: 'user1',
-        line_items: []
+        ...validTransaction,
+        type: 'invalid_type'
       }
 
       const { req } = createMocks({
         method: 'POST',
         url: '/api/transactions',
-        body: invalidTransaction
+        body: invalidTransaction,
       })
 
-      const response = await POST(req)
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Invalid transaction type')
-    })
-
-    it('should validate numeric fields', async () => {
-      const invalidTransaction = {
-        type: 'sale',
-        subtotal: -100.00, // Invalid negative subtotal
-        tax: 8.00,
-        tax_rate: 0.08,
-        total: 108.00,
-        created_by: 'user1',
-        line_items: []
-      }
-
-      const { req } = createMocks({
-        method: 'POST',
-        url: '/api/transactions',
-        body: invalidTransaction
-      })
-
-      const response = await POST(req)
-      const data = await response.json()
-
-      expect(response.status).toBe(400)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Subtotal must be a non-negative number')
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Invalid transaction type')
     })
 
     it('should validate line items', async () => {
       const invalidTransaction = {
-        type: 'sale',
-        subtotal: 100.00,
-        tax: 8.00,
-        tax_rate: 0.08,
-        total: 108.00,
-        created_by: 'user1',
+        ...validTransaction,
         line_items: [] // Empty line items
       }
 
       const { req } = createMocks({
         method: 'POST',
         url: '/api/transactions',
-        body: invalidTransaction
+        body: invalidTransaction,
       })
 
-      const response = await POST(req)
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('At least one line item is required')
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('At least one line item is required')
     })
 
-    it('should handle creation errors', async () => {
-      const newTransaction = {
-        type: 'sale',
-        subtotal: 100.00,
-        tax: 8.00,
-        tax_rate: 0.08,
-        total: 108.00,
-        created_by: 'user1',
+    it('should validate line item data', async () => {
+      const invalidTransaction = {
+        ...validTransaction,
         line_items: [
           {
-            product_id: 'prod1',
-            product_sku: 'SKU-001',
-            product_name: 'Test Product',
-            quantity: 2,
-            unit_price: 50.00,
-            total_price: 100.00
+            // Missing required fields
+            quantity: 1
           }
         ]
       }
 
-      vi.mocked(transactionService.create).mockRejectedValue(new Error('Insufficient inventory'))
+      const { req } = createMocks({
+        method: 'POST',
+        url: '/api/transactions',
+        body: invalidTransaction,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Product ID is required')
+    })
+
+    it('should validate numeric fields', async () => {
+      const invalidTransaction = {
+        ...validTransaction,
+        subtotal: 'invalid',
+        tax: 'not-a-number'
+      }
 
       const { req } = createMocks({
         method: 'POST',
         url: '/api/transactions',
-        body: newTransaction
+        body: invalidTransaction,
       })
 
-      const response = await POST(req)
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Failed to create transaction')
-      expect(data.message).toBe('Insufficient inventory')
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Subtotal must be a number')
+    })
+
+    it('should validate price calculations', async () => {
+      const invalidTransaction = {
+        ...validTransaction,
+        subtotal: 100.00,
+        tax: 10.00,
+        total: 95.00 // Incorrect total
+      }
+
+      const { req } = createMocks({
+        method: 'POST',
+        url: '/api/transactions',
+        body: invalidTransaction,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Total does not match subtotal + tax')
+    })
+
+    it('should handle creation errors', async () => {
+      auditedTransactionService.create.mockRejectedValue(new Error('Inventory insufficient'))
+
+      const { req } = createMocks({
+        method: 'POST',
+        url: '/api/transactions',
+        body: validTransaction,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(validTransaction),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(409)
+      expect(data.error).toBe('Conflict')
+      expect(data.message).toBe('Inventory insufficient')
+    })
+  })
+
+  describe('PUT /api/transactions', () => {
+    const updateData = {
+      notes: 'Updated transaction notes',
+      status: 'cancelled'
+    }
+
+    it('should update a transaction successfully', async () => {
+      const updatedTransaction = {
+        ...mockTransactions[0],
+        ...updateData,
+        updated_at: '2024-01-03T10:00:00Z'
+      }
+      auditedTransactionService.update.mockResolvedValue(updatedTransaction)
+
+      const { req } = createMocks({
+        method: 'PUT',
+        url: '/api/transactions?id=trans-1',
+        body: updateData,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(updateData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(200)
+      expect(data).toEqual(updatedTransaction)
+      expect(auditedTransactionService.update).toHaveBeenCalledWith('trans-1', updateData)
+    })
+
+    it('should require transaction ID for updates', async () => {
+      const { req } = createMocks({
+        method: 'PUT',
+        url: '/api/transactions',
+        body: updateData,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(updateData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toBe('Transaction ID is required for updates')
+    })
+
+    it('should validate status values', async () => {
+      const invalidUpdate = {
+        status: 'invalid_status'
+      }
+
+      const { req } = createMocks({
+        method: 'PUT',
+        url: '/api/transactions?id=trans-1',
+        body: invalidUpdate,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(invalidUpdate),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Invalid status value')
+    })
+
+    it('should handle transaction not found', async () => {
+      auditedTransactionService.update.mockRejectedValue(new Error('Transaction not found'))
+
+      const { req } = createMocks({
+        method: 'PUT',
+        url: '/api/transactions?id=nonexistent',
+        body: updateData,
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: JSON.stringify(updateData),
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(404)
+      expect(data.error).toBe('Not Found')
+      expect(data.message).toBe('Transaction not found')
     })
   })
 
   describe('DELETE /api/transactions', () => {
-    it('should delete a specific transaction successfully', async () => {
-      vi.mocked(transactionService.delete).mockResolvedValue(undefined)
+    it('should delete a transaction successfully', async () => {
+      auditedTransactionService.delete.mockResolvedValue(true)
 
       const { req } = createMocks({
         method: 'DELETE',
-        url: '/api/transactions?id=123'
+        url: '/api/transactions?id=trans-1',
       })
 
-      const response = await DELETE(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(transactionService.delete).toHaveBeenCalledWith('123')
-      expect(data.success).toBe(true)
+      expect(response.status).toBe(200)
       expect(data.message).toBe('Transaction deleted successfully')
+      expect(auditedTransactionService.delete).toHaveBeenCalledWith('trans-1')
     })
 
-    it('should delete all transactions when deleteAll=true', async () => {
-      vi.mocked(transactionService.deleteAll).mockResolvedValue(undefined)
-
+    it('should require transaction ID for deletion', async () => {
       const { req } = createMocks({
         method: 'DELETE',
-        url: '/api/transactions?deleteAll=true'
+        url: '/api/transactions',
       })
 
-      const response = await DELETE(req)
-      const data = await response.json()
-
-      expect(transactionService.deleteAll).toHaveBeenCalledOnce()
-      expect(data.success).toBe(true)
-      expect(data.message).toBe('All transactions deleted successfully')
-    })
-
-    it('should require transaction ID when not deleting all', async () => {
-      const { req } = createMocks({
-        method: 'DELETE',
-        url: '/api/transactions'
-      })
-
-      const response = await DELETE(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
       expect(response.status).toBe(400)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Transaction ID is required')
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toBe('Transaction ID is required for deletion')
     })
 
-    it('should handle deletion errors', async () => {
-      vi.mocked(transactionService.delete).mockRejectedValue(new Error('Transaction not found'))
+    it('should handle deletion restrictions', async () => {
+      auditedTransactionService.delete.mockRejectedValue(new Error('Cannot delete completed transaction'))
 
       const { req } = createMocks({
         method: 'DELETE',
-        url: '/api/transactions?id=123'
+        url: '/api/transactions?id=trans-1',
       })
 
-      const response = await DELETE(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Failed to delete transaction')
-      expect(data.message).toBe('Transaction not found')
+      expect(response.status).toBe(409)
+      expect(data.error).toBe('Conflict')
+      expect(data.message).toBe('Cannot delete completed transaction')
     })
+  })
 
-    it('should handle delete all errors', async () => {
-      vi.mocked(transactionService.deleteAll).mockRejectedValue(new Error('Database constraint violation'))
+  describe('GET /api/transactions - Analytics', () => {
+    it('should return transaction analytics', async () => {
+      const mockAnalytics = {
+        totalTransactions: 150,
+        totalValue: 25000.00,
+        averageTransactionValue: 166.67,
+        transactionsByType: [
+          { type: 'sale', count: 100, value: 20000.00 },
+          { type: 'stock_addition', count: 50, value: 5000.00 }
+        ],
+        transactionsByDay: [
+          { date: '2024-01-01', count: 5, value: 1000.00 },
+          { date: '2024-01-02', count: 8, value: 1500.00 }
+        ]
+      }
+      auditedTransactionService.getAnalytics.mockResolvedValue(mockAnalytics)
 
       const { req } = createMocks({
-        method: 'DELETE',
-        url: '/api/transactions?deleteAll=true'
+        method: 'GET',
+        url: '/api/transactions?analytics=true',
       })
 
-      const response = await DELETE(req)
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
       const data = await response.json()
 
-      expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
-      expect(data.error).toBe('Failed to delete all transactions')
-      expect(data.message).toBe('Database constraint violation')
+      expect(response.status).toBe(200)
+      expect(data).toEqual(mockAnalytics)
+      expect(auditedTransactionService.getAnalytics).toHaveBeenCalledWith({})
+    })
+
+    it('should return analytics with date range', async () => {
+      const mockAnalytics = {
+        totalTransactions: 50,
+        totalValue: 10000.00,
+        averageTransactionValue: 200.00,
+        transactionsByType: [
+          { type: 'sale', count: 30, value: 8000.00 },
+          { type: 'stock_addition', count: 20, value: 2000.00 }
+        ]
+      }
+      auditedTransactionService.getAnalytics.mockResolvedValue(mockAnalytics)
+
+      const { req } = createMocks({
+        method: 'GET',
+        url: '/api/transactions?analytics=true&startDate=2024-01-01&endDate=2024-01-31',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+
+      expect(response.status).toBe(200)
+      expect(auditedTransactionService.getAnalytics).toHaveBeenCalledWith({
+        startDate: '2024-01-01',
+        endDate: '2024-01-31'
+      })
+    })
+  })
+
+  describe('Method Not Allowed', () => {
+    it('should return 405 for unsupported methods', async () => {
+      const { req } = createMocks({
+        method: 'PATCH',
+        url: '/api/transactions',
+      })
+
+      const request = new NextRequest(req.url, { method: req.method })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(405)
+      expect(data.error).toBe('Method Not Allowed')
+      expect(data.message).toBe('Method PATCH not allowed')
+    })
+  })
+
+  describe('Content-Type Validation', () => {
+    it('should validate JSON content type for POST requests', async () => {
+      const { req } = createMocks({
+        method: 'POST',
+        url: '/api/transactions',
+        body: 'invalid json',
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: 'invalid json',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Invalid JSON')
+    })
+
+    it('should handle missing content type for POST requests', async () => {
+      const { req } = createMocks({
+        method: 'POST',
+        url: '/api/transactions',
+        body: '{}',
+      })
+
+      const request = new NextRequest(req.url, {
+        method: req.method,
+        body: '{}'
+      })
+      const response = await handler(request)
+      const data = await response.json()
+
+      expect(response.status).toBe(400)
+      expect(data.error).toBe('Bad Request')
+      expect(data.message).toContain('Content-Type must be application/json')
     })
   })
 })

@@ -1,96 +1,68 @@
 ---
-description: Branch protection and pull request management rules
+alwaysApply: false
+description: "Guidelines for configuring GitHub branch protection rules."
 ---
 
-# Branch Protection Rules
+# GitHub Branch Protection Rules Guidelines
 
-## Main Branch Protection
-The `main` branch has strict protection rules configured via [scripts/setup-branch-protection.js](mdc:scripts/setup-branch-protection.js):
+Branch protection rules are crucial for maintaining code quality and ensuring a stable release process. These rules are configured in your GitHub repository settings under `Settings > Branches > Branch protection rules`.
 
-### Required Settings
-- **Pull Request Reviews**: Minimum 1 approval required
-- **Dismiss Stale Reviews**: Yes, when new commits are pushed
-- **Code Owner Reviews**: Required
-- **Status Checks**: All CI checks must pass
-- **Up-to-date Branches**: Required before merging
-- **Linear History**: Enforced
-- **Force Pushes**: Disabled
-- **Deletions**: Disabled
+## `main` Branch Protection (Production)
 
-### Required Status Checks
-- `prod-deploy / prod-quality`
-- `prod-deploy / security`
-- `prod-deploy / prod-test`
-- `pr-checks / pr-validation`
-- `pr-checks / pr-security`
+The `main` branch is highly protected to ensure only thoroughly reviewed and tested code reaches production.
 
-## Dev Branch Protection
-The `dev` branch has moderate protection for faster iteration:
+### Required Settings:
+- **Require a pull request before merging**: **Enabled**
+  - **Require approvals**: **Enabled** (at least 1 approving review)
+  - **Require code owner reviews**: **Enabled** (if `CODEOWNERS` file is used)
+  - **Dismiss stale pull request approvals when new commits are pushed**: **Enabled** (ensures reviews are always on the latest code)
+- **Require status checks to pass before merging**: **Enabled**
+  - **Strict status checks**: **Enabled** (branches must be up to date before merging)
+  - **Required status checks**: Select all critical CI/CD jobs from `prod-deploy.yml` and `pr-checks.yml`:
+    - `prod-deploy / quality`
+    - `prod-deploy / security`
+    - `prod-deploy / test`
+    - `prod-deploy / e2e-test`
+    - `prod-deploy / build`
+    - `pr-checks / pr-quality-checks`
+- **Require signed commits**: (Optional, but recommended for high-security projects)
+- **Require linear history**: (Optional, prevents merge commits)
+- **Include administrators**: **Enabled** (ensures admins also follow the rules)
+- **Allow force pushes**: **Disabled**
+- **Allow deletions**: **Disabled**
 
-### Required Settings
-- **Pull Request Reviews**: Not required
-- **Status Checks**: Basic quality checks only
-- **Force Pushes**: Allowed for rebasing
-- **Deletions**: Disabled
+## `dev` Branch Protection (Development)
 
-### Required Status Checks
-- `dev-deploy / dev-quality`
+The `dev` branch has lighter protection to facilitate faster iteration while still maintaining quality.
 
-## Pull Request Guidelines
-When creating PRs:
+### Required Settings:
+- **Require a pull request before merging**: **Disabled** (allows direct pushes for faster development)
+- **Require status checks to pass before merging**: **Enabled**
+  - **Strict status checks**: **Enabled**
+  - **Required status checks**: Select essential CI checks from `dev-deploy.yml` and `pr-checks.yml`:
+    - `dev-deploy / build-and-deploy-dev`
+    - `pr-checks / pr-quality-checks`
+- **Include administrators**: **Disabled** (allows admins to push directly for quick fixes if necessary, but generally discouraged)
+- **Allow force pushes**: **Enabled** (useful for rebasing during development)
+- **Allow deletions**: **Disabled**
 
-### From Feature to Dev
-- Use descriptive titles
-- Link related issues
-- Request appropriate reviewers
-- Ensure all dev checks pass
+## Setup Script:
+- Use [`scripts/fix-github-workflow.js`](mdc:scripts/fix-github-workflow.js) to automate the configuration of these rules via the GitHub API. Remember to set `GITHUB_TOKEN`, `GITHUB_REPOSITORY_OWNER`, and `GITHUB_REPOSITORY_NAME` environment variables.
 
-### From Dev to Main
-- Use release notes format for title
-- Include comprehensive description
-- Link all related PRs merged to dev
-- Wait for all production checks to pass
-- Get required approvals before merging
+## Manual Setup:
+1. Go to GitHub repository settings: `Settings > Branches`
+2. Click "Add rule" for each branch (`main` and `dev`)
+3. Configure the settings as described above
+4. Save the rules
 
-## CODEOWNERS File
-The [.github/CODEOWNERS](mdc:.github/CODEOWNERS) file defines code ownership:
-- Global owners for all files
-- Specific owners for documentation, workflows, config files
-- Database migrations and scripts require owner approval
+## Emergency Bypass:
+- In extreme emergencies, an administrator can temporarily disable protection rules or use a bypass mechanism if configured, but this should be a last resort and thoroughly documented.
 
-## Emergency Procedures
-For critical production issues:
+## Branch Protection Status:
+- **`main`**: Highly protected, requires PRs from `dev` with approvals
+- **`dev`**: Lightly protected, allows direct pushes but requires status checks
+- **`feature/*`**: No protection, allows full freedom for development
 
-1. **Create Hotfix Branch**:
-   ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b hotfix/critical-issue
-   ```
-
-2. **Make Minimal Fix**:
-   ```bash
-   git add .
-   git commit -m "fix: critical security issue"
-   git push origin hotfix/critical-issue
-   ```
-
-3. **Create PR to Main**:
-   - Mark as urgent
-   - Request expedited review
-   - Include detailed explanation
-
-4. **Sync Back to Dev**:
-   ```bash
-   git checkout dev
-   git merge main
-   git push origin dev
-   ```
-
-## Branch Protection Setup
-Use the automated script to set up protection rules:
-```bash
-node scripts/setup-branch-protection.js
-```
-
-Or configure manually via GitHub web interface following the settings in [docs/SETUP_GITHUB_WORKFLOW.md](mdc:docs/SETUP_GITHUB_WORKFLOW.md).
+## Documentation:
+- [`docs/CORRECT_GITHUB_WORKFLOW.md`](mdc:docs/CORRECT_GITHUB_WORKFLOW.md): Detailed workflow documentation with branch protection explanation.
+- [`GITHUB_WORKFLOW_QUICK_REFERENCE.md`](mdc:GITHUB_WORKFLOW_QUICK_REFERENCE.md): Quick reference for branch protection setup.

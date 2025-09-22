@@ -1,0 +1,151 @@
+name: 🧪 Development Deployment
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+env:
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ===== DEVELOPMENT QUALITY CHECKS =====
+  dev-quality:
+    name: 🔍 Dev Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 📝 TypeScript type check
+        run: npm run type-check || npx tsc --noEmit
+
+      - name: 🎨 ESLint check
+        run: npm run lint || npx eslint . --ext .ts,.tsx,.js,.jsx
+
+      - name: 🧪 Run unit tests
+        run: npm run test || npx vitest run
+
+  # ===== DEVELOPMENT BUILD =====
+  dev-build:
+    name: 🏗️ Dev Build
+    runs-on: ubuntu-latest
+    needs: [dev-quality]
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+      - name: 📦 Upload dev build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dev-build-files
+          path: |
+            .next/
+            public/
+          retention-days: 3
+
+  # ===== DEVELOPMENT DEPLOYMENT =====
+  dev-deploy:
+    name: 🚀 Dev Deploy
+    runs-on: ubuntu-latest
+    needs: [dev-build]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    
+    environment:
+      name: development
+      url: ${{ steps.vercel.outputs.url }}
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: dev-build-files
+
+      - name: 🚀 Deploy to Vercel (Dev)
+        id: vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--target=development'
+
+      - name: 📝 Comment dev deployment URL
+        uses: actions/github-script@v8
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const url = '${{ steps.vercel.outputs.url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🧪 **Development deployment successful!**\n\n✅ Dev URL: ${url}\n\n⚠️ This is a development environment for testing purposes only.`
+            });
+
+  # ===== DEVELOPMENT E2E TESTS =====
+  dev-e2e:
+    name: 🎭 Dev E2E Tests
+    runs-on: ubuntu-latest
+    needs: [dev-deploy]
+    if: github.ref == 'refs/heads/dev' && github.event_name == 'push'
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: 🎭 Run E2E tests against dev environment
+        run: npm run test:e2e:dev || npx playwright test --config=playwright.dev.config.ts
+        env:
+          BASE_URL: ${{ steps.vercel.outputs.url }}
+
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: dev-playwright-report
+          path: playwright-report/
+          retention-days: 7

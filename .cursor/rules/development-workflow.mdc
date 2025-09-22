@@ -1,118 +1,75 @@
 ---
 alwaysApply: true
-description: Daily development workflow and best practices for the dev/prod branching strategy
 ---
 
-# Development Workflow Rules
+# Development Workflow Best Practices
 
-## Daily Development Process
+This document outlines the recommended practices for daily development within the project, aligning with our GitHub branching strategy.
 
-### Starting Work
-1. **Sync with latest changes**:
-   ```bash
-   git checkout dev
-   git pull origin dev
-   ```
+## 1. Branching Strategy:
+- Always create a new feature or bugfix branch from `dev`.
+  - `git checkout dev`
+  - `git pull origin dev`
+  - `git checkout -b feature/my-new-feature` (or `bugfix/issue-id`)
+- **NEVER commit directly to `dev` or `main`**.
 
-2. **Create feature branch**:
-   ```bash
-   git checkout -b feature/descriptive-name
-   ```
+## 2. Commit Messages:
+- Follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+- **Format**: `<type>(<scope>): <description>`
+  - **`type`**: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`, `perf`, `ci`, `build`
+  - **`scope`**: (Optional) The part of the codebase affected (e.g., `inventory`, `auth`, `ui`).
+  - **`description`**: Concise summary of the change.
+- **Examples**:
+  - `feat(inventory): add bulk create functionality`
+  - `fix(auth): resolve login redirect bug`
+  - `docs: update GitHub workflow guide`
+  - `test(inventory): add e2e tests for quick stock`
 
-### During Development
-1. **Make focused commits**:
-   ```bash
-   git add .
-   git commit -m "feat: add user authentication"
-   ```
+## 3. Code Quality:
+- Run linters and formatters locally before committing:
+  - `npm run lint`
+  - `npm run format` (or `npx prettier --write .`)
+- Ensure TypeScript type checks pass: `npm run type-check`
+- Write clear, concise, and well-commented code.
 
-2. **Push frequently**:
-   ```bash
-   git push origin feature/descriptive-name
-   ```
+## 4. Testing:
+- Write unit tests for new components/functions.
+- Write E2E tests for new user flows, especially for critical paths.
+- Run relevant tests locally before pushing:
+  - `npm run test` (unit tests)
+  - `npx playwright test` (all E2E tests)
+  - `npx playwright test tests/e2e/inventory/my-feature.spec.ts` (specific E2E test)
+- Ensure tests pass and maintain high code coverage.
 
-3. **Keep branch updated**:
-   ```bash
-   git checkout dev
-   git pull origin dev
-   git checkout feature/descriptive-name
-   git rebase dev
-   ```
+## 5. Pull Requests (PRs):
+- Open PRs from your feature/bugfix branch to `dev`.
+- Provide a clear title and description, referencing any related issues.
+- Request reviews from appropriate team members.
+- Address all review comments and ensure all CI checks pass before merging.
 
-### Completing Features
-1. **Create PR to dev**:
-   - Use descriptive title and description
-   - Link related issues
-   - Request appropriate reviewers
+## 6. Code Review Checklist:
+- [ ] Code adheres to style guides (ESLint, Prettier).
+- [ ] Functionality matches requirements.
+- [ ] Edge cases are handled.
+- [ ] Tests are sufficient and pass.
+- [ ] Documentation (code comments, READMEs, workflow docs) is updated.
+- [ ] No sensitive information is exposed.
+- [ ] Performance implications are considered.
 
-2. **Address feedback**:
-   - Make requested changes
-   - Respond to comments
-   - Update PR description if needed
+## 7. Keeping `dev` up-to-date:
+- Regularly pull changes from `dev` into your feature branch to avoid merge conflicts.
+  - `git checkout dev`
+  - `git pull origin dev`
+  - `git checkout feature/my-new-feature`
+  - `git merge dev` (resolve conflicts if any)
 
-3. **Merge to dev**:
-   - Wait for CI checks to pass
-   - Get required approvals
-   - Merge using "Squash and merge"
+## 8. Production Releases:
+- Only create PRs from `dev` to `main` when `dev` is stable.
+- Ensure all tests pass and code is thoroughly reviewed.
+- Production deployments are automatic when `dev` is merged to `main`.
 
-### Promoting to Production
-1. **Create PR from dev to main**:
-   - Use release notes format for title
-   - Include comprehensive description of changes
-   - Link to all related PRs merged to dev
-
-2. **Production deployment**:
-   - All CI checks must pass
-   - Security scans must pass
-   - Performance tests must pass
-   - Required approvals must be obtained
-
-## Commit Message Convention
-Use conventional commit format:
-- `feat:` - New features
-- `fix:` - Bug fixes
-- `docs:` - Documentation changes
-- `style:` - Formatting changes
-- `refactor:` - Code refactoring
-- `test:` - Adding tests
-- `chore:` - Maintenance tasks
-- `perf:` - Performance improvements
-- `ci:` - CI/CD changes
-- `build:` - Build system changes
-
-## File Organization
-- Keep feature-related files together
-- Update relevant documentation
-- Add tests for new functionality
-- Update type definitions if needed
-
-## Testing Requirements
-- Unit tests for new functions/components
-- Integration tests for API endpoints
-- E2E tests for user workflows
-- Update existing tests if behavior changes
-
-## Documentation Updates
-When making changes, update:
-- [docs/GITHUB_WORKFLOW.md](mdc:docs/GITHUB_WORKFLOW.md) if workflow changes
-- README.md if setup instructions change
-- Code comments for complex logic
-- Type definitions for new interfaces
-
-## Code Review Checklist
-Before requesting review, ensure:
-- [ ] Code follows project conventions
-- [ ] Tests are added/updated
-- [ ] Documentation is updated
-- [ ] No console.log or debug code
-- [ ] Proper error handling
-- [ ] Performance considerations addressed
-- [ ] Security implications reviewed
-
-## Deployment Monitoring
-After deployment:
-- [ ] Check deployment logs
-- [ ] Verify E2E tests pass
-- [ ] Monitor performance metrics
-- [ ] Check error rates
-- [ ] Validate functionality in production
+## Workflow Files:
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development deployment workflow.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production deployment workflow.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): PR validation workflow.
+- [`docs/CORRECT_GITHUB_WORKFLOW.md`](mdc:docs/CORRECT_GITHUB_WORKFLOW.md): Detailed workflow documentation.

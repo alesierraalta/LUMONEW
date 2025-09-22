@@ -511,7 +511,10 @@ export class OptimizedInventoryService {
     try {
       const itemsWithStatus = items.map(item => ({ ...item, status: item.status || 'active' }))
 
-      const { data, error } = await supabase
+      // Use service role client for server-side operations
+      const client = getAuditClient(user)
+      
+      const { data, error } = await client
         .from('inventory')
         .insert(itemsWithStatus)
         .select(`

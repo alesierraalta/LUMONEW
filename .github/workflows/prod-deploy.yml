@@ -1,0 +1,261 @@
+name: 🚀 Production Deployment
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ===== PRODUCTION QUALITY GATE =====
+  prod-quality:
+    name: 🔍 Production Quality Gate
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 📝 TypeScript type check
+        run: npm run type-check || npx tsc --noEmit
+
+      - name: 🎨 ESLint check
+        run: npm run lint || npx eslint . --ext .ts,.tsx,.js,.jsx
+
+      - name: 💄 Prettier check
+        run: npx prettier --check "**/*.{ts,tsx,js,jsx,json,md}"
+
+      - name: 🔍 Check for unused dependencies
+        run: npx depcheck --ignores="@types/*,eslint-*,prettier,postcss,tailwindcss"
+
+  # ===== SECURITY CHECKS =====
+  security:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🛡️ Run security audit
+        run: npm audit --audit-level=moderate
+
+      - name: 🔍 Snyk security scan
+        uses: snyk/actions/node@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+
+  # ===== PRODUCTION TESTING =====
+  prod-test:
+    name: 🧪 Production Tests
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18, 20]
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🧪 Run unit tests
+        run: npm run test || npx vitest run
+
+      - name: 📊 Generate test coverage
+        run: npm run test:coverage || npx vitest run --coverage
+
+      - name: 📈 Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+
+  # ===== PRODUCTION BUILD =====
+  prod-build:
+    name: 🏗️ Production Build
+    runs-on: ubuntu-latest
+    needs: [prod-quality, security, prod-test]
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+      - name: 📦 Upload production build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: prod-build-files
+          path: |
+            .next/
+            public/
+          retention-days: 7
+
+  # ===== PRODUCTION DEPLOYMENT =====
+  prod-deploy:
+    name: 🚀 Production Deploy
+    runs-on: ubuntu-latest
+    needs: [prod-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    environment:
+      name: production
+      url: ${{ steps.vercel.outputs.url }}
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Download build artifacts
+        uses: actions/download-artifact@v5
+        with:
+          name: prod-build-files
+
+      - name: 🚀 Deploy to Vercel (Production)
+        id: vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+
+      - name: 📝 Comment production deployment URL
+        uses: actions/github-script@v8
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const url = '${{ steps.vercel.outputs.url }}';
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🚀 **Production deployment successful!**\n\n✅ Production URL: ${url}\n\n🎉 This deployment is now live in production!`
+            });
+
+  # ===== PRODUCTION E2E TESTS =====
+  prod-e2e:
+    name: 🎭 Production E2E Tests
+    runs-on: ubuntu-latest
+    needs: [prod-deploy]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: 🎭 Run E2E tests against production
+        run: npm run test:e2e || npx playwright test
+        env:
+          BASE_URL: ${{ steps.vercel.outputs.url }}
+
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: prod-playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  # ===== PERFORMANCE MONITORING =====
+  lighthouse:
+    name: 🔍 Lighthouse Performance
+    runs-on: ubuntu-latest
+    needs: [prod-e2e]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          configPath: './.lighthouserc.json'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+  # ===== DEPLOYMENT NOTIFICATION =====
+  notify:
+    name: 📢 Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [lighthouse]
+    if: always() && github.ref == 'refs/heads/main' && github.event_name == 'push'
+    
+    steps:
+      - name: 📢 Notify deployment status
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const status = '${{ needs.lighthouse.result }}';
+            const url = '${{ steps.vercel.outputs.url }}';
+            const message = status === 'success' 
+              ? `🎉 **Production deployment successful!**\n\n✅ URL: ${url}\n🚀 Performance checks passed`
+              : `⚠️ **Production deployment completed with issues**\n\n✅ URL: ${url}\n❌ Performance checks failed`;
+            
+            github.rest.repos.createCommitComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+              body: message
+            });

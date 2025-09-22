@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { optimizedInventoryService } from '@/lib/services/optimized-inventory-service'
-import { createCachedResponse, getCacheConfig } from '@/lib/cache/api-cache-manager'
+import { createCachedResponse, getCacheConfig, apiCacheManager } from '@/lib/cache/api-cache-manager'
 import { PaginationHelper } from '@/lib/utils/pagination'
 import { createClient } from '@/lib/supabase/server-with-retry'
 
@@ -121,6 +121,9 @@ export async function POST(request: NextRequest) {
 
       const createdItems = await optimizedInventoryService.createMany(items, user)
       
+      // Invalidate cache after creating items
+      await apiCacheManager.invalidateByTags(['inventory', 'list'])
+      
       return NextResponse.json({
         success: true,
         created: createdItems.length,
@@ -161,6 +164,9 @@ export async function POST(request: NextRequest) {
         status: body.status || 'active',
         images: body.images || []
       }, user) // Pass user context for audit
+      
+      // Invalidate cache after creating item
+      await apiCacheManager.invalidateByTags(['inventory', 'list'])
       
       return NextResponse.json({
         success: true,

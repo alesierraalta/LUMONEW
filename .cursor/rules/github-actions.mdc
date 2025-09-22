@@ -1,66 +1,72 @@
 ---
-globs: .github/workflows/*.yml,.github/workflows/*.yaml
-description: GitHub Actions workflow configuration and best practices
+globs: .github/workflows/*.yml
 ---
 
-# GitHub Actions Workflow Rules
+# GitHub Actions Workflow Configuration Guidelines
 
-## Workflow Files Structure
-All workflow files are in [.github/workflows/](mdc:.github/workflows/) directory:
+When working with GitHub Actions workflow files (`.yml` files in `.github/workflows/`), follow these guidelines:
 
-- [ci.yml](mdc:.github/workflows/ci.yml): Main CI/CD pipeline
-- [dev-deploy.yml](mdc:.github/workflows/dev-deploy.yml): Development deployment
-- [prod-deploy.yml](mdc:.github/workflows/prod-deploy.yml): Production deployment
-- [pr-checks.yml](mdc:.github/workflows/pr-checks.yml): Pull request validation
+## General Structure:
+- **`name`**: Clearly describe the workflow's purpose.
+- **`on`**: Define triggers (e.g., `push`, `pull_request`, `workflow_dispatch`). Specify target branches (`main`, `dev`).
+- **`env`**: Define global environment variables for the workflow.
+- **`jobs`**: Organize tasks into logical jobs (e.g., `quality`, `security`, `test`, `build`, `deploy`).
 
-## Environment Variables
-Always use these environment variables:
-```yaml
-env:
-  NODE_VERSION: '18'
-  NEXT_TELEMETRY_DISABLED: 1
-```
+## Job Configuration:
+- **`name`**: Provide a descriptive name for each job.
+- **`runs-on`**: Specify the runner environment (e.g., `ubuntu-latest`).
+- **`needs`**: Define job dependencies to ensure sequential execution (e.g., `needs: [quality, test]`).
+- **`if`**: Use conditional expressions for job execution (e.g., `if: github.ref == 'refs/heads/main'`).
+- **`environment`**: Link to a GitHub environment for deployments, enabling environment protection rules and secrets.
 
-## Required Secrets
-Ensure these secrets are configured in repository settings:
-- `VERCEL_TOKEN`: Vercel deployment token
-- `VERCEL_ORG_ID`: Vercel organization ID
-- `VERCEL_PROJECT_ID`: Vercel project ID
-- `SNYK_TOKEN`: Snyk security scan token
-- `CODECOV_TOKEN`: Codecov coverage token
-- `GITHUB_TOKEN`: Automatically provided
+## Steps Configuration:
+- **`name`**: Describe each step's action.
+- **`uses`**: Use official or community actions (e.g., `actions/checkout@v4`, `actions/setup-node@v4`). Always specify a version.
+- **`run`**: Execute shell commands.
+- **`with`**: Pass inputs to actions.
+- **`env`**: Define step-specific environment variables.
 
-## Workflow Triggers
-- **dev-deploy.yml**: Triggers on push/PR to `dev` branch
-- **prod-deploy.yml**: Triggers on push/PR to `main` branch
-- **pr-checks.yml**: Triggers on PR events to `main` branch
-- **ci.yml**: Triggers on push/PR to both `main` and `dev` branches
+## Branch-Specific Workflows:
 
-## Job Dependencies
-Follow this dependency chain for production:
-1. `prod-quality` → Quality checks
-2. `security` → Security scans
-3. `prod-test` → Testing
-4. `prod-build` → Build (depends on quality, security, test)
-5. `prod-deploy` → Deployment (depends on build)
-6. `prod-e2e` → E2E tests (depends on deploy)
-7. `lighthouse` → Performance monitoring (depends on e2e)
+### Development Workflow (`dev-deploy.yml`):
+- Triggers on pushes and PRs to `dev` branch.
+- Lighter quality gates for faster iteration.
+- Deploys to development environment.
+- Includes basic checks: build, lint, test.
 
-## Status Check Names
-Use consistent naming for status checks:
-- `prod-deploy / prod-quality`
-- `prod-deploy / security`
-- `prod-deploy / prod-test`
-- `pr-checks / pr-validation`
-- `pr-checks / pr-security`
-- `dev-deploy / dev-quality`
+### Production Workflow (`prod-deploy.yml`):
+- Triggers only on pushes to `main` branch.
+- Comprehensive quality gates: security, performance, E2E tests.
+- Deploys to production environment.
+- Includes all checks: quality, security, test, build, deploy, lighthouse.
 
-## Artifact Management
-- Use descriptive artifact names: `prod-build-files`, `dev-build-files`
-- Set appropriate retention days: 7 for production, 3 for development
-- Upload E2E test reports on failure with 7-day retention
+### PR Checks (`pr-checks.yml`):
+- Triggers on PRs to `main` or `dev` branches.
+- Essential validation checks for pull requests.
+- Runs on every PR to ensure code quality.
 
-## Error Handling
-- Use `continue-on-error: true` for non-critical jobs like security scans
-- Upload artifacts on failure for debugging
-- Provide meaningful error messages in comments
+## Secrets Management:
+- Access secrets using `${{ secrets.SECRET_NAME }}`.
+- Never hardcode sensitive information directly in workflow files.
+- Ensure necessary secrets are configured in the GitHub repository settings for each environment.
+
+## Best Practices:
+- **Reusability**: Break down complex workflows into reusable components or composite actions if applicable.
+- **Readability**: Use clear names, comments, and consistent formatting.
+- **Security**:
+  - Limit permissions for `GITHUB_TOKEN` where possible.
+  - Use `snyk/actions/node@master` for security scanning.
+  - Ensure `npm audit` is run.
+- **Testing**: Include `npm run test` and `npx playwright test` steps.
+- **Artifacts**: Use `actions/upload-artifact` and `actions/download-artifact` for passing data between jobs.
+- **Deployment**: Use `amondnet/vercel-action@v25` for Vercel deployments.
+- **Performance**: Integrate `treosh/lighthouse-ci-action@v12` for performance monitoring on production deployments.
+
+## Status Checks:
+- Ensure that all critical jobs (e.g., `quality`, `test`, `security`, `build`, `deploy`) are configured as required status checks in branch protection rules.
+
+## Workflow Files:
+- [`.github/workflows/ci.yml`](mdc:.github/workflows/ci.yml): Core CI workflow for all branches.
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development deployment workflow.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production deployment workflow.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): Pull request validation workflow.

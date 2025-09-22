@@ -1,13 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { optimizedInventoryService } from '@/lib/services/optimized-inventory-service'
-import { createClient } from '@/lib/supabase/server-with-retry'
+import { auditedInventoryService } from '@/lib/database-with-audit'
+import { createClient as createServerSupabaseClient } from '@/lib/supabase/server-with-retry'
+import { auditService } from '@/lib/audit'
+
+async function setAuditUserFromRequest() {
+  try {
+    const supabase = createServerSupabaseClient()
+    const { data, error } = await supabase.auth.getUser()
+    if (!error && data?.user) {
+      console.log('Setting audit user context:', data.user.email)
+      auditService.setUserContext(data.user)
+      return data.user
+    } else {
+      console.warn('No user found for audit context:', error)
+      return null
+    }
+  } catch (error) {
+    console.error('Error setting audit user context:', error)
+    return null
+  }
+}
 
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const item = await optimizedInventoryService.getById(params.id)
+    const item = await auditedInventoryService.getById(params.id)
     
     if (!item) {
       return NextResponse.json(
@@ -37,6 +56,9 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Set up audit user context first
+    const user = await setAuditUserFromRequest()
+    
     const body = await request.json()
     
     // Validate required fields
@@ -51,25 +73,18 @@ export async function PUT(
       )
     }
 
-    // Get authenticated user information
-    const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
     // Debug logging
     console.log('🔍 Authentication Debug (PUT):')
     console.log('  - User:', user ? `${user.email} (${user.id})` : 'No user found')
-    console.log('  - Auth Error:', authError)
     console.log('  - Request headers:', Object.fromEntries(request.headers.entries()))
     
-    if (authError) {
-      console.warn('❌ Could not get authenticated user for audit:', authError)
-    } else if (!user) {
+    if (!user) {
       console.warn('⚠️ No authenticated user found - audit will show "Sistema automático"')
     } else {
       console.log('✅ User authenticated successfully for audit:', user.email)
     }
 
-    const updatedItem = await optimizedInventoryService.update(params.id, {
+    const updatedItem = await auditedInventoryService.update(params.id, {
       sku: body.sku,
       name: body.name,
       category_id: body.category_id || body.categoryId,
@@ -80,7 +95,7 @@ export async function PUT(
       max_stock: parseInt(body.max_stock || body.maximumLevel || body.quantity * 2 || 0),
       status: body.status || 'active',
       images: body.images || []
-    }, user) // Pass user context for audit
+    })
     
     return NextResponse.json({
       success: true,
@@ -127,25 +142,21 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    // Get authenticated user information
-    const supabase = createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    // Set up audit user context first
+    const user = await setAuditUserFromRequest()
     
     // Debug logging
     console.log('🔍 Authentication Debug (DELETE):')
     console.log('  - User:', user ? `${user.email} (${user.id})` : 'No user found')
-    console.log('  - Auth Error:', authError)
     console.log('  - Request headers:', Object.fromEntries(request.headers.entries()))
     
-    if (authError) {
-      console.warn('❌ Could not get authenticated user for audit:', authError)
-    } else if (!user) {
+    if (!user) {
       console.warn('⚠️ No authenticated user found - audit will show "Sistema automático"')
     } else {
       console.log('✅ User authenticated successfully for audit:', user.email)
     }
 
-    await optimizedInventoryService.delete(params.id, user) // Pass user context for audit
+    await auditedInventoryService.delete(params.id)
     
     return NextResponse.json({
       success: true,

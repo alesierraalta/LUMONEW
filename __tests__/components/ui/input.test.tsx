@@ -1,13 +1,17 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeAll } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { render } from '../../utils/test-render'
+import { simpleRender, setupCommonMocks } from '../../utils/test-render'
 import { Input } from '@/components/ui/input'
+
+beforeAll(() => {
+  setupCommonMocks()
+})
 
 describe('Input', () => {
   describe('Rendering', () => {
     it('should render input with default props', () => {
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       expect(input).toBeInTheDocument()
@@ -16,21 +20,21 @@ describe('Input', () => {
     })
 
     it('should render input with placeholder', () => {
-      render(<Input placeholder="Enter your name" />)
+      simpleRender(<Input placeholder="Enter your name" />)
       
       const input = screen.getByPlaceholderText('Enter your name')
       expect(input).toBeInTheDocument()
     })
 
     it('should render input with value', () => {
-      render(<Input value="test value" readOnly />)
+      simpleRender(<Input value="test value" readOnly />)
       
       const input = screen.getByDisplayValue('test value')
       expect(input).toBeInTheDocument()
     })
 
     it('should render input with default value', () => {
-      render(<Input defaultValue="default value" />)
+      simpleRender(<Input defaultValue="default value" />)
       
       const input = screen.getByDisplayValue('default value')
       expect(input).toBeInTheDocument()
@@ -39,7 +43,7 @@ describe('Input', () => {
 
   describe('Input Types', () => {
     it('should render text input by default', () => {
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       // Input elements don't have explicit type='text' by default in HTML
@@ -47,56 +51,56 @@ describe('Input', () => {
     })
 
     it('should render email input', () => {
-      render(<Input type="email" />)
+      simpleRender(<Input type="email" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('type', 'email')
     })
 
     it('should render password input', () => {
-      render(<Input type="password" />)
+      simpleRender(<Input type="password" />)
       
       const input = document.querySelector('input[type="password"]')
       expect(input).toBeInTheDocument()
     })
 
     it('should render number input', () => {
-      render(<Input type="number" />)
+      simpleRender(<Input type="number" />)
       
       const input = screen.getByRole('spinbutton')
       expect(input).toHaveAttribute('type', 'number')
     })
 
     it('should render tel input', () => {
-      render(<Input type="tel" />)
+      simpleRender(<Input type="tel" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('type', 'tel')
     })
 
     it('should render url input', () => {
-      render(<Input type="url" />)
+      simpleRender(<Input type="url" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('type', 'url')
     })
 
     it('should render search input', () => {
-      render(<Input type="search" />)
+      simpleRender(<Input type="search" />)
       
       const input = screen.getByRole('searchbox')
       expect(input).toHaveAttribute('type', 'search')
     })
 
     it('should render date input', () => {
-      render(<Input type="date" />)
+      simpleRender(<Input type="date" />)
       
       const input = document.querySelector('input[type="date"]')
       expect(input).toBeInTheDocument()
     })
 
     it('should render file input', () => {
-      render(<Input type="file" />)
+      simpleRender(<Input type="file" />)
       
       const input = document.querySelector('input[type="file"]')
       expect(input).toBeInTheDocument()
@@ -105,14 +109,14 @@ describe('Input', () => {
 
   describe('States', () => {
     it('should be enabled by default', () => {
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       expect(input).not.toBeDisabled()
     })
 
     it('should be disabled when disabled prop is true', () => {
-      render(<Input disabled />)
+      simpleRender(<Input disabled />)
       
       const input = screen.getByRole('textbox')
       expect(input).toBeDisabled()
@@ -120,14 +124,14 @@ describe('Input', () => {
     })
 
     it('should be readonly when readOnly prop is true', () => {
-      render(<Input readOnly />)
+      simpleRender(<Input readOnly />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('readonly')
     })
 
     it('should be required when required prop is true', () => {
-      render(<Input required />)
+      simpleRender(<Input required />)
       
       const input = screen.getByRole('textbox')
       expect(input).toBeRequired()
@@ -136,7 +140,7 @@ describe('Input', () => {
 
   describe('Styling', () => {
     it('should have default styling classes', () => {
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveClass(
@@ -154,14 +158,14 @@ describe('Input', () => {
     })
 
     it('should apply custom className', () => {
-      render(<Input className="custom-class" />)
+      simpleRender(<Input className="custom-class" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveClass('custom-class')
     })
 
     it('should have focus styles', () => {
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveClass(
@@ -173,14 +177,14 @@ describe('Input', () => {
     })
 
     it('should have placeholder styles', () => {
-      render(<Input placeholder="Test placeholder" />)
+      simpleRender(<Input placeholder="Test placeholder" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveClass('placeholder:text-muted-foreground')
     })
 
     it('should have file input styles', () => {
-      render(<Input type="file" />)
+      simpleRender(<Input type="file" />)
       
       const input = document.querySelector('input[type="file"]')
       expect(input).toHaveClass(
@@ -197,7 +201,7 @@ describe('Input', () => {
       const handleChange = vi.fn()
       const user = userEvent.setup()
       
-      render(<Input onChange={handleChange} />)
+      simpleRender(<Input onChange={handleChange} />)
       
       const input = screen.getByRole('textbox')
       await user.type(input, 'test')
@@ -209,7 +213,7 @@ describe('Input', () => {
       const handleFocus = vi.fn()
       const user = userEvent.setup()
       
-      render(<Input onFocus={handleFocus} />)
+      simpleRender(<Input onFocus={handleFocus} />)
       
       const input = screen.getByRole('textbox')
       await user.click(input)
@@ -221,7 +225,7 @@ describe('Input', () => {
       const handleBlur = vi.fn()
       const user = userEvent.setup()
       
-      render(<Input onBlur={handleBlur} />)
+      simpleRender(<Input onBlur={handleBlur} />)
       
       const input = screen.getByRole('textbox')
       await user.click(input)
@@ -233,7 +237,7 @@ describe('Input', () => {
     it('should call onKeyDown when key is pressed', () => {
       const handleKeyDown = vi.fn()
       
-      render(<Input onKeyDown={handleKeyDown} />)
+      simpleRender(<Input onKeyDown={handleKeyDown} />)
       
       const input = screen.getByRole('textbox')
       fireEvent.keyDown(input, { key: 'Enter' })
@@ -245,7 +249,7 @@ describe('Input', () => {
       const handleChange = vi.fn()
       const user = userEvent.setup()
       
-      render(<Input onChange={handleChange} disabled />)
+      simpleRender(<Input onChange={handleChange} disabled />)
       
       const input = screen.getByRole('textbox')
       await user.type(input, 'test')
@@ -257,7 +261,7 @@ describe('Input', () => {
       const handleChange = vi.fn()
       const user = userEvent.setup()
       
-      render(<Input onChange={handleChange} readOnly />)
+      simpleRender(<Input onChange={handleChange} readOnly />)
       
       const input = screen.getByRole('textbox')
       await user.type(input, 'test')
@@ -287,7 +291,7 @@ describe('Input', () => {
     it('should work as uncontrolled component', async () => {
       const user = userEvent.setup()
       
-      render(<Input defaultValue="initial" />)
+      simpleRender(<Input defaultValue="initial" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveValue('initial')
@@ -300,14 +304,14 @@ describe('Input', () => {
 
   describe('Accessibility', () => {
     it('should support aria-label', () => {
-      render(<Input aria-label="Username input" />)
+      simpleRender(<Input aria-label="Username input" />)
       
       const input = screen.getByLabelText('Username input')
       expect(input).toBeInTheDocument()
     })
 
     it('should support aria-describedby', () => {
-      render(
+      simpleRender(
         <div>
           <Input aria-describedby="help-text" />
           <div id="help-text">Enter your username</div>
@@ -319,7 +323,7 @@ describe('Input', () => {
     })
 
     it('should support aria-invalid', () => {
-      render(<Input aria-invalid="true" />)
+      simpleRender(<Input aria-invalid="true" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('aria-invalid', 'true')
@@ -328,7 +332,7 @@ describe('Input', () => {
     it('should be keyboard navigable', async () => {
       const user = userEvent.setup()
       
-      render(
+      simpleRender(
         <div>
           <Input placeholder="First input" />
           <Input placeholder="Second input" />
@@ -354,7 +358,7 @@ describe('Input', () => {
         expect(formData.get('username')).toBe('testuser')
       })
       
-      render(
+      simpleRender(
         <form onSubmit={handleSubmit}>
           <Input name="username" defaultValue="testuser" />
           <button type="submit">Submit</button>
@@ -370,7 +374,7 @@ describe('Input', () => {
     it('should work with form validation', async () => {
       const user = userEvent.setup()
       
-      render(
+      simpleRender(
         <form>
           <Input required name="email" type="email" />
           <button type="submit">Submit</button>
@@ -392,28 +396,28 @@ describe('Input', () => {
 
   describe('Custom Props', () => {
     it('should accept custom id', () => {
-      render(<Input id="custom-id" />)
+      simpleRender(<Input id="custom-id" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('id', 'custom-id')
     })
 
     it('should accept custom name', () => {
-      render(<Input name="custom-name" />)
+      simpleRender(<Input name="custom-name" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('name', 'custom-name')
     })
 
     it('should accept data attributes', () => {
-      render(<Input data-testid="custom-input" />)
+      simpleRender(<Input data-testid="custom-input" />)
       
       const input = screen.getByTestId('custom-input')
       expect(input).toBeInTheDocument()
     })
 
     it('should accept min and max for number inputs', () => {
-      render(<Input type="number" min="0" max="100" />)
+      simpleRender(<Input type="number" min="0" max="100" />)
       
       const input = screen.getByRole('spinbutton')
       expect(input).toHaveAttribute('min', '0')
@@ -421,21 +425,21 @@ describe('Input', () => {
     })
 
     it('should accept step for number inputs', () => {
-      render(<Input type="number" step="0.1" />)
+      simpleRender(<Input type="number" step="0.1" />)
       
       const input = screen.getByRole('spinbutton')
       expect(input).toHaveAttribute('step', '0.1')
     })
 
     it('should accept maxLength', () => {
-      render(<Input maxLength={10} />)
+      simpleRender(<Input maxLength={10} />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('maxlength', '10')
     })
 
     it('should accept pattern', () => {
-      render(<Input pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" />)
+      simpleRender(<Input pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveAttribute('pattern', '[0-9]{3}-[0-9]{3}-[0-9]{4}')
@@ -444,21 +448,21 @@ describe('Input', () => {
 
   describe('Edge Cases', () => {
     it('should handle null value gracefully', () => {
-      render(<Input value={null as any} readOnly />)
+      simpleRender(<Input value={null as any} readOnly />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveValue('')
     })
 
     it('should handle undefined value gracefully', () => {
-      render(<Input value={undefined} readOnly />)
+      simpleRender(<Input value={undefined} readOnly />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveValue('')
     })
 
     it('should handle number values', () => {
-      render(<Input value={123 as any} readOnly />)
+      simpleRender(<Input value={123 as any} readOnly />)
       
       const input = screen.getByRole('textbox')
       expect(input).toHaveValue('123')
@@ -468,7 +472,7 @@ describe('Input', () => {
       const longValue = 'a'.repeat(100) // Reduced length to prevent timeout
       const user = userEvent.setup()
       
-      render(<Input />)
+      simpleRender(<Input />)
       
       const input = screen.getByRole('textbox')
       // Use paste instead of typing for performance
@@ -483,7 +487,7 @@ describe('Input', () => {
     it('should forward ref to input element', () => {
       const ref = vi.fn()
       
-      render(<Input ref={ref} />)
+      simpleRender(<Input ref={ref} />)
       
       expect(ref).toHaveBeenCalledWith(expect.any(HTMLInputElement))
     })
@@ -491,7 +495,7 @@ describe('Input', () => {
     it('should allow ref to access input methods', () => {
       let inputRef: HTMLInputElement | null = null
       
-      render(<Input ref={(el) => { inputRef = el }} />)
+      simpleRender(<Input ref={(el) => { inputRef = el }} />)
       
       expect(inputRef).toBeInstanceOf(HTMLInputElement)
       if (inputRef) {

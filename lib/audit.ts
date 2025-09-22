@@ -127,187 +127,57 @@ export class AuditService {
     return supabase as any
   }
 
-  // Helper method to generate enhanced action descriptions
-  private generateActionDescription(
-    operation: string,
-    tableName: string,
-    oldValues: any,
-    newValues: any
-  ): string {
-    const tableLabels: Record<string, string> = {
-      'inventory': 'Inventario',
-      'categories': 'Categorías',
-      'locations': 'Ubicaciones',
-      'users': 'Usuarios',
-      'audit_logs': 'Auditoría',
-      'projects': 'Proyectos',
-      'cl_tasks': 'Tareas CL',
-      'imp_tasks': 'Tareas IMP'
+  // Enhanced user validation with proactive foreign key constraint handling
+  private async validateAndSyncUser(userId: string | null): Promise<string | null> {
+    if (!userId) {
+      return null // No user ID provided
     }
     
-    const tableLabel = tableLabels[tableName] || tableName
-    
-    switch (operation) {
-      case 'INSERT':
-        return `Creó un nuevo registro en ${tableLabel}`
-      case 'UPDATE':
-        if (oldValues && newValues) {
-          const changedFields = Object.keys(newValues).filter(key =>
-            JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
-          )
-          if (changedFields.length > 0) {
-            return `Actualizó ${changedFields.length} campo(s) en ${tableLabel}: ${changedFields.join(', ')}`
-          }
-        }
-        return `Actualizó un registro en ${tableLabel}`
-      case 'DELETE':
-        return `Eliminó un registro de ${tableLabel}`
-      case 'LOGIN':
-        return 'Inició sesión en el sistema'
-      case 'LOGOUT':
-        return 'Cerró sesión del sistema'
-      case 'EXPORT':
-        return `Exportó datos de ${tableLabel}`
-      case 'IMPORT':
-        return `Importó datos a ${tableLabel}`
-      case 'BULK_OPERATION':
-        return `Realizó una operación masiva en ${tableLabel}`
-      default:
-        return `Realizó una operación en ${tableLabel}`
+    // Skip validation on client-side
+    if (typeof window !== 'undefined') {
+      return userId
     }
-  }
 
-  // Helper method to determine action category
-  private determineActionCategory(operation: string, tableName: string): string {
-    const categories: Record<string, string> = {
-      'inventory': 'Gestión de Inventario',
-      'categories': 'Gestión de Categorías',
-      'locations': 'Gestión de Ubicaciones',
-      'users': 'Gestión de Usuarios',
-      'audit_logs': 'Auditoría del Sistema',
-      'projects': 'Gestión de Proyectos',
-      'cl_tasks': 'Tareas de Control de Línea',
-      'imp_tasks': 'Tareas de Implementación'
-    }
-    
-    const operationCategories: Record<string, string> = {
-      'INSERT': 'Creación',
-      'UPDATE': 'Modificación',
-      'DELETE': 'Eliminación',
-      'LOGIN': 'Autenticación',
-      'LOGOUT': 'Autenticación',
-      'EXPORT': 'Exportación',
-      'IMPORT': 'Importación',
-      'BULK_OPERATION': 'Operación Masiva'
-    }
-    
-    const tableCategory = categories[tableName] || 'Sistema'
-    const operationCategory = operationCategories[operation] || 'Operación'
-    
-    return `${tableCategory} - ${operationCategory}`
-  }
+    try {
+      // First, check if user exists in users table
+      const supabase = getServiceRoleClient()
+      const { data: existingUser, error: checkError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', userId)
+        .single()
 
-  // Helper method to determine action impact
-  private determineActionImpact(
-    operation: string,
-    tableName: string,
-    oldValues: any,
-    newValues: any
-  ): 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' {
-    // Critical operations
-    if (operation === 'DELETE' && (tableName === 'users' || tableName === 'audit_logs')) {
-      return 'CRITICAL'
-    }
-    
-    // High impact operations
-    if (operation === 'DELETE' || operation === 'BULK_OPERATION') {
-      return 'HIGH'
-    }
-    
-    // Medium impact operations
-    if (operation === 'UPDATE' && tableName === 'users') {
-      return 'MEDIUM'
-    }
-    
-    if (operation === 'UPDATE' && oldValues && newValues) {
-      const changedFields = Object.keys(newValues).filter(key =>
-        JSON.stringify(oldValues[key]) !== JSON.stringify(newValues[key])
-      )
-      if (changedFields.length > 3) {
-        return 'MEDIUM'
+      if (existingUser && !checkError) {
+        return userId // User exists, return the ID
       }
-    }
-    
-    // Low impact operations
-    return 'LOW'
-  }
 
-  // Helper method to generate business context
-  private generateBusinessContext(
-    operation: string,
-    tableName: string,
-    oldValues: any,
-    newValues: any
-  ): string {
-    const contexts: Record<string, string> = {
-      'inventory': 'Gestión del inventario de productos y materiales',
-      'categories': 'Organización y clasificación de productos',
-      'locations': 'Administración de ubicaciones y almacenes',
-      'users': 'Gestión de usuarios y permisos del sistema',
-      'projects': 'Administración de proyectos y tareas',
-      'cl_tasks': 'Control de línea y seguimiento de tareas',
-      'imp_tasks': 'Implementación y desarrollo de tareas'
-    }
-    
-    const baseContext = contexts[tableName] || 'Operación del sistema'
-    
-    switch (operation) {
-      case 'INSERT':
-        return `${baseContext} - Nuevo registro agregado`
-      case 'UPDATE':
-        return `${baseContext} - Registro modificado`
-      case 'DELETE':
-        return `${baseContext} - Registro eliminado`
-      case 'LOGIN':
-        return 'Acceso al sistema'
-      case 'LOGOUT':
-        return 'Salida del sistema'
-      case 'EXPORT':
-        return `${baseContext} - Datos exportados`
-      case 'IMPORT':
-        return `${baseContext} - Datos importados`
-      default:
-        return baseContext
+      // User doesn't exist, try to sync from auth
+      console.warn(`User ${userId} not found in users table, attempting to sync from auth...`)
+      
+      // First check if user exists in auth.users
+      const { data: authUser, error: authError } = await supabase.auth.admin.getUserById(userId)
+      
+      if (authError || !authUser.user) {
+        console.error(`User ${userId} does not exist in auth.users either. This is an invalid user ID. Setting user_id to null.`)
+        return null // User doesn't exist in auth either, set to null
+      }
+      
+      // User exists in auth, try to sync
+      const userExists = await ensureUserExists(userId)
+      
+      if (userExists) {
+        return userId // Successfully synced
+      } else {
+        console.warn(`Failed to sync user ${userId} from auth. Setting user_id to null to avoid foreign key constraint violation.`)
+        return null // Set to null to avoid foreign key constraint violation
+      }
+    } catch (error) {
+      console.warn(`Error validating user ${userId}:`, error)
+      return null // Set to null to avoid foreign key constraint violation
     }
   }
 
-  // Helper method to get browser information
-  private getBrowserInfo(): string {
-    if (typeof window === 'undefined') return 'Server-side'
-    
-    const userAgent = window.navigator.userAgent
-    if (userAgent.includes('Chrome')) return 'Chrome'
-    if (userAgent.includes('Firefox')) return 'Firefox'
-    if (userAgent.includes('Safari')) return 'Safari'
-    if (userAgent.includes('Edge')) return 'Edge'
-    return 'Unknown Browser'
-  }
-
-  // Helper method to get device type
-  private getDeviceType(): string {
-    if (typeof window === 'undefined') return 'Server'
-    
-    const userAgent = window.navigator.userAgent
-    if (/Mobile|Android|iPhone|iPad/.test(userAgent)) {
-      return 'Mobile'
-    }
-    if (/Tablet|iPad/.test(userAgent)) {
-      return 'Tablet'
-    }
-    return 'Desktop'
-  }
-
-  // Log any operation with comprehensive details
+  // Enhanced log operation with proactive foreign key constraint handling
   async logOperation(params: {
     operation: AuditLog['operation']
     table_name: string
@@ -331,48 +201,11 @@ export class AuditService {
     try {
       const clientInfo = await this.getClientInfo()
       
-      // Get user ID and ensure user exists in users table
-      const userId = params.user_id || this.currentUser?.id || null
+      // Get user ID and validate it exists in users table
+      let userId = params.user_id || this.currentUser?.id || null
       
-      // If we have a user ID, try to ensure the user exists in the users table
-      if (userId && typeof window === 'undefined') {
-        // Only attempt user sync on server-side to avoid browser context issues
-        try {
-          await ensureUserExists(userId)
-        } catch (syncError) {
-          console.warn('Could not sync user, will proceed without user reference:', syncError)
-        }
-      }
-      
-      // Generate enhanced action description if not provided
-      const actionDescription = params.action_description || this.generateActionDescription(
-        params.operation,
-        params.table_name,
-        params.old_values,
-        params.new_values
-      )
-      
-      // Determine action category if not provided
-      const actionCategory = params.action_category || this.determineActionCategory(
-        params.operation,
-        params.table_name
-      )
-      
-      // Determine action impact if not provided
-      const actionImpact = params.action_impact || this.determineActionImpact(
-        params.operation,
-        params.table_name,
-        params.old_values,
-        params.new_values
-      )
-      
-      // Generate business context if not provided
-      const businessContext = params.business_context || this.generateBusinessContext(
-        params.operation,
-        params.table_name,
-        params.old_values,
-        params.new_values
-      )
+      // Proactively validate and sync user to avoid foreign key constraint violations
+      userId = await this.validateAndSyncUser(userId)
       
       const auditEntry = {
         user_id: userId,
@@ -387,36 +220,14 @@ export class AuditService {
         old_values: params.old_values || null,
         new_values: params.new_values || null,
         session_id: this.sessionId,
-        action_description: actionDescription,
-        action_category: actionCategory,
-        action_impact: actionImpact,
-        business_context: businessContext,
+        action_description: params.action_description || null,
+        action_category: params.action_category || null,
+        action_impact: params.action_impact || null,
+        business_context: params.business_context || null,
         affected_records_count: params.affected_records_count || 1,
         ...clientInfo,
         metadata: {
-          ...params.metadata,
-          user_profile: {
-            name: params.user_name || this.currentUser?.name,
-            role: params.user_role || this.currentUser?.role,
-            department: params.user_department || this.currentUser?.department,
-            avatar_url: params.user_avatar_url || this.currentUser?.avatar_url,
-            last_login: this.currentUser?.last_login,
-            status: this.currentUser?.status || 'active'
-          },
-          action_details: {
-            category: actionCategory,
-            impact: actionImpact,
-            business_context: businessContext,
-            workflow_step: params.metadata?.workflow_step,
-            validation_results: params.metadata?.validation_results,
-            related_actions: params.metadata?.related_actions
-          },
-          system_context: {
-            browser: this.getBrowserInfo(),
-            device_type: this.getDeviceType(),
-            location: params.metadata?.location,
-            referrer: params.metadata?.referrer
-          }
+          ...params.metadata
         }
       }
 
@@ -430,31 +241,12 @@ export class AuditService {
         .single()
 
       if (error) {
-        // If it's a foreign key constraint error, try again without user_id
+        // If it's a foreign key constraint error, it means the user_id was invalid from the start
+        // The proactive check should have caught this, but as a fallback, log without user_id
         if (error.code === '23503' && error.message.includes('user_id')) {
-          console.warn('User ID not found in users table, logging audit without user reference')
-          const auditEntryWithoutUser = {
-            ...auditEntry,
-            user_id: null,
-            metadata: {
-              ...auditEntry.metadata,
-              original_user_id: userId,
-              note: 'User ID not found in users table - user sync may be needed'
-            }
-          }
-          
-          const { data: retryData, error: retryError } = await client
-            .from('audit_logs')
-            .insert([auditEntryWithoutUser])
-            .select()
-            .single()
-            
-          if (retryError) {
-            console.error('Audit logging failed on retry:', retryError)
-            return null
-          }
-          
-          return retryData
+          console.error('Audit logging failed due to invalid user_id (FK constraint). This should have been caught proactively.', error)
+          // No retry needed here as the proactive check should handle it. Just return null.
+          return null
         }
         
         console.error('Audit logging failed:', error)
@@ -641,8 +433,6 @@ export class AuditService {
   }
 
   // Get recent audit logs
-  // Get recent audit logs
-  // Get recent audit logs
   async getRecentLogs(limit: number = 10, supabaseClient?: SupabaseClient): Promise<AuditLog[]> {
     try {
       const client = this.getSupabaseClient(supabaseClient)
@@ -680,8 +470,6 @@ export class AuditService {
     }
   }
 
-  // Get audit logs with advanced filtering
-  // Get audit logs with advanced filtering
   // Get audit logs with advanced filtering
   async getAuditLogs(filters: {
     limit?: number
@@ -777,8 +565,6 @@ export class AuditService {
   }
 
   // Get audit statistics
-  // Get audit statistics
-  // Get audit statistics
   async getAuditStats(date_from?: string, date_to?: string, supabaseClient?: SupabaseClient) {
     try {
       const client = this.getSupabaseClient(supabaseClient)
@@ -844,8 +630,6 @@ export class AuditService {
   }
 
   // Get recent activity for dashboard
-  // Get recent activity for dashboard
-  // Get recent activity for dashboard
   async getRecentActivity(limit: number = 10, supabaseClient?: SupabaseClient) {
     const client = this.getSupabaseClient(supabaseClient)
     const { data, error } = await client
@@ -884,8 +668,6 @@ export class AuditService {
     return filteredData
   }
 
-  // Get user activity history
-  // Get user activity history
   // Get user activity history
   async getUserActivity(user_id: string, limit: number = 20, supabaseClient?: SupabaseClient) {
     const client = this.getSupabaseClient(supabaseClient)
@@ -952,7 +734,7 @@ export function withAudit<T extends (...args: any[]) => Promise<any>>(
   auditParams: {
     table_name: string
     operation_type: 'INSERT' | 'UPDATE' | 'DELETE'
-    get_record_id: (result: any) => string
+    get_record_id: (result:any) => string
     get_old_values?: () => Promise<any>
     get_new_values?: (result: any) => any
   }
@@ -995,3 +777,4 @@ export function withAudit<T extends (...args: any[]) => Promise<any>>(
     }
   }) as T
 }
+

@@ -1,49 +1,53 @@
 ---
 alwaysApply: true
-description: GitHub workflow and branching strategy rules for dev/prod environment management
 ---
 
-# GitHub Workflow Rules
+# GitHub Workflow Guide
 
-## Branch Structure
-- **main**: Production branch with strict protection rules
-- **dev**: Development branch for active development and testing
-- **feature/***: Feature branches created from dev branch
+This project follows a `main`/`dev` branching strategy for development and production deployments.
 
-## Development Workflow
-1. Always start from `dev` branch: `git checkout dev && git pull origin dev`
-2. Create feature branches: `git checkout -b feature/descriptive-name`
-3. Make commits with conventional commit messages: `feat:`, `fix:`, `docs:`, etc.
-4. Push feature branch and create PR to `dev`
-5. After testing in dev, create PR from `dev` to `main` for production
+## ⚠️ CRITICAL RULE: NEVER work directly on main branch!
 
-## Branch Protection Rules
-- **main branch**: Requires PR reviews, status checks, no direct pushes
-- **dev branch**: Lighter protection, allows force pushes for rebasing
-- Use [scripts/setup-branch-protection.js](mdc:scripts/setup-branch-protection.js) to configure protection
+**Branch Structure:**
+- **`main`**: This branch is strictly for production deployments. All changes to `main` must come from a pull request from `dev` and require approvals and passing CI/CD checks. Direct pushes to `main` are forbidden.
+- **`dev`**: This branch is for active development and testing. Features are merged into `dev` for integration testing. Changes to `dev` should ideally come from feature branches via pull requests.
 
-## GitHub Actions Workflows
-- [.github/workflows/dev-deploy.yml](mdc:.github/workflows/dev-deploy.yml): Development deployment
-- [.github/workflows/prod-deploy.yml](mdc:.github/workflows/prod-deploy.yml): Production deployment  
-- [.github/workflows/pr-checks.yml](mdc:.github/workflows/pr-checks.yml): PR validation
-- [.github/workflows/ci.yml](mdc:.github/workflows/ci.yml): Main CI/CD pipeline
+## Development Process:
+1. **Feature Branches**: Create new branches from `dev` for each new feature or bug fix (e.g., `feature/my-new-feature`, `bugfix/issue-123`).
+2. **Pull Requests to `dev`**: Once a feature is complete and tested locally, open a pull request from your feature branch to `dev`. This PR will trigger `pr-checks.yml` and `dev-deploy.yml`.
+3. **Review and Merge to `dev`**: After code review and passing all automated checks, merge the feature branch into `dev`. This will trigger a deployment to the development environment.
+4. **Release to `main`**: When `dev` is stable and ready for a production release, open a pull request from `dev` to `main`. This PR will trigger `pr-checks.yml` and `prod-deploy.yml`.
+5. **Production Deployment**: After thorough review and approval, merge the `dev` branch into `main`. This will automatically trigger the production deployment.
 
-## Documentation
-- [docs/GITHUB_WORKFLOW.md](mdc:docs/GITHUB_WORKFLOW.md): Complete workflow documentation
-- [docs/SETUP_GITHUB_WORKFLOW.md](mdc:docs/SETUP_GITHUB_WORKFLOW.md): Setup guide
+## Commit Conventions:
+- Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for clear commit history (e.g., `feat: add new inventory item`, `fix: correct login bug`).
 
-## Commit Message Format
-Use conventional commits:
-- `feat:` new features
-- `fix:` bug fixes
-- `docs:` documentation changes
-- `style:` formatting changes
-- `refactor:` code refactoring
-- `test:` adding tests
-- `chore:` maintenance tasks
+## Emergency Hotfixes:
+- For critical production bugs, a hotfix branch can be created directly from `main`.
+- The hotfix should be merged back into `main` (triggering a production deployment) and then also merged into `dev` to keep branches in sync.
 
-## Emergency Procedures
-For critical production fixes:
-1. Create hotfix branch from main: `git checkout -b hotfix/critical-issue`
-2. Make minimal fix and create PR to main
-3. After merge, sync back to dev: `git checkout dev && git merge main`
+## Daily Development Commands:
+```bash
+# Start your day
+git checkout dev
+git pull origin dev
+
+# Create feature branch
+git checkout -b feature/descriptive-name
+
+# Make changes and commit
+git add .
+git commit -m "feat: descriptive message"
+
+# Push and create PR to dev (NOT main!)
+git push origin feature/descriptive-name
+```
+
+## Relevant Files:
+- [`.github/workflows/ci.yml`](mdc:.github/workflows/ci.yml): Core CI checks for all branches.
+- [`.github/workflows/dev-deploy.yml`](mdc:.github/workflows/dev-deploy.yml): Development environment deployment.
+- [`.github/workflows/prod-deploy.yml`](mdc:.github/workflows/prod-deploy.yml): Production environment deployment.
+- [`.github/workflows/pr-checks.yml`](mdc:.github/workflows/pr-checks.yml): Pull request validation checks.
+- [`scripts/fix-github-workflow.js`](mdc:scripts/fix-github-workflow.js): Script to configure branch protection rules.
+- [`docs/CORRECT_GITHUB_WORKFLOW.md`](mdc:docs/CORRECT_GITHUB_WORKFLOW.md): Detailed workflow documentation.
+- [`GITHUB_WORKFLOW_QUICK_REFERENCE.md`](mdc:GITHUB_WORKFLOW_QUICK_REFERENCE.md): Quick reference guide.

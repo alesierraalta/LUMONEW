@@ -38,8 +38,9 @@
     "categories": "Categories",
     "locations": "Locations",
     "users": "Users",
+    "audit": "History",
     "deleted_items": "Deleted Items",
-    "audit": "Audit",
+    "audit": "History",
     "reports": "Reports",
     "settings": "Settings",
     "alerts": "Alerts"
@@ -262,7 +263,7 @@
     "errorSavingDescription": "Could not save the transaction",
     "inventoryLoaded": "Inventory loaded",
     "buttons": {
-      "auditHistory": "Audit History",
+      "auditHistory": "History",
       "import": "Import",
       "export": "Export",
       "addStock": "Add Stock",
@@ -352,7 +353,41 @@
       "operations": {
         "add": "add",
         "subtract": "subtract"
-      }
+      },
+      "sku": "SKU",
+      "lowStock": "Low stock warning (minimum: {minimum})",
+      "operation": "Operation",
+      "quantity": "Quantity",
+      "enterQuantity": "Enter quantity",
+      "reason": "Reason",
+      "selectReason": "Select reason",
+      "add": "Add",
+      "stock": "stock",
+      "subtract": "Subtract",
+      "preview": "Preview",
+      "units": "units",
+      "reasons": {
+        "received": "Stock received",
+        "sold": "Item sold",
+        "damaged": "Item damaged",
+        "expired": "Item expired",
+        "found": "Item found",
+        "lost": "Item lost",
+        "adjustment": "Inventory adjustment",
+        "return": "Item returned",
+        "other": "Other"
+      },
+      "validationError": "Validation Error",
+      "completeAllFields": "Please complete all required fields",
+      "quantityMustBePositive": "Quantity must be greater than 0",
+      "cannotSubtractUnits": "Cannot subtract {quantity}. Available stock: {currentStock}",
+      "stockUpdated": "Stock Updated",
+      "stockUpdateSuccess": "Successfully {operation} {quantity} units of {itemName}",
+      "added": "added",
+      "subtracted": "subtracted",
+      "updateError": "Update Error",
+      "updateErrorMessage": "Could not update stock. Please try again.",
+      "user": "User"
     },
     "addProduct": "Add Product",
     "editProduct": "Edit Product",
@@ -383,7 +418,7 @@
       "selectOperation": "Select an operation"
     },
     "transactionHistory": "Transaction History",
-    "auditHistory": "Audit History",
+    "auditHistory": "History",
     "bulkCreate": {
       "title": "Bulk Create",
       "addRow": "Add Row",
@@ -609,7 +644,7 @@
     "createFirstCategory": "Create your first category to get started"
   },
   "audit": {
-    "title": "Audit Log",
+    "title": "History Log",
     "subtitle": "System activity and change history",
     "totalOperations": "Total Operations",
     "operationsToday": "Operations Today",
@@ -619,9 +654,9 @@
     "todayActivity": "Today's activity",
     "usersWithRecentActivity": "Users with recent activity",
     "deletedRecords": "Deleted records",
-    "auditFilters": "Audit Filters",
-    "filterDescription": "Filter audit records by date, user, action and more",
-    "auditLog": "Audit Log",
+    "auditFilters": "History Filters",
+    "filterDescription": "Filter history records by date, user, action and more",
+    "auditLog": "History Log",
     "completeHistory": "Complete history of all system operations",
     "action": "Action",
     "user": "User",

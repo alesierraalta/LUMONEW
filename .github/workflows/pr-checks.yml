@@ -1,0 +1,204 @@
+name: 🔍 Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '18'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # ===== PR VALIDATION =====
+  pr-validation:
+    name: 🔍 PR Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 📝 TypeScript type check
+        run: npm run type-check || npx tsc --noEmit
+
+      - name: 🎨 ESLint check
+        run: npm run lint || npx eslint . --ext .ts,.tsx,.js,.jsx
+
+      - name: 💄 Prettier check
+        run: npx prettier --check "**/*.{ts,tsx,js,jsx,json,md}"
+
+      - name: 🧪 Run unit tests
+        run: npm run test || npx vitest run
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+  # ===== PR SECURITY CHECK =====
+  pr-security:
+    name: 🔒 PR Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🛡️ Run security audit
+        run: npm audit --audit-level=moderate
+
+  # ===== PR PREVIEW DEPLOYMENT =====
+  pr-preview:
+    name: 🎭 PR Preview
+    runs-on: ubuntu-latest
+    needs: [pr-validation]
+    
+    environment:
+      name: pr-preview
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🏗️ Build application
+        run: npm run build
+
+      - name: 🚀 Deploy PR Preview to Vercel
+        id: vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--target=preview'
+
+      - name: 📝 Comment PR preview URL
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const url = '${{ steps.vercel.outputs.url }}';
+            const prNumber = context.issue.number;
+            
+            // Check if comment already exists
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+            
+            const existingComment = comments.data.find(comment => 
+              comment.body.includes('🎭 **PR Preview**') && 
+              comment.user.type === 'Bot'
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: `🎭 **PR Preview**\n\n✅ Preview URL: ${url}\n\n⚠️ This is a preview environment for testing purposes only.\n\n🔄 This preview will be updated automatically when you push new commits to this PR.`
+              });
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: `🎭 **PR Preview**\n\n✅ Preview URL: ${url}\n\n⚠️ This is a preview environment for testing purposes only.\n\n🔄 This preview will be updated automatically when you push new commits to this PR.`
+              });
+            }
+
+  # ===== PR E2E TESTS =====
+  pr-e2e:
+    name: 🎭 PR E2E Tests
+    runs-on: ubuntu-latest
+    needs: [pr-preview]
+    
+    steps:
+      - name: 📚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: 🔧 Install dependencies
+        run: npm ci
+
+      - name: 🎭 Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: 🎭 Run E2E tests against PR preview
+        run: npm run test:e2e || npx playwright test
+        env:
+          BASE_URL: ${{ steps.vercel.outputs.url }}
+
+      - name: 📊 Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: pr-playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ===== PR STATUS CHECK =====
+  pr-status:
+    name: ✅ PR Status Check
+    runs-on: ubuntu-latest
+    needs: [pr-validation, pr-security, pr-e2e]
+    if: always()
+    
+    steps:
+      - name: ✅ Check PR status
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const validationStatus = '${{ needs.pr-validation.result }}';
+            const securityStatus = '${{ needs.pr-security.result }}';
+            const e2eStatus = '${{ needs.pr-e2e.result }}';
+            
+            const allPassed = validationStatus === 'success' && 
+                            securityStatus === 'success' && 
+                            e2eStatus === 'success';
+            
+            const status = allPassed ? '✅ All checks passed!' : '❌ Some checks failed';
+            const emoji = allPassed ? '🎉' : '⚠️';
+            
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `${emoji} **PR Status Summary**\n\n${status}\n\n📊 **Check Results:**\n- Validation: ${validationStatus}\n- Security: ${securityStatus}\n- E2E Tests: ${e2eStatus}`
+            });

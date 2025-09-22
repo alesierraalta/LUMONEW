@@ -22,6 +22,13 @@ playwright-report/
 junit.xml
 test-*.js
 
+# Test artifacts and temporary files
+test-*.log
+test-*.tmp
+test-*.bak
+*test-credentials*
+*test-keys*
+
 # Next.js
 /.next/
 /out/
@@ -37,6 +44,8 @@ test-*.js
 .env.production
 .env.staging
 .env
+.env.test
+.env.development
 
 # Security - Never commit these files
 *.pem
@@ -45,6 +54,25 @@ test-*.js
 *.pfx
 secrets/
 config/secrets/
+
+# Supabase and API keys
+*supabase*
+*api-key*
+*service-role*
+*anon-key*
+*service_role_key*
+*anon_key*
+
+# Test files with credentials
+test-*-credentials*
+test-*-keys*
+*credentials*
+*keys*
+
+# Database connection strings
+*connection-string*
+*db-url*
+*database-url*
 
 # Database dumps and backups
 *.sql

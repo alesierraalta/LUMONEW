@@ -6,11 +6,13 @@ import { createMockInventoryItems, resetSequenceCounter } from '@/__tests__/util
 import { setupCommonMocks } from '@/__tests__/utils/test-render'
 
 // Mock the database service
+const mockAuditedInventoryService = {
+  getAll: vi.fn(),
+  delete: vi.fn(),
+}
+
 vi.mock('@/lib/database-with-audit', () => ({
-  auditedInventoryService: {
-    getAll: vi.fn(),
-    delete: vi.fn(),
-  }
+  auditedInventoryService: mockAuditedInventoryService
 }))
 
 // Mock Next.js router
@@ -20,6 +22,42 @@ vi.mock('next/navigation', () => ({
     push: mockPush,
   })
 }))
+
+// Mock next-intl
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, params?: any) => {
+    // Return mock translations
+    const translations: Record<string, string> = {
+      'table.searchPlaceholder': 'Search items...',
+      'table.headers.sku': 'SKU',
+      'table.headers.name': 'Name',
+      'table.headers.category': 'Category',
+      'table.headers.location': 'Location',
+      'table.headers.price': 'Price',
+      'table.headers.stock': 'Stock',
+      'table.headers.status': 'Status',
+      'table.headers.lastUpdated': 'Last Updated',
+      'table.headers.actions': 'Actions',
+      'table.actions.addStock': 'Agregar stock',
+      'table.actions.subtractStock': 'Restar stock',
+      'table.actions.edit': 'Edit',
+      'table.actions.delete': 'Delete',
+      'table.stockStatus.outOfStock': 'Out of Stock',
+      'table.stockStatus.lowStock': 'Low Stock',
+      'table.stockStatus.inStock': 'In Stock',
+      'table.noItemsFound': 'No items found matching your criteria.',
+      'bulkOperations': `Bulk Operations (${params?.count || 0})`,
+      'confirmDelete': `Are you sure you want to delete ${params?.name}?`,
+      'errorLoadingInventory': 'Failed to fetch inventory items',
+      'unknown': 'Unknown',
+      'minStock': 'Min Stock'
+    }
+    return translations[key] || key
+  }
+}))
+
+// Mock fetch globally
+vi.stubGlobal('fetch', vi.fn())
 
 // Mock QuickStockModal component
 vi.mock('@/components/inventory/quick-stock-modal', () => ({
@@ -45,8 +83,13 @@ describe('InventoryTable', () => {
     vi.clearAllMocks()
     
     // Mock the service to return our test data
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue(mockItems)
+    mockAuditedInventoryService.getAll.mockResolvedValue(mockItems)
+    
+    // Mock fetch to return our test data
+    vi.mocked(global.fetch).mockResolvedValue({
+      ok: true,
+      json: async () => mockItems
+    } as Response)
   })
 
   it('renders loading state initially', () => {
@@ -73,13 +116,12 @@ describe('InventoryTable', () => {
   })
 
   it('displays error state when data fetching fails', async () => {
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockRejectedValue(new Error('Failed to fetch'))
+    mockAuditedInventoryService.getAll.mockRejectedValue(new Error('Failed to fetch'))
     
     render(<InventoryTable filters={defaultFilters} />)
     
     await waitFor(() => {
-      expect(screen.getByText(/Error loading inventory/)).toBeInTheDocument()
+      expect(screen.getByText(/Failed to fetch inventory items/)).toBeInTheDocument()
     })
   })
 
@@ -297,7 +339,7 @@ describe('InventoryTable', () => {
 
   it('refreshes data when stock is updated', async () => {
     const user = userEvent.setup()
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
+    // Using mockAuditedInventoryService
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -312,7 +354,7 @@ describe('InventoryTable', () => {
     await user.click(updateStockButton)
 
     // Should call getAll again to refresh data
-    expect(auditedInventoryService.getAll).toHaveBeenCalledTimes(2)
+    expect(mockAuditedInventoryService.getAll).toHaveBeenCalledTimes(2)
   })
 
   it('navigates to edit page when edit button is clicked', async () => {
@@ -331,7 +373,7 @@ describe('InventoryTable', () => {
 
   it('deletes item when delete button is clicked and confirmed', async () => {
     const user = userEvent.setup()
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
+    // Using mockAuditedInventoryService
     
     // Mock window.confirm
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true)
@@ -346,14 +388,14 @@ describe('InventoryTable', () => {
     await user.click(deleteButtons[0])
 
     expect(confirmSpy).toHaveBeenCalledWith(`Are you sure you want to delete ${mockItems[0].name}?`)
-    expect(auditedInventoryService.delete).toHaveBeenCalledWith(mockItems[0].id)
+    expect(mockAuditedInventoryService.delete).toHaveBeenCalledWith(mockItems[0].id)
     
     confirmSpy.mockRestore()
   })
 
   it('does not delete item when delete is cancelled', async () => {
     const user = userEvent.setup()
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
+    // Using mockAuditedInventoryService
     
     // Mock window.confirm to return false
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false)
@@ -368,7 +410,7 @@ describe('InventoryTable', () => {
     await user.click(deleteButtons[0])
 
     expect(confirmSpy).toHaveBeenCalled()
-    expect(auditedInventoryService.delete).not.toHaveBeenCalled()
+    expect(mockAuditedInventoryService.delete).not.toHaveBeenCalled()
     
     confirmSpy.mockRestore()
   })
@@ -379,8 +421,8 @@ describe('InventoryTable', () => {
     const outOfStockItem = { ...mockItems[1], quantity: 0, min_stock: 5 }
     const goodStockItem = { ...mockItems[2], quantity: 50, min_stock: 10 }
     
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([lowStockItem, outOfStockItem, goodStockItem])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([lowStockItem, outOfStockItem, goodStockItem])
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -424,8 +466,8 @@ describe('InventoryTable', () => {
   })
 
   it('shows no items message when no items match filters', async () => {
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([])
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -444,8 +486,8 @@ describe('InventoryTable', () => {
       }
     }
     
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([itemWithCategory])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([itemWithCategory])
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -464,8 +506,8 @@ describe('InventoryTable', () => {
       }
     }
     
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([itemWithLocation])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([itemWithLocation])
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -481,8 +523,8 @@ describe('InventoryTable', () => {
       categories: null
     }
     
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([itemWithoutCategory])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([itemWithoutCategory])
     
     render(<InventoryTable filters={defaultFilters} />)
     
@@ -497,8 +539,8 @@ describe('InventoryTable', () => {
       locations: null
     }
     
-    const { auditedInventoryService } = require('@/lib/database-with-audit')
-    auditedInventoryService.getAll.mockResolvedValue([itemWithoutLocation])
+    // Using mockAuditedInventoryService
+    mockAuditedInventoryService.getAll.mockResolvedValue([itemWithoutLocation])
     
     render(<InventoryTable filters={defaultFilters} />)
     

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Logger } from '@/lib/utils/logger'
 import { handleAPIError } from '@/lib/utils/api-error-handler'
 import { createClient } from '@/lib/supabase/server-with-retry'
+import { apiCacheManager } from '@/lib/cache/api-cache-manager'
 
 /**
  * Bulk Operations API for Inventory
@@ -60,11 +61,21 @@ export async function POST(request: NextRequest) {
       case 'create':
         // Real bulk create using optimized inventory service
         try {
+          // Get default category and location IDs
+          const supabase = createClient()
+          const [categoryResult, locationResult] = await Promise.all([
+            supabase.from('categories').select('id').limit(1).single(),
+            supabase.from('locations').select('id').limit(1).single()
+          ])
+          
+          const defaultCategoryId = categoryResult.data?.id || '44166394-996a-4c80-b48b-c6bf2e97387b' // Electronics
+          const defaultLocationId = locationResult.data?.id || '424acea8-70c2-46c6-9a2e-e7ee0ba6a72d' // Main Warehouse
+
           const itemsToCreate = items.map((item: any) => ({
             name: item.name,
             sku: item.sku,
-            category_id: item.category_id || item.categoryId,
-            location_id: item.location_id || item.locationId,
+            category_id: item.category_id || item.categoryId || defaultCategoryId,
+            location_id: item.location_id || item.locationId || defaultLocationId,
             unit_price: parseFloat(item.unit_price || item.price || 0),
             quantity: parseInt(item.quantity || item.currentStock || 0),
             min_stock: parseInt(item.min_stock || item.minimumLevel || 0),
@@ -92,6 +103,9 @@ export async function POST(request: NextRequest) {
           
           // Create items in database
           const createdItems = await optimizedInventoryService.createMany(itemsToCreate, user)
+          
+          // Invalidate API cache to ensure fresh data on next request
+          await apiCacheManager.invalidateByTags(['inventory', 'list'])
           
           result = {
             successful: createdItems.length,
@@ -152,6 +166,11 @@ export async function POST(request: NextRequest) {
           const updateResults = await Promise.all(updatePromises)
           const successful = updateResults.filter(r => r.success)
           const failed = updateResults.filter(r => !r.success)
+
+          // Invalidate API cache to ensure fresh data on next request
+          if (successful.length > 0) {
+            await apiCacheManager.invalidateByTags(['inventory', 'list'])
+          }
 
           result = {
             successful: successful.length,
@@ -265,6 +284,11 @@ export async function DELETE(request: NextRequest) {
       const deleteResults = await Promise.all(deletePromises)
       const successful = deleteResults.filter(r => r.success)
       const failed = deleteResults.filter(r => !r.success)
+
+      // Invalidate API cache to ensure fresh data on next request
+      if (successful.length > 0) {
+        await apiCacheManager.invalidateByTags(['inventory', 'list'])
+      }
 
       const result = {
         successful: successful.length,
