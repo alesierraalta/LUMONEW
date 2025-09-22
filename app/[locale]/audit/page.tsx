@@ -121,64 +121,67 @@ export default function AuditPage() {
             {t('subtitle')}
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <Shield className="h-6 w-6 md:h-8 md:w-8 text-blue-600" />
+        
+        {/* Action Buttons - Mobile Responsive */}
+        <div className="flex flex-wrap gap-2" id="audit-actions">
+          <Button
+            onClick={loadAuditLogs}
+            className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 text-xs md:text-sm"
+            size="sm"
+            id="audit-refresh"
+          >
+            <RefreshCw className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Actualizar Datos</span>
+            <span className="sm:hidden">Actualizar</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200 text-xs md:text-sm"
+            size="sm"
+            onClick={() => {
+              // TODO: Implement export functionality
+              console.log('Export audit logs')
+            }}
+            id="audit-export"
+          >
+            <Download className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Exportar CSV</span>
+            <span className="sm:hidden">Exportar</span>
+          </Button>
+          <Button
+            variant="outline"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200 text-xs md:text-sm"
+            size="sm"
+            onClick={() => {
+              // TODO: Implement report generation
+              console.log('Generate report')
+            }}
+            id="audit-report"
+          >
+            <FileText className="h-4 w-4 mr-1 md:mr-2" />
+            <span className="hidden sm:inline">Generar Reporte</span>
+            <span className="sm:hidden">Reporte</span>
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              // TODO: Implement tutorial
+              console.log('Open audit tutorial')
+            }} 
+            aria-label="Abrir tutorial de historial"
+            className="text-xs md:text-sm"
+            id="audit-tutorial"
+          >
+            <Shield className="h-4 w-4 mr-1 md:mr-2" />
+            Tutorial
+          </Button>
         </div>
       </div>
 
-      {/* Audit Tools - Prominent Section */}
-      <Card className="border-blue-200 dark:border-gray-700">
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-blue-100 dark:bg-gray-800 text-blue-700 dark:text-gray-100 border-blue-300 dark:border-gray-600">
-                <Zap className="h-3 w-3 mr-1" />
-                Herramientas de Auditoría
-              </Badge>
-              <span className="text-sm text-muted-foreground">
-                Gestiona y exporta registros de actividad
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={loadAuditLogs}
-                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
-                size="sm"
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Actualizar Datos
-              </Button>
-              <Button
-                variant="outline"
-                className="border-green-300 text-green-700 hover:bg-green-50 dark:border-green-700 dark:text-green-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
-                size="sm"
-                onClick={() => {
-                  // TODO: Implement export functionality
-                  console.log('Export audit logs')
-                }}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar CSV
-              </Button>
-              <Button
-                variant="outline"
-                className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-700 dark:text-purple-400 dark:hover:bg-gray-800 shadow-md hover:shadow-lg transition-all duration-200"
-                size="sm"
-                onClick={() => {
-                  // TODO: Implement report generation
-                  console.log('Generate report')
-                }}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Generar Reporte
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Statistics Cards - Mobile Responsive Grid */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+      <div className="flex flex-wrap gap-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-xs md:text-sm font-medium">{t('totalOperations')}</CardTitle>

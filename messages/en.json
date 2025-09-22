@@ -38,8 +38,9 @@
     "categories": "Categories",
     "locations": "Locations",
     "users": "Users",
+    "audit": "History",
     "deleted_items": "Deleted Items",
-    "audit": "Audit",
+    "audit": "History",
     "reports": "Reports",
     "settings": "Settings",
     "alerts": "Alerts"
@@ -262,7 +263,7 @@
     "errorSavingDescription": "Could not save the transaction",
     "inventoryLoaded": "Inventory loaded",
     "buttons": {
-      "auditHistory": "Audit History",
+      "auditHistory": "History",
       "import": "Import",
       "export": "Export",
       "addStock": "Add Stock",
@@ -417,7 +418,7 @@
       "selectOperation": "Select an operation"
     },
     "transactionHistory": "Transaction History",
-    "auditHistory": "Audit History",
+    "auditHistory": "History",
     "bulkCreate": {
       "title": "Bulk Create",
       "addRow": "Add Row",
@@ -643,7 +644,7 @@
     "createFirstCategory": "Create your first category to get started"
   },
   "audit": {
-    "title": "Audit Log",
+    "title": "History Log",
     "subtitle": "System activity and change history",
     "totalOperations": "Total Operations",
     "operationsToday": "Operations Today",
@@ -653,9 +654,9 @@
     "todayActivity": "Today's activity",
     "usersWithRecentActivity": "Users with recent activity",
     "deletedRecords": "Deleted records",
-    "auditFilters": "Audit Filters",
-    "filterDescription": "Filter audit records by date, user, action and more",
-    "auditLog": "Audit Log",
+    "auditFilters": "History Filters",
+    "filterDescription": "Filter history records by date, user, action and more",
+    "auditLog": "History Log",
     "completeHistory": "Complete history of all system operations",
     "action": "Action",
     "user": "User",

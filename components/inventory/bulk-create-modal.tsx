@@ -32,9 +32,7 @@ interface BulkCreateModalProps {
 
 export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) => {
   const [items, setItems] = useState<BulkItem[]>([
-    { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-    { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-    { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
+    { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
@@ -214,11 +212,9 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
             description: `${successCount} items fueron creados correctamente${failedCount > 0 ? `, ${failedCount} fallaron` : ''}`
           })
           
-          // Reset form
+          // Reset form to 1 item (as configured)
           setItems([
-            { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-            { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-            { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
+            { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
           ])
           
           onSuccess()
@@ -420,6 +416,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
               onClick={handleSubmit}
               disabled={isSubmitting}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
+              data-testid="bulk-create-submit-button"
             >
               {isSubmitting ? (
                 <>

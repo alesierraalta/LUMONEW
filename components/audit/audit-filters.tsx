@@ -184,7 +184,7 @@ export function AuditFilters({ filters, onFiltersChange }: AuditFiltersProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+          <div className="flex flex-wrap gap-3">
             {FILTER_PRESETS.map((preset) => {
               const Icon = preset.icon
               const isActive = activePreset === preset.id
@@ -195,7 +195,7 @@ export function AuditFilters({ filters, onFiltersChange }: AuditFiltersProps) {
                   variant={isActive ? "default" : "outline"}
                   size="sm"
                   onClick={() => applyPreset(preset)}
-                  className="h-auto p-3 flex flex-col items-start gap-2 text-left"
+                  className="h-auto p-3 flex flex-col items-start gap-2 text-left min-w-[200px] max-w-[280px] flex-shrink-0"
                 >
                   <div className="flex items-center gap-2 w-full">
                     <Icon className="h-4 w-4" />

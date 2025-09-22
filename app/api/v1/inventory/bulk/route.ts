@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Logger } from '@/lib/utils/logger'
 import { handleAPIError } from '@/lib/utils/api-error-handler'
 import { createClient } from '@/lib/supabase/server-with-retry'
+import { apiCacheManager } from '@/lib/cache/api-cache-manager'
 
 /**
  * Bulk Operations API for Inventory
@@ -103,6 +104,9 @@ export async function POST(request: NextRequest) {
           // Create items in database
           const createdItems = await optimizedInventoryService.createMany(itemsToCreate, user)
           
+          // Invalidate API cache to ensure fresh data on next request
+          await apiCacheManager.invalidateByTags(['inventory', 'list'])
+          
           result = {
             successful: createdItems.length,
             failed: 0,
@@ -162,6 +166,11 @@ export async function POST(request: NextRequest) {
           const updateResults = await Promise.all(updatePromises)
           const successful = updateResults.filter(r => r.success)
           const failed = updateResults.filter(r => !r.success)
+
+          // Invalidate API cache to ensure fresh data on next request
+          if (successful.length > 0) {
+            await apiCacheManager.invalidateByTags(['inventory', 'list'])
+          }
 
           result = {
             successful: successful.length,
@@ -275,6 +284,11 @@ export async function DELETE(request: NextRequest) {
       const deleteResults = await Promise.all(deletePromises)
       const successful = deleteResults.filter(r => r.success)
       const failed = deleteResults.filter(r => !r.success)
+
+      // Invalidate API cache to ensure fresh data on next request
+      if (successful.length > 0) {
+        await apiCacheManager.invalidateByTags(['inventory', 'list'])
+      }
 
       const result = {
         successful: successful.length,

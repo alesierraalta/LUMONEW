@@ -37,6 +37,19 @@ export function MetricsCards() {
     }
 
     fetchMetrics()
+
+    // Listen for inventory changes to refresh metrics
+    const handleInventoryChange = () => {
+      fetchMetrics()
+    }
+
+    // Add event listener for inventory changes
+    window.addEventListener('inventoryUpdated', handleInventoryChange)
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('inventoryUpdated', handleInventoryChange)
+    }
   }, [])
 
   if (loading) {

@@ -20,7 +20,21 @@
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "test:install": "playwright install"
+    "test:install": "playwright install",
+    "test:db": "node scripts/run-database-tests.js",
+    "test:db:unit": "node scripts/run-database-tests.js unit",
+    "test:db:integration": "node scripts/run-database-tests.js integration",
+    "test:db:api": "node scripts/run-database-tests.js api",
+    "test:db:e2e": "node scripts/run-database-tests.js e2e",
+    "test:db:cleanup": "node scripts/run-database-tests.js cleanup",
+    "test:db:config": "npx playwright test --config=tests/database-test.config.ts",
+    "test:organized": "node scripts/run-organized-tests.js",
+    "test:organized:unit": "node scripts/run-organized-tests.js unit",
+    "test:organized:integration": "node scripts/run-organized-tests.js integration",
+    "test:organized:e2e": "node scripts/run-organized-tests.js e2e",
+    "test:organized:api": "node scripts/run-organized-tests.js api",
+    "test:organized:manual": "node scripts/run-organized-tests.js manual",
+    "test:organized:help": "node scripts/run-organized-tests.js --help"
   },
   "dependencies": {
     "@next/font": "13.5.6",

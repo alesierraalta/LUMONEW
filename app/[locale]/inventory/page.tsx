@@ -40,6 +40,7 @@ function InventoryContent() {
   const [isCSVImportOpen, setIsCSVImportOpen] = useState(false)
   const [inventoryData, setInventoryData] = useState<any>(null)
   const [loadingTransactions, setLoadingTransactions] = useState(false)
+  const [inventoryTableRefreshTrigger, setInventoryTableRefreshTrigger] = useState(0)
   const { addToast } = useToast()
   const { openModal } = useModal()
   
@@ -47,8 +48,8 @@ function InventoryContent() {
     try {
       setIsLoading(true)
       
-      // Load inventory items
-      const inventoryResponse = await fetch('/api/inventory/items?limit=999999')
+      // Load inventory items with cache busting
+      const inventoryResponse = await fetch(`/api/inventory/items?limit=999999&_t=${Date.now()}`)
       if (!inventoryResponse.ok) {
         throw new Error('Failed to fetch inventory items')
       }
@@ -72,7 +73,7 @@ function InventoryContent() {
       }
       const categories = await categoriesResponse.json()
       
-      // Get analytics data
+      // Get analytics data (direct DB call, no cache needed)
       const analytics = await analyticsService.getDashboardMetrics()
       
       // Calculate stock status counts
@@ -129,6 +130,12 @@ function InventoryContent() {
       }
       
       setInventoryData(cardData)
+      
+      // Trigger inventory table refresh
+      setInventoryTableRefreshTrigger(prev => prev + 1)
+      
+      // Notify dashboard of inventory changes
+      window.dispatchEvent(new CustomEvent('inventoryUpdated'))
       
     } catch (error) {
       console.error('Error loading inventory data:', error)
@@ -227,6 +234,9 @@ function InventoryContent() {
         
         // Reload transactions to get the latest data
         loadTransactions()
+        
+        // Trigger inventory table refresh
+        setInventoryTableRefreshTrigger(prev => prev + 1)
       } else {
         throw new Error(result.error || 'Error al guardar la transacción')
       }
@@ -245,7 +255,16 @@ function InventoryContent() {
     openModal(
       <Suspense fallback={<PageLoading message="Cargando modal..." />}>
         <BulkCreateModal
-          onSuccess={loadInventoryData}
+          onSuccess={async () => {
+            // Force a complete refresh of inventory data and status
+            await loadInventoryData()
+            setInventoryTableRefreshTrigger(prev => prev + 1)
+            
+            // Force a small delay to ensure all updates are processed
+            setTimeout(() => {
+              loadInventoryData()
+            }, 1000)
+          }}
           onClose={() => {}} // Modal handles its own closing
         />
       </Suspense>,
@@ -439,14 +458,14 @@ function InventoryContent() {
           <button
             id="inv-audit-history"
             className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-blue-500/5 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            onClick={() => setIsAuditHistoryOpen(true)}
+            onClick={() => router.push('/audit')}
             title="Ver historial completo de cambios y movimientos del inventario"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
               <History className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground">Historial de Auditoría</p>
+              <p className="font-medium text-sm text-foreground">Historial</p>
               <p className="text-xs text-muted-foreground truncate">Seguimiento de cambios</p>
             </div>
           </button>
@@ -529,7 +548,7 @@ function InventoryContent() {
             </Suspense>
             <Suspense fallback={<PageLoading message={t('loading.table')} />}>
               <div id="inv-table">
-                <InventoryTable filters={filters} />
+                <InventoryTable filters={filters} refreshTrigger={inventoryTableRefreshTrigger} />
               </div>
             </Suspense>
           </div>
