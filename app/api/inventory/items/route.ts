@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { optimizedInventoryService } from '@/lib/services/optimized-inventory-service'
+import { serverInventoryService } from '@/lib/services/server-inventory-service'
 import { createCachedResponse, getCacheConfig } from '@/lib/cache/api-cache-manager'
 import { PaginationHelper } from '@/lib/utils/pagination'
 import { createClient } from '@/lib/supabase/server-with-retry'
@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       }
       
       // Get all inventory items without pagination
-      const result = await optimizedInventoryService.getAll({ limit: 999999, page: 1 }, filters)
+      const result = await serverInventoryService.getAll({ limit: 999999, page: 1 }, filters)
       
       // Return simple array response (backward compatible with old format)
       return createCachedResponse(
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Get paginated inventory items with filters
-    const result = await optimizedInventoryService.getAll(paginationParams, filters)
+    const result = await serverInventoryService.getAll(paginationParams, filters)
     
     // Generate pagination links
     const baseUrl = new URL(request.url).origin + new URL(request.url).pathname
@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
         console.warn('Could not get authenticated user for audit:', authError)
       }
 
-      const createdItems = await optimizedInventoryService.createMany(items, user)
+      const createdItems = await serverInventoryService.createMany(items, user)
       
       return NextResponse.json({
         success: true,
@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create single inventory item
-      const newItem = await optimizedInventoryService.create({
+      const newItem = await serverInventoryService.create({
         sku: body.sku,
         name: body.name,
         category_id: body.category_id || body.categoryId,
