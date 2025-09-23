@@ -8,7 +8,46 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     
-    // Parse pagination parameters
+    // Check if this is a "get all" request (limit >= 999999)
+    const limit = parseInt(searchParams.get('limit') || '20')
+    const isGetAllRequest = limit >= 999999
+    
+    if (isGetAllRequest) {
+      // For "get all" requests, return a simple array without pagination
+      const filters = {
+        category: searchParams.get('category') || undefined,
+        location: searchParams.get('location') || undefined,
+        status: searchParams.get('status') || undefined,
+        search: searchParams.get('search') || undefined,
+        minQuantity: searchParams.get('minQuantity') ? parseInt(searchParams.get('minQuantity')!) : undefined,
+        maxQuantity: searchParams.get('maxQuantity') ? parseInt(searchParams.get('maxQuantity')!) : undefined,
+        lowStock: searchParams.get('lowStock') === 'true',
+        outOfStock: searchParams.get('outOfStock') === 'true'
+      }
+      
+      // Handle legacy withStock parameter
+      const withStock = searchParams.get('withStock') === 'true'
+      if (withStock) {
+        filters.minQuantity = 1
+      }
+      
+      // Get all inventory items without pagination
+      const result = await optimizedInventoryService.getAll({ limit: 999999, page: 1 }, filters)
+      
+      // Return simple array response (backward compatible with old format)
+      return createCachedResponse(
+        request,
+        result.data, // Return just the data array, not the pagination object
+        'inventory',
+        'list-all',
+        {
+          'X-Total-Count': result.pagination.total.toString(),
+          'X-Response-Type': 'simple-array'
+        }
+      )
+    }
+    
+    // For normal pagination requests, use the existing logic
     const paginationParams = PaginationHelper.parseParams(searchParams)
     
     // Parse filters
