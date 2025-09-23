@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { Select } from '@/components/ui/select'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { auditService, AuditLog } from '@/lib/audit'
 import { 
   Calendar, 
@@ -267,8 +267,8 @@ export default function HistoryPage() {
   
   // Filtros
   const [searchTerm, setSearchTerm] = useState('')
-  const [operationFilter, setOperationFilter] = useState<string>('')
-  const [tableFilter, setTableFilter] = useState<string>('')
+  const [operationFilter, setOperationFilter] = useState<string>('all')
+  const [tableFilter, setTableFilter] = useState<string>('all')
   const [dateFilter, setDateFilter] = useState<string>('all')
   const [showFilters, setShowFilters] = useState(true)
 
@@ -278,8 +278,8 @@ export default function HistoryPage() {
     try {
       const { data } = await auditService.getAuditLogs({
         limit: 200,
-        operation: operationFilter || undefined,
-        table_name: tableFilter || undefined,
+        operation: operationFilter !== 'all' ? operationFilter : undefined,
+        table_name: tableFilter !== 'all' ? tableFilter : undefined,
         search: searchTerm || undefined,
         date_from: getDateFromFilter(dateFilter)
       })
@@ -455,13 +455,13 @@ export default function HistoryPage() {
   // Limpiar filtros
   const clearFilters = () => {
     setSearchTerm('')
-    setOperationFilter('')
-    setTableFilter('')
+    setOperationFilter('all')
+    setTableFilter('all')
     setDateFilter('all')
   }
 
   // Verificar si hay filtros activos
-  const hasActiveFilters = searchTerm || operationFilter || tableFilter || dateFilter !== 'all'
+  const hasActiveFilters = searchTerm || operationFilter !== 'all' || tableFilter !== 'all' || dateFilter !== 'all'
 
   // Obtener estadísticas
   const stats = {
@@ -732,37 +732,52 @@ export default function HistoryPage() {
               value={operationFilter}
               onValueChange={setOperationFilter}
             >
-              <option value="">Todas las operaciones</option>
-              <option value="INSERT">✨ Creaciones</option>
-              <option value="UPDATE">📝 Actualizaciones</option>
-              <option value="DELETE">🗑️ Eliminaciones</option>
-              <option value="LOGIN">🔐 Inicios de sesión</option>
-              <option value="LOGOUT">👋 Cierres de sesión</option>
-              <option value="EXPORT">📤 Exportaciones</option>
-              <option value="IMPORT">📥 Importaciones</option>
-              <option value="BULK_OPERATION">⚡ Operaciones masivas</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las operaciones" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las operaciones</SelectItem>
+                <SelectItem value="INSERT">✨ Creaciones</SelectItem>
+                <SelectItem value="UPDATE">📝 Actualizaciones</SelectItem>
+                <SelectItem value="DELETE">🗑️ Eliminaciones</SelectItem>
+                <SelectItem value="LOGIN">🔐 Inicios de sesión</SelectItem>
+                <SelectItem value="LOGOUT">👋 Cierres de sesión</SelectItem>
+                <SelectItem value="EXPORT">📤 Exportaciones</SelectItem>
+                <SelectItem value="IMPORT">📥 Importaciones</SelectItem>
+                <SelectItem value="BULK_OPERATION">⚡ Operaciones masivas</SelectItem>
+              </SelectContent>
             </Select>
             
             <Select
               value={tableFilter}
               onValueChange={setTableFilter}
             >
-              <option value="">Todas las entidades</option>
-              <option value="inventory">📦 Inventario</option>
-              <option value="users">👥 Usuarios</option>
-              <option value="categories">🏷️ Categorías</option>
-              <option value="locations">📍 Ubicaciones</option>
-              <option value="transactions">💰 Transacciones</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Todas las entidades" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las entidades</SelectItem>
+                <SelectItem value="inventory">📦 Inventario</SelectItem>
+                <SelectItem value="users">👥 Usuarios</SelectItem>
+                <SelectItem value="categories">🏷️ Categorías</SelectItem>
+                <SelectItem value="locations">📍 Ubicaciones</SelectItem>
+                <SelectItem value="transactions">💰 Transacciones</SelectItem>
+              </SelectContent>
             </Select>
             
             <Select
               value={dateFilter}
               onValueChange={setDateFilter}
             >
-              <option value="all">🕐 Todo el tiempo</option>
-              <option value="today">📅 Hoy</option>
-              <option value="week">📊 Última semana</option>
-              <option value="month">📈 Último mes</option>
+              <SelectTrigger>
+                <SelectValue placeholder="Todo el tiempo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">🕐 Todo el tiempo</SelectItem>
+                <SelectItem value="today">📅 Hoy</SelectItem>
+                <SelectItem value="week">📊 Última semana</SelectItem>
+                <SelectItem value="month">📈 Último mes</SelectItem>
+              </SelectContent>
             </Select>
           </div>
 
