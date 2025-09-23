@@ -10,6 +10,7 @@ export default function Loading() {
           alt="LUMO Logo" 
           width={48} 
           height={48} 
+          priority={true} 
           className="h-12 w-12 object-contain dark:invert"
         />
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

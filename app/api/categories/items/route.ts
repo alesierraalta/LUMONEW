@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auditedCategoryService } from '@/lib/database-with-audit'
+import { serverCategoryService } from '@/lib/services/server-category-service'
 
 export async function GET(request: NextRequest) {
   try {
-    const categories = await auditedCategoryService.getAll()
+    const categories = await serverCategoryService.getAll()
     return NextResponse.json(categories)
   } catch (error) {
     console.error('Error fetching categories:', error)

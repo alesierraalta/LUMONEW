@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auditedLocationService } from '@/lib/database-with-audit'
+import { serverLocationService } from '@/lib/services/server-location-service'
 
 export async function GET(request: NextRequest) {
   try {
-    const locations = await auditedLocationService.getAll()
+    const locations = await serverLocationService.getAll()
     return NextResponse.json(locations)
   } catch (error) {
     console.error('Error fetching locations:', error)

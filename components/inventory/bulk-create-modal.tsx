@@ -33,8 +33,7 @@ interface BulkCreateModalProps {
 export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) => {
   const [items, setItems] = useState<BulkItem[]>([
     { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-    { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-    { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
+    { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
   ])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [categories, setCategories] = useState<any[]>([])
@@ -48,26 +47,86 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
   // Load categories and locations
   const loadData = useCallback(async () => {
     try {
+      console.log('🔄 Loading categories and locations...')
+
       const [categoriesResponse, locationsResponse] = await Promise.all([
         fetch('/api/categories/items'),
         fetch('/api/locations/items')
       ])
-      
+
+      console.log('📡 API Responses:', {
+        categoriesOk: categoriesResponse.ok,
+        locationsOk: locationsResponse.ok,
+        categoriesStatus: categoriesResponse.status,
+        locationsStatus: locationsResponse.status
+      })
+
       if (!categoriesResponse.ok || !locationsResponse.ok) {
-        throw new Error('Failed to fetch data')
+        const errorDetails = {
+          categoriesError: categoriesResponse.ok ? 'OK' : `${categoriesResponse.status}: ${categoriesResponse.statusText}`,
+          locationsError: locationsResponse.ok ? 'OK' : `${locationsResponse.status}: ${locationsResponse.statusText}`
+        }
+        
+        console.error('❌ API Errors:', errorDetails)
+        
+        // Show user-friendly error message
+        addToast({
+          type: 'error',
+          title: 'Error de configuración',
+          description: 'No se pueden cargar categorías y ubicaciones. Verifica la configuración de Supabase.',
+          duration: 10000
+        })
+        
+        throw new Error(`API Error: ${JSON.stringify(errorDetails)}`)
       }
-      
+
       const [categoriesData, locationsData] = await Promise.all([
         categoriesResponse.json(),
         locationsResponse.json()
       ])
-      
-      setCategories(categoriesData)
-      setLocations(locationsData)
+
+      console.log('📊 Data received:', {
+        categoriesCount: categoriesData?.length || 0,
+        locationsCount: locationsData?.length || 0,
+        categoriesData: categoriesData?.slice(0, 3), // Show first 3 categories
+        locationsData: locationsData?.slice(0, 3) // Show first 3 locations
+      })
+
+      // Check if data is empty
+      if ((!categoriesData || categoriesData.length === 0) && (!locationsData || locationsData.length === 0)) {
+        addToast({
+          type: 'warning',
+          title: 'Base de datos vacía',
+          description: 'No hay categorías ni ubicaciones. Ejecuta el script de configuración de la base de datos.',
+          duration: 10000
+        })
+      } else if (!categoriesData || categoriesData.length === 0) {
+        addToast({
+          type: 'warning',
+          title: 'Categorías faltantes',
+          description: 'No hay categorías disponibles. Ejecuta el script de configuración.',
+          duration: 8000
+        })
+      } else if (!locationsData || locationsData.length === 0) {
+        addToast({
+          type: 'warning',
+          title: 'Ubicaciones faltantes',
+          description: 'No hay ubicaciones disponibles. Ejecuta el script de configuración.',
+          duration: 8000
+        })
+      }
+
+      setCategories(categoriesData || [])
+      setLocations(locationsData || [])
+
+      console.log('✅ State updated successfully')
     } catch (error) {
-      console.error('Error loading data:', error)
+      console.error('❌ Error loading data:', error)
+      // Set empty arrays as fallback
+      setCategories([])
+      setLocations([])
     }
-  }, [])
+  }, [addToast])
 
   useEffect(() => {
     loadData()
@@ -178,7 +237,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
             cat.name.toLowerCase().includes('sin categoría')
           ) || categories[0]
 
-          const response = await fetch('/api/inventory/items?limit=999999', {
+          const response = await fetch('/api/inventory/items', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
@@ -217,8 +276,7 @@ export const BulkCreateModal = ({ onSuccess, onClose }: BulkCreateModalProps) =>
         // Reset form
         setItems([
           { id: '1', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-          { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' },
-          { id: '3', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
+          { id: '2', sku: '', name: '', category_id: '', location_id: '', quantity: '' }
         ])
         
         onSuccess()

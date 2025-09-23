@@ -1,5 +1,6 @@
 // Inventory Components Barrel Export
 export { BulkCreateModal } from './bulk-create-modal'
+export { QuickCreateModal } from './quick-create-modal'
 export { BulkOperations } from './bulk-operations'
 export { InventoryFilters } from './inventory-filters'
 export { InventoryTable } from './inventory-table'

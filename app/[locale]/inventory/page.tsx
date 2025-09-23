@@ -21,7 +21,8 @@ const InventoryTable = lazy(() => import('@/components/inventory/inventory-table
 const InventoryFilters = lazy(() => import('@/components/inventory/inventory-filters').then(mod => ({ default: mod.InventoryFilters })))
 const TransactionBuilder = lazy(() => import('@/components/inventory/transaction-builder').then(mod => ({ default: mod.TransactionBuilder })))
 const AuditHistory = lazy(() => import('@/components/inventory/audit-history').then(mod => ({ default: mod.AuditHistory })))
-const BulkCreateModal = lazy(() => import('@/components/inventory/bulk-create-modal').then(mod => ({ default: mod.BulkCreateModal })))
+const QuickCreateModal = lazy(() => import('@/components/inventory/quick-create-modal').then(mod => ({ default: mod.QuickCreateModal })))
+import { BulkCreateModal } from '@/components/inventory/bulk-create-modal'
 const CSVImportModal = lazy(() => import('@/components/inventory/csv-import/csv-import-modal').then(mod => ({ default: mod.CSVImportModal })))
 const InventoryTutorial = lazy(() => import('@/components/inventory/inventory-tutorial').then(mod => ({ default: mod.InventoryTutorial })))
 
