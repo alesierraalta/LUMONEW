@@ -416,7 +416,7 @@ export const auditedInventoryService = {
     try {
       const oldData = await this.getById(id)
       
-      const { error } = await (supabase as any)
+      const { error } = await (getAuditClient() as any)
         .from('inventory')
         .delete()
         .eq('id', id)

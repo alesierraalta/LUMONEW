@@ -5,6 +5,7 @@
 
 import { createClient } from '../supabase/client'
 import { auditService } from '../audit'
+import { deletedItemsService } from './deleted-items-service'
 import { inventoryCache } from '../cache/cache-manager'
 import { PaginationHelper, PaginationParams, PaginationResult } from '../utils/pagination'
 
@@ -451,6 +452,21 @@ export class OptimizedInventoryService {
   async delete(id: string, user?: any): Promise<void> {
     try {
       const oldData = await this.getById(id)
+
+      // Save to deleted_items before actual deletion
+      try {
+        await deletedItemsService.saveDeletedItem({
+          original_table_name: 'inventory',
+          original_record_id: id,
+          original_data: oldData,
+          deleted_by: user?.id || 'system',
+          deletion_reason: 'Inventory item deleted from system',
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        })
+      } catch (deleteItemError) {
+        console.warn('Failed to save deleted item:', deleteItemError)
+        // Continue with deletion even if saving to deleted_items fails
+      }
 
       const { error } = await supabase
         .from('inventory')

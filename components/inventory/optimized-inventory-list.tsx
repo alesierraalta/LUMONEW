@@ -284,7 +284,7 @@ export function OptimizedInventoryList() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {/* Category options would be populated from API */}
               </SelectContent>
             </Select>
@@ -293,7 +293,7 @@ export function OptimizedInventoryList() {
                 <SelectValue placeholder="Location" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Locations</SelectItem>
+                <SelectItem value="all">All Locations</SelectItem>
                 {/* Location options would be populated from API */}
               </SelectContent>
             </Select>
@@ -302,7 +302,7 @@ export function OptimizedInventoryList() {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>

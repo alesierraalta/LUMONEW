@@ -290,6 +290,7 @@
     "daysInInventory": "Días en Inventario"
   },
   "inventory": {
+    "confirmDelete": "¿Estás seguro de que quieres eliminar este artículo? Esta acción no se puede deshacer.",
     "noItemsFound": "No se encontraron artículos que coincidan con tus criterios.",
     "title": "Inventario",
     "description": "Administra tu inventario de productos y stock",

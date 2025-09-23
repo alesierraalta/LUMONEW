@@ -27,6 +27,32 @@ export interface DeletedItemsFilters {
 }
 
 export class DeletedItemsService {
+  /**
+   * Save a deleted item to the deleted_items table
+   */
+  async saveDeletedItem(item: {
+    original_table_name: string
+    original_record_id: string
+    original_data: any
+    deleted_by: string
+    deletion_reason?: string
+    expires_at?: string
+  }): Promise<void> {
+    const { error } = await this.supabase
+      .from('deleted_items')
+      .insert({
+        original_table_name: item.original_table_name,
+        original_record_id: item.original_record_id,
+        original_data: item.original_data,
+        deleted_by: item.deleted_by,
+        deletion_reason: item.deletion_reason || 'Item deleted from system',
+        expires_at: item.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      })
+
+    if (error) {
+      throw new Error(`Failed to save deleted item: ${error.message}`)
+    }
+  }
   private supabase;
 
   constructor(supabaseClient?: any) {

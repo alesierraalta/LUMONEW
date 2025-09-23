@@ -174,3 +174,16 @@ export function chunk<T>(array: T[], size: number): T[][] {
   }
   return chunks
 }
+
+// Utility function to format item information for deletion confirmations and messages
+export function formatItemInfo(item: { name?: string; id: string }): string {
+  const name = item.name || 'Elemento'
+  const shortId = item.id.substring(0, 8) + '...'
+  return `${name} (ID: ${shortId})`
+}
+
+// Utility function to format item information with full ID (for logs/audit)
+export function formatItemInfoFull(item: { name?: string; id: string }): string {
+  const name = item.name || 'Elemento'
+  return `${name} (ID: ${item.id})`
+}

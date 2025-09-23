@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   MoreHorizontal,
   Edit,
   Trash2,
@@ -15,12 +22,63 @@ import {
   Search,
   Plus,
   Minus,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Filter,
+  X
 } from 'lucide-react'
 import { formatCurrency, formatDate } from '@/lib/utils'
-// Removed direct database import - now using API endpoint
 import { categoryService, locationService } from '@/lib/database'
 import { QuickStockModal } from './quick-stock-modal'
+import { BulkActions } from './bulk-actions'
+
+/**
+ * Escapa caracteres HTML para prevenir XSS
+ */
+function escapeHtml(text: string): string {
+  const div = document.createElement('div')
+  div.textContent = text
+  return div.innerHTML
+}
+
+/**
+ * Genera mensaje de confirmación para eliminación de elementos
+ */
+function getDeleteMessage(item: any, type: string = 'inventory'): string {
+  if (!item || typeof item !== 'object') {
+    return '¿Estás seguro de que quieres eliminar este elemento?'
+  }
+  
+  const name = escapeHtml(item.name || 'Sin nombre')
+  const sku = escapeHtml(item.sku || 'Sin SKU')
+  
+  switch(type) {
+    case 'inventory':
+      return `¿Estás seguro de que quieres eliminar el artículo ${sku} (${name})? Esta acción no se puede deshacer.`
+    case 'category':
+      return `¿Estás seguro de que quieres eliminar la categoría '${name}'? Esta acción no se puede deshacer.`
+    case 'location':
+      return `¿Estás seguro de que quieres eliminar la ubicación '${name}'? Esta acción no se puede deshacer.`
+    default:
+      return `¿Estás seguro de que quieres eliminar este elemento? Esta acción no se puede deshacer.`
+  }
+}
+
+/**
+ * Genera mensaje de éxito después de eliminación
+ */
+function getSuccessMessage(item: any, type: string = 'inventory'): string {
+  if (!item || typeof item !== 'object') {
+    return '✅ Elemento eliminado exitosamente'
+  }
+  
+  const name = escapeHtml(item.name || 'Sin nombre')
+  const sku = escapeHtml(item.sku || 'Sin SKU')
+  
+  if (type === 'inventory') {
+    return `✅ Artículo ${sku} (${name}) eliminado exitosamente`
+  }
+  return `✅ Elemento eliminado exitosamente`
+}
 
 interface InventoryItem {
   id: string
@@ -48,6 +106,18 @@ interface InventoryItem {
   }
 }
 
+interface Category {
+  id: string
+  name: string
+  color: string
+}
+
+interface Location {
+  id: string
+  name: string
+  address?: string
+}
+
 interface FilterOptions {
   status?: string
   lowStock?: boolean
@@ -73,11 +143,32 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     item: InventoryItem | null
     initialOperation: 'add' | 'subtract'
   }>({ isOpen: false, item: null, initialOperation: 'add' })
+  
+  // New filter states
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedLocation, setSelectedLocation] = useState<string>('all')
+  const [categories, setCategories] = useState<Category[]>([])
+  const [locations, setLocations] = useState<Location[]>([])
 
-  // Fetch inventory data
+  // Fetch inventory data and filter options
   useEffect(() => {
     fetchInventory()
+    fetchFilterOptions()
   }, [])
+
+  // Fetch categories and locations for filters
+  const fetchFilterOptions = async () => {
+    try {
+      const [categoriesData, locationsData] = await Promise.all([
+        categoryService.getAll(),
+        locationService.getAll()
+      ])
+      setCategories(categoriesData || [])
+      setLocations(locationsData || [])
+    } catch (err) {
+      console.error('Error fetching filter options:', err)
+    }
+  }
 
   // Handle bulk selection
   const handleSelectAll = (checked: boolean) => {
@@ -94,6 +185,13 @@ export function InventoryTable({ filters }: InventoryTableProps) {
     } else {
       setSelectedItems(prev => prev.filter(id => id !== itemId))
     }
+  }
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedCategory('all')
+    setSelectedLocation('all')
+    setSearchTerm('')
   }
 
   // Helper function to get inventory stock status
@@ -118,7 +216,11 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       matchesStockStatus = itemStockStatus === filters.stockStatus
     }
     
-    return matchesSearch && matchesStatus && matchesLowStock && matchesStockStatus
+    // New category and location filters
+    const matchesCategory = !selectedCategory || selectedCategory === 'all' || item.category_id === selectedCategory
+    const matchesLocation = !selectedLocation || selectedLocation === 'all' || item.location_id === selectedLocation
+    
+    return matchesSearch && matchesStatus && matchesLowStock && matchesStockStatus && matchesCategory && matchesLocation
   })
 
   const sortedItems = [...filteredItems].sort((a, b) => {
@@ -204,7 +306,8 @@ export function InventoryTable({ filters }: InventoryTableProps) {
   }
 
   const handleDelete = async (item: InventoryItem) => {
-    if (confirm(t('confirmDelete', { name: item.name }))) {
+    const deleteMessage = getDeleteMessage(item, 'inventory')
+    if (confirm(deleteMessage)) {
       try {
         const response = await fetch(`/api/inventory?id=${item.id}`, {
           method: 'DELETE'
@@ -213,9 +316,131 @@ export function InventoryTable({ filters }: InventoryTableProps) {
           throw new Error('Failed to delete item')
         }
         setItems(prev => prev.filter(i => i.id !== item.id))
+        
+        // Mostrar mensaje de éxito
+        const successMessage = getSuccessMessage(item, 'inventory')
+        alert(successMessage)
       } catch (err) {
         console.error('Failed to delete item:', err)
       }
+    }
+  }
+
+  // Bulk action handlers
+  const handleBulkDelete = async (itemIds: string[]) => {
+    try {
+      const deletePromises = itemIds.map(id => 
+        fetch(`/api/inventory?id=${id}`, { method: 'DELETE' })
+      )
+      
+      const responses = await Promise.all(deletePromises)
+      const failedDeletes = responses.filter(r => !r.ok)
+      
+      if (failedDeletes.length > 0) {
+        throw new Error(`Failed to delete ${failedDeletes.length} items`)
+      }
+      
+      setItems(prev => prev.filter(item => !itemIds.includes(item.id)))
+      alert(`✅ ${itemIds.length} items eliminados exitosamente`)
+    } catch (err) {
+      console.error('Failed to delete items:', err)
+      throw err
+    }
+  }
+
+  const handleBulkExport = async (itemIds: string[]) => {
+    try {
+      const selectedItemsData = items.filter(item => itemIds.includes(item.id))
+      
+      // Create CSV content
+      const headers = ['SKU', 'Nombre', 'Categoría', 'Ubicación', 'Stock', 'Precio', 'Estado']
+      const csvContent = [
+        headers.join(','),
+        ...selectedItemsData.map(item => [
+          item.sku,
+          `"${item.name}"`,
+          item.categories?.name || 'Sin categoría',
+          item.locations?.name || 'Sin ubicación',
+          item.quantity,
+          item.unit_price,
+          item.status
+        ].join(','))
+      ].join('\n')
+      
+      // Download CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+      const url = URL.createObjectURL(blob)
+      link.setAttribute('href', url)
+      link.setAttribute('download', `inventario_${new Date().toISOString().split('T')[0]}.csv`)
+      link.style.visibility = 'hidden'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      alert(`✅ ${itemIds.length} items exportados exitosamente`)
+    } catch (err) {
+      console.error('Failed to export items:', err)
+      throw err
+    }
+  }
+
+  const handleBulkUpdate = async (itemIds: string[], updates: any) => {
+    try {
+      const updatePromises = itemIds.map(id => 
+        fetch(`/api/inventory?id=${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates)
+        })
+      )
+      
+      const responses = await Promise.all(updatePromises)
+      const failedUpdates = responses.filter(r => !r.ok)
+      
+      if (failedUpdates.length > 0) {
+        throw new Error(`Failed to update ${failedUpdates.length} items`)
+      }
+      
+      // Refresh inventory data
+      await fetchInventory()
+      alert(`✅ ${itemIds.length} items actualizados exitosamente`)
+    } catch (err) {
+      console.error('Failed to update items:', err)
+      throw err
+    }
+  }
+
+  const handleBulkStockAdjustment = async (itemIds: string[], adjustment: number, reason: string) => {
+    try {
+      const selectedItemsData = items.filter(item => itemIds.includes(item.id))
+      
+      const updatePromises = selectedItemsData.map(item => {
+        const newQuantity = Math.max(0, item.quantity + adjustment)
+        return fetch(`/api/inventory?id=${item.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            quantity: newQuantity,
+            // Add audit note
+            notes: `Ajuste en lote: ${adjustment > 0 ? '+' : ''}${adjustment} (${reason})`
+          })
+        })
+      })
+      
+      const responses = await Promise.all(updatePromises)
+      const failedUpdates = responses.filter(r => !r.ok)
+      
+      if (failedUpdates.length > 0) {
+        throw new Error(`Failed to adjust stock for ${failedUpdates.length} items`)
+      }
+      
+      // Refresh inventory data
+      await fetchInventory()
+      alert(`✅ Stock ajustado para ${itemIds.length} items exitosamente`)
+    } catch (err) {
+      console.error('Failed to adjust stock:', err)
+      throw err
     }
   }
 
@@ -246,6 +471,9 @@ export function InventoryTable({ filters }: InventoryTableProps) {
       </div>
     )
   }
+
+  // Check if any filters are active
+  const hasActiveFilters = selectedCategory || selectedLocation || searchTerm
 
   if (loading) {
     return (
@@ -285,7 +513,7 @@ export function InventoryTable({ filters }: InventoryTableProps) {
 
   return (
     <div className="space-y-2 xs:space-y-3 sm:space-y-4">
-      {/* Search and Bulk Operations */}
+      {/* Search and Filters */}
       <div className="flex flex-col gap-2 xs:gap-3">
         <div className="relative">
           <Search className="absolute left-2 top-2 xs:top-2.5 h-3 w-3 xs:h-4 xs:w-4 text-muted-foreground" />
@@ -296,11 +524,74 @@ export function InventoryTable({ filters }: InventoryTableProps) {
             className="pl-6 xs:pl-8 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm"
           />
         </div>
-        {selectedItems.length > 0 && (
-          <Button className="bg-blue-600 hover:bg-blue-700 h-8 xs:h-9 sm:h-10 text-xs xs:text-sm">
-            {t('bulkOperations', { count: selectedItems.length })}
-          </Button>
-        )}
+        
+        {/* Filter Bar */}
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Filtros:</span>
+          </div>
+          
+          {/* Category Filter */}
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger className="w-[180px] h-8 xs:h-9 sm:h-10 text-xs xs:text-sm">
+              <SelectValue placeholder="Todas las categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las categorías</SelectItem>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: category.color }}
+                    />
+                    {category.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Location Filter */}
+          <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+            <SelectTrigger className="w-[180px] h-8 xs:h-9 sm:h-10 text-xs xs:text-sm">
+              <SelectValue placeholder="Todas las ubicaciones" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las ubicaciones</SelectItem>
+              {locations.map((location) => (
+                <SelectItem key={location.id} value={location.id}>
+                  {location.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Clear Filters Button */}
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className="h-8 xs:h-9 sm:h-10 text-xs xs:text-sm"
+            >
+              <X className="h-3 w-3 xs:h-4 xs:w-4 mr-1" />
+              Limpiar filtros
+            </Button>
+          )}
+        </div>
+        
+        {/* Selection Counter and Bulk Actions */}
+        <BulkActions
+          selectedItems={selectedItems}
+          totalItems={sortedItems.length}
+          onClearSelection={() => setSelectedItems([])}
+          onBulkDelete={handleBulkDelete}
+          onBulkExport={handleBulkExport}
+          onBulkUpdate={handleBulkUpdate}
+          onBulkStockAdjustment={handleBulkStockAdjustment}
+        />
       </div>
 
       {/* Table */}
@@ -484,7 +775,22 @@ export function InventoryTable({ filters }: InventoryTableProps) {
 
       {sortedItems.length === 0 && !loading && (
         <div className="text-center py-6">
-          <p className="text-visible-dark">{t('table.noItemsFound')}</p>
+          <p className="text-visible-dark">
+            {hasActiveFilters 
+              ? 'No se encontraron items con los filtros aplicados' 
+              : t('table.noItemsFound')
+            }
+          </p>
+          {hasActiveFilters && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearFilters}
+              className="mt-2"
+            >
+              Limpiar filtros
+            </Button>
+          )}
         </div>
       )}
 

@@ -151,7 +151,7 @@ export function ColumnMappingModal({ session, onComplete, onBack }: ColumnMappin
   const handleMappingChange = (csvColumn: string, inventoryField: keyof InventoryFieldMapping) => {
     setMappings(prev => prev.map(mapping => 
       mapping.csvColumn === csvColumn
-        ? { ...mapping, inventoryField, isMapped: true }
+        ? { ...mapping, inventoryField, isMapped: inventoryField !== 'none' }
         : mapping
     ))
   }
@@ -326,14 +326,14 @@ export function ColumnMappingModal({ session, onComplete, onBack }: ColumnMappin
 
                     <div className="flex items-center gap-2">
                       <Select
-                        value={isMapped ? mapping?.inventoryField : ''}
+                        value={isMapped ? mapping?.inventoryField : 'none'}
                         onValueChange={(value) => handleMappingChange(column.header, value as keyof InventoryFieldMapping)}
                       >
                         <SelectTrigger className="w-64">
                           <SelectValue placeholder="Seleccionar campo..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">No mapear</SelectItem>
+                          <SelectItem value="none">No mapear</SelectItem>
                           {availableFields.map(field => (
                             <SelectItem key={field.key} value={field.key}>
                               <div className="flex items-center gap-2">
