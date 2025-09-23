@@ -157,6 +157,135 @@ export interface Database {
           new_values?: any | null
         }
       }
+      deleted_items: {
+        Row: {
+          id: string
+          original_table_name: string
+          original_record_id: string
+          original_data: any
+          deleted_by: string | null
+          deleted_by_name: string | null
+          deleted_at: string | null
+          deletion_reason: string | null
+          expires_at: string | null
+          recovery_count: number | null
+          last_recovered_at: string | null
+          metadata: any | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          original_table_name: string
+          original_record_id: string
+          original_data: any
+          deleted_by?: string | null
+          deleted_by_name?: string | null
+          deleted_at?: string | null
+          deletion_reason?: string | null
+          expires_at?: string | null
+          recovery_count?: number | null
+          last_recovered_at?: string | null
+          metadata?: any | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          original_table_name?: string
+          original_record_id?: string
+          original_data?: any
+          deleted_by?: string | null
+          deleted_by_name?: string | null
+          deleted_at?: string | null
+          deletion_reason?: string | null
+          expires_at?: string | null
+          recovery_count?: number | null
+          last_recovered_at?: string | null
+          metadata?: any | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      recovery_logs: {
+        Row: {
+          id: string
+          deleted_item_id: string | null
+          recovered_by: string | null
+          recovered_by_name: string | null
+          recovered_at: string | null
+          recovery_reason: string | null
+          recovery_method: string | null
+          success: boolean | null
+          error_message: string | null
+          metadata: any | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          deleted_item_id?: string | null
+          recovered_by?: string | null
+          recovered_by_name?: string | null
+          recovered_at?: string | null
+          recovery_reason?: string | null
+          recovery_method?: string | null
+          success?: boolean | null
+          error_message?: string | null
+          metadata?: any | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          deleted_item_id?: string | null
+          recovered_by?: string | null
+          recovered_by_name?: string | null
+          recovered_at?: string | null
+          recovery_reason?: string | null
+          recovery_method?: string | null
+          success?: boolean | null
+          error_message?: string | null
+          metadata?: any | null
+          created_at?: string | null
+        }
+      }
+      cleanup_logs: {
+        Row: {
+          id: string
+          cleanup_type: string
+          items_processed: number | null
+          items_deleted: number | null
+          errors_count: number | null
+          started_at: string | null
+          completed_at: string | null
+          executed_by: string | null
+          metadata: any | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          cleanup_type: string
+          items_processed?: number | null
+          items_deleted?: number | null
+          errors_count?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          executed_by?: string | null
+          metadata?: any | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          cleanup_type?: string
+          items_processed?: number | null
+          items_deleted?: number | null
+          errors_count?: number | null
+          started_at?: string | null
+          completed_at?: string | null
+          executed_by?: string | null
+          metadata?: any | null
+          created_at?: string | null
+        }
+      }
     }
     Views: {
       [_ in never]: never

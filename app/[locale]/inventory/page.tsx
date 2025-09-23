@@ -20,7 +20,6 @@ import { Badge } from '@/components/ui/badge'
 const InventoryTable = lazy(() => import('@/components/inventory/inventory-table').then(mod => ({ default: mod.InventoryTable })))
 const InventoryFilters = lazy(() => import('@/components/inventory/inventory-filters').then(mod => ({ default: mod.InventoryFilters })))
 const TransactionBuilder = lazy(() => import('@/components/inventory/transaction-builder').then(mod => ({ default: mod.TransactionBuilder })))
-const AuditHistory = lazy(() => import('@/components/inventory/audit-history').then(mod => ({ default: mod.AuditHistory })))
 const QuickCreateModal = lazy(() => import('@/components/inventory/quick-create-modal').then(mod => ({ default: mod.QuickCreateModal })))
 import { BulkCreateModal } from '@/components/inventory/bulk-create-modal'
 const CSVImportModal = lazy(() => import('@/components/inventory/csv-import/csv-import-modal').then(mod => ({ default: mod.CSVImportModal })))
@@ -34,7 +33,6 @@ function InventoryContent() {
   const [isClient, setIsClient] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isTransactionBuilderOpen, setIsTransactionBuilderOpen] = useState(false)
-  const [isAuditHistoryOpen, setIsAuditHistoryOpen] = useState(false)
   const [transactionMode, setTransactionMode] = useState<'sale' | 'stock_addition'>('sale')
   const [transactions, setTransactions] = useState<any[]>([])
   const [isTutorialOpen, setIsTutorialOpen] = useState(false)
@@ -440,14 +438,14 @@ function InventoryContent() {
           <button
             id="inv-audit-history"
             className="group flex items-center space-x-3 rounded-lg border border-border bg-card p-4 text-left transition-all duration-200 hover:shadow-md hover:shadow-blue-500/5 hover:border-blue-200 dark:hover:border-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            onClick={() => setIsAuditHistoryOpen(true)}
+            onClick={() => router.push('/inventory/history')}
             title="Ver historial completo de cambios y movimientos del inventario"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/50 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 transition-colors">
               <History className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-medium text-sm text-foreground">Historial de Auditoría</p>
+              <p className="font-medium text-sm text-foreground">historial</p>
               <p className="text-xs text-muted-foreground truncate">Seguimiento de cambios</p>
             </div>
           </button>
@@ -549,15 +547,6 @@ function InventoryContent() {
         </Suspense>
       )}
 
-      {/* Audit History Modal */}
-      {isAuditHistoryOpen && (
-        <Suspense fallback={<PageLoading message={t('loading.auditHistory')} />}>
-          <AuditHistory
-            open={isAuditHistoryOpen}
-            onOpenChange={setIsAuditHistoryOpen}
-          />
-        </Suspense>
-      )}
 
       {/* Inventory Tutorial Overlay */}
       {isTutorialOpen && (
