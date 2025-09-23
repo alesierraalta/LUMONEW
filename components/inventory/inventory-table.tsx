@@ -413,11 +413,11 @@ export function InventoryTable({ filters }: InventoryTableProps) {
                         className="w-3 h-3 rounded-full"
                         style={{ backgroundColor: item.categories?.color || '#gray' }}
                       />
-                      <span className="text-sm">{item.categories?.name || t('unknown')}</span>
+                      <span className="text-sm">{item.categories?.name || t('table.unknown')}</span>
                     </div>
                   </td>
                   <td className="p-4 align-middle">
-                    <div className="text-sm">{item.locations?.name || t('unknown')}</div>
+                    <div className="text-sm">{item.locations?.name || t('table.unknown')}</div>
                     <div className="text-xs text-muted-foreground">{item.locations?.type}</div>
                   </td>
                   <td className="p-4 align-middle">
